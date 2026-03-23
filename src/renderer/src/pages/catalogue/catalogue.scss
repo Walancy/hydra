@@ -4,103 +4,98 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: calc(globals.$spacing-unit * 2);
   width: 100%;
-  padding: 16px;
   scroll-behavior: smooth;
+  align-items: center;
+  position: relative;
+  height: 100%;
+  padding-bottom: 24px;
+  overflow-x: hidden;
 
-  &__filters-container {
+  &__bg-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.25; // Sutil para não atrapalhar a leitura
+  }
+
+  // ----- Sticky filter bar (fixed at top, centered) -----
+  &__filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
     width: 100%;
-    padding: 4px;
-    align-self: flex-start;
+    display: flex;
+    justify-content: center;
+    background: rgba(28, 28, 28, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 6px 0;
   }
 
-  &__header {
+  &__filter-bar-inner {
     display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    justify-content: space-between;
+    flex-direction: row;
     flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 1400px;
+    padding: 0 48px;
   }
 
-  &__filters-wrapper {
+  // ----- Active filter tags -----
+  &__active-filters {
     display: flex;
-    gap: 8px;
+    align-items: center;
     flex-wrap: wrap;
-    min-width: 0;
-    flex: 1;
+    gap: 8px;
+    width: 100%;
+    max-width: 1400px;
+    padding: 8px 48px 0;
+    align-self: center;
   }
 
   &__filters-list {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     list-style: none;
     margin: 0;
     padding: 0;
+    flex: 1;
   }
 
-  &__clear-all-button {
-    flex-shrink: 0;
-    min-height: 32px;
-    padding: 6px 12px;
+  &__clear-btn {
+    white-space: nowrap;
+    min-height: 30px;
+    padding: 4px 12px;
     font-size: 12px;
-    align-self: center;
   }
 
+  // ----- Main content -----
   &__content {
     display: flex;
     flex-direction: column;
-    gap: calc(globals.$spacing-unit * 2);
+    gap: 32px;
     width: 100%;
-  }
+    max-width: 1400px;
+    padding: 16px 48px 56px;
+    align-self: center;
 
-  &__games-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    width: 100%;
-    min-width: 0;
+    @media (max-width: 1100px) {
+      padding: 16px 24px 48px;
+    }
   }
 
   &__pagination-container {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 16px;
-  }
-
-  &__result-count {
-    font-size: 12px;
-  }
-
-  &__filters-sections {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 12px;
-  }
-
-  &__skeleton {
-    height: 105px;
-    border-radius: 4px;
-    border: solid 1px rgba(255, 255, 255, 0.15);
-  }
-
-  @media (max-width: 1024px) {
-    &__content {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  @media (max-width: 768px) {
-    &__header {
-      align-items: stretch;
-    }
-
-    &__clear-all-button {
-      width: 100%;
-    }
+    margin-top: 8px;
   }
 }

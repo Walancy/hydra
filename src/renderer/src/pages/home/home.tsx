@@ -281,7 +281,7 @@ export default function Home() {
               />
             )}
 
-            {!isMyGames && catalogue[CatalogueCategory.Hot]?.length > 0 && (
+            {catalogue[CatalogueCategory.Hot]?.length > 0 && (
               <HeroCarousel games={catalogue[CatalogueCategory.Hot]} />
             )}
           </div>
