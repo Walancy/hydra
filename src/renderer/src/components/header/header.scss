@@ -84,6 +84,17 @@
     transform: translateX(-50%);
     animation: search-slide-down 0.15s ease;
     z-index: 2;
+
+    // Variante inline: substitui os itens da nav sem sair do fluxo normal
+    &--inline {
+      position: static;
+      transform: none;
+      top: unset;
+      left: unset;
+      min-width: 280px;
+      animation: search-expand 0.18s cubic-bezier(0.2, 0, 0.2, 1);
+      -webkit-app-region: no-drag;
+    }
   }
 
   &__search-bar-icon {
@@ -174,6 +185,17 @@
     to {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @keyframes search-expand {
+    from {
+      opacity: 0;
+      transform: scaleX(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: scaleX(1);
     }
   }
 

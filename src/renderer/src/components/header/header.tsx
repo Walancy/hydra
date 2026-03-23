@@ -272,15 +272,10 @@ export function Header() {
   }, [searchParams, setSearchParams]);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchBarWidth, setSearchBarWidth] = useState(0);
-  const navRef = useRef<HTMLElement>(null);
 
   const handleToggleSearch = () => {
     setIsSearchOpen((prev) => {
       if (!prev) {
-        if (navRef.current) {
-          setSearchBarWidth(navRef.current.offsetWidth);
-        }
         setTimeout(() => inputRef.current?.focus(), 100);
       }
       return !prev;
@@ -325,22 +320,55 @@ export function Header() {
           </button>
         </section>
 
-        <nav ref={navRef} className="header__nav">
-          {navRoutes.map(({ path, nameKey }) => (
-            <button
-              key={path}
-              type="button"
-              className={cn("header__nav-item", {
-                "header__nav-item--active":
-                  path === "/"
-                    ? location.pathname === "/"
-                    : location.pathname.startsWith(path),
-              })}
-              onClick={() => navigate(path)}
+        <nav className="header__nav">
+          {isSearchOpen ? (
+            <div
+              ref={searchContainerRef}
+              className="header__search-bar header__search-bar--inline"
             >
-              {t(nameKey, { ns: "sidebar" })}
-            </button>
-          ))}
+              <SearchIcon size={14} className="header__search-bar-icon" />
+              <input
+                ref={inputRef}
+                type="text"
+                name="search"
+                placeholder={
+                  isOnLibraryPage ? t("search_library") : t("search")
+                }
+                value={searchValue}
+                className="header__search-input"
+                onChange={(event) => handleSearch(event.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  onMouseDown={handleClearSearchMouseDown}
+                  onClick={handleClearSearch}
+                  className="header__action-button"
+                >
+                  <XIcon size={14} />
+                </button>
+              )}
+            </div>
+          ) : (
+            navRoutes.map(({ path, nameKey }) => (
+              <button
+                key={path}
+                type="button"
+                className={cn("header__nav-item", {
+                  "header__nav-item--active":
+                    path === "/"
+                      ? location.pathname === "/"
+                      : location.pathname.startsWith(path),
+                })}
+                onClick={() => navigate(path)}
+              >
+                {t(nameKey, { ns: "sidebar" })}
+              </button>
+            ))
+          )}
         </nav>
 
         <section className="header__section header__section--right">
@@ -393,38 +421,6 @@ export function Header() {
             </span>
           </button>
         </section>
-
-        {isSearchOpen && (
-          <div
-            ref={searchContainerRef}
-            className="header__search-bar"
-            style={{ width: searchBarWidth > 0 ? searchBarWidth : undefined }}
-          >
-            <SearchIcon size={14} className="header__search-bar-icon" />
-            <input
-              ref={inputRef}
-              type="text"
-              name="search"
-              placeholder={isOnLibraryPage ? t("search_library") : t("search")}
-              value={searchValue}
-              className="header__search-input"
-              onChange={(event) => handleSearch(event.target.value)}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-            />
-            {searchValue && (
-              <button
-                type="button"
-                onMouseDown={handleClearSearchMouseDown}
-                onClick={handleClearSearch}
-                className="header__action-button"
-              >
-                <XIcon size={14} />
-              </button>
-            )}
-          </div>
-        )}
       </header>
 
       {isOnLibraryPage && window.electron.platform === "win32" && (

@@ -21,12 +21,17 @@ interface CategoryExplorerProps {
   onSelectGenre: (genre: string) => void;
 }
 
-export function CategoryExplorer({ onSelectGenre }: Readonly<CategoryExplorerProps>) {
+export function CategoryExplorer({
+  onSelectGenre,
+}: Readonly<CategoryExplorerProps>) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: "left" | "right") => {
     if (!trackRef.current) return;
-    trackRef.current.scrollBy({ left: dir === "left" ? -400 : 400, behavior: "smooth" });
+    trackRef.current.scrollBy({
+      left: dir === "left" ? -400 : 400,
+      behavior: "smooth",
+    });
   };
 
   return (

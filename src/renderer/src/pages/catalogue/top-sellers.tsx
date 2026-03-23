@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CatalogueSearchResult, ShopDetailsWithAssets } from "@types";
 import { QuestionIcon } from "@primer/octicons-react";
@@ -62,19 +62,39 @@ function formatDate(dateStr: string): string {
   if (parts.length < 3) return dateStr;
 
   const months: Record<string, string> = {
-    jan: "Jan.", feb: "Fev.", mar: "Mar.", apr: "Abr.", may: "Mai.",
-    jun: "Jun.", jul: "Jul.", aug: "Ago.", sep: "Set.", oct: "Out.",
-    nov: "Nov.", dec: "Dez.", janeiro: "Jan.", fevereiro: "Fev.",
-    março: "Mar.", abril: "Abr.", maio: "Mai.", junho: "Jun.",
-    julho: "Jul.", agosto: "Ago.", setembro: "Set.", outubro: "Out.",
-    novembro: "Nov.", dezembro: "Dez.",
+    jan: "Jan.",
+    feb: "Fev.",
+    mar: "Mar.",
+    apr: "Abr.",
+    may: "Mai.",
+    jun: "Jun.",
+    jul: "Jul.",
+    aug: "Ago.",
+    sep: "Set.",
+    oct: "Out.",
+    nov: "Nov.",
+    dec: "Dez.",
+    janeiro: "Jan.",
+    fevereiro: "Fev.",
+    março: "Mar.",
+    abril: "Abr.",
+    maio: "Mai.",
+    junho: "Jun.",
+    julho: "Jul.",
+    agosto: "Ago.",
+    setembro: "Set.",
+    outubro: "Out.",
+    novembro: "Nov.",
+    dezembro: "Dez.",
   };
 
   const monthWord = parts.find((p) => isNaN(Number(p)))?.toLowerCase();
   const year = parts.find((p) => p.length === 4 && !isNaN(Number(p)));
 
   if (monthWord && year) {
-    const month = months[monthWord] || monthWord.charAt(0).toUpperCase() + monthWord.slice(1);
+    const month =
+      months[monthWord] ||
+      monthWord.charAt(0).toUpperCase() + monthWord.slice(1);
     return `${month} ${year}`;
   }
 
@@ -83,11 +103,17 @@ function formatDate(dateStr: string): string {
 
 const detailsCache = new Map<string, ShopDetailsWithAssets>();
 
-export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProps>) {
+export function TopSellers({
+  games,
+  isLoading = false,
+}: Readonly<TopSellersProps>) {
   const [activeTab, setActiveTab] = useState("popular");
   const [hoveredIndex, setHoveredIndex] = useState(0);
-  const [activeGameDetails, setActiveGameDetails] = useState<ShopDetailsWithAssets | null>(null);
+  const [activeGameDetails, setActiveGameDetails] =
+    useState<ShopDetailsWithAssets | null>(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [isHoveringPanel, setIsHoveringPanel] = useState(false);
+  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { i18n } = useTranslation("catalogue");
   const navigate = useNavigate();
 
@@ -102,7 +128,10 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
   const mediaItems = useMemo(() => {
     const items: { thumb: string; full: string }[] = [];
     if (activeGame?.libraryImageUrl) {
-      items.push({ thumb: activeGame.libraryImageUrl, full: activeGame.libraryImageUrl });
+      items.push({
+        thumb: activeGame.libraryImageUrl,
+        full: activeGame.libraryImageUrl,
+      });
     }
     if (activeGameDetails?.screenshots) {
       activeGameDetails.screenshots.slice(0, 3).forEach((s) => {
@@ -128,7 +157,11 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
 
     const timer = setTimeout(() => {
       window.electron
-        .getGameShopDetails(key, activeGame.shop, getSteamLanguage(i18n.language))
+        .getGameShopDetails(
+          key,
+          activeGame.shop,
+          getSteamLanguage(i18n.language)
+        )
         .then((result) => {
           if (result) {
             detailsCache.set(key, result);
@@ -141,6 +174,21 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
     return () => clearTimeout(timer);
   }, [activeGame, i18n.language]);
 
+  // Autoplay: avança a imagem a cada 3s, pausa no hover
+  useEffect(() => {
+    if (mediaItems.length <= 1) return;
+    if (isHoveringPanel) {
+      if (autoplayRef.current) clearInterval(autoplayRef.current);
+      return;
+    }
+    autoplayRef.current = setInterval(() => {
+      setSelectedMediaIndex((prev) => (prev + 1) % mediaItems.length);
+    }, 3000);
+    return () => {
+      if (autoplayRef.current) clearInterval(autoplayRef.current);
+    };
+  }, [mediaItems.length, isHoveringPanel]);
+
   if (!isLoading && !games.length) return null;
 
   return (
@@ -151,7 +199,10 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
             key={tab.key}
             type="button"
             className={`top-sellers__tab${activeTab === tab.key ? " top-sellers__tab--active" : ""}`}
-            onClick={() => { setActiveTab(tab.key); setHoveredIndex(0); }}
+            onClick={() => {
+              setActiveTab(tab.key);
+              setHoveredIndex(0);
+            }}
           >
             {tab.label}
           </button>
@@ -162,7 +213,10 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
         <div className="top-sellers__list">
           {isLoading
             ? Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="top-sellers__row top-sellers__row--skeleton">
+                <div
+                  key={i}
+                  className="top-sellers__row top-sellers__row--skeleton"
+                >
                   <div className="top-sellers__skeleton-thumb" />
                   <div className="top-sellers__skeleton-meta">
                     <div className="top-sellers__skeleton-line" />
@@ -182,7 +236,11 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
         </div>
 
         {activeGame && !isLoading && (
-          <div className="top-sellers__panel">
+          <div
+            className="top-sellers__panel"
+            onMouseEnter={() => setIsHoveringPanel(true)}
+            onMouseLeave={() => setIsHoveringPanel(false)}
+          >
             <button
               type="button"
               className="top-sellers__detail"
@@ -197,9 +255,9 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
                 <div className="top-sellers__cover-section">
                   <div className="top-sellers__detail-cover">
                     {activeMedia ? (
-                      <img 
-                        src={activeMedia.full} 
-                        alt={activeGame.title} 
+                      <img
+                        src={activeMedia.full}
+                        alt={activeGame.title}
                         loading="lazy"
                       />
                     ) : (
@@ -213,15 +271,21 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
                     <div className="top-sellers__media-previews">
                       {mediaItems.slice(0, 4).map((m, i) => (
                         <button
-                           key={m.thumb}
-                           type="button"
-                           className={`top-sellers__media-preview ${i === selectedMediaIndex ? "top-sellers__media-preview--active" : ""}`}
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             setSelectedMediaIndex(i);
-                           }}
+                          key={m.thumb}
+                          type="button"
+                          className={`top-sellers__media-preview${i === selectedMediaIndex ? " top-sellers__media-preview--active" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMediaIndex(i);
+                          }}
                         >
                           <img src={m.thumb} alt="Preview" loading="lazy" />
+                          {i === selectedMediaIndex && (
+                            <span
+                              className="top-sellers__media-progress"
+                              key={`${activeGame.objectId}-${i}`}
+                            />
+                          )}
                         </button>
                       ))}
                     </div>
@@ -230,7 +294,9 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
                   {activeGame.genres?.length > 0 && (
                     <div className="top-sellers__detail-tags">
                       {activeGame.genres.slice(0, 4).map((g) => (
-                        <span key={g} className="top-sellers__detail-tag">{g}</span>
+                        <span key={g} className="top-sellers__detail-tag">
+                          {g}
+                        </span>
                       ))}
                     </div>
                   )}
@@ -246,40 +312,65 @@ export function TopSellers({ games, isLoading = false }: Readonly<TopSellersProp
                   <div className="top-sellers__detail-grid">
                     {(activeGameDetails as any)?.developers?.length > 0 && (
                       <div className="top-sellers__detail-block">
-                        <span className="top-sellers__detail-label">Desenvolvedor:</span>
-                        <span className="top-sellers__detail-value">{(activeGameDetails as any).developers[0]}</span>
+                        <span className="top-sellers__detail-label">
+                          Desenvolvedor:
+                        </span>
+                        <span className="top-sellers__detail-value">
+                          {(activeGameDetails as any).developers[0]}
+                        </span>
                       </div>
                     )}
 
                     {(activeGameDetails as any)?.publishers?.length > 0 && (
                       <div className="top-sellers__detail-block">
-                        <span className="top-sellers__detail-label">Distribuidora:</span>
-                        <span className="top-sellers__detail-value">{(activeGameDetails as any).publishers[0]}</span>
+                        <span className="top-sellers__detail-label">
+                          Distribuidora:
+                        </span>
+                        <span className="top-sellers__detail-value">
+                          {(activeGameDetails as any).publishers[0]}
+                        </span>
                       </div>
                     )}
 
                     {activeGameDetails?.release_date?.date && (
                       <div className="top-sellers__detail-block">
-                        <span className="top-sellers__detail-label">Lançamento:</span>
-                        <span className="top-sellers__detail-value">{formatDate(activeGameDetails.release_date.date)}</span>
+                        <span className="top-sellers__detail-label">
+                          Lançamento:
+                        </span>
+                        <span className="top-sellers__detail-value">
+                          {formatDate(activeGameDetails.release_date.date)}
+                        </span>
                       </div>
                     )}
 
                     {(activeGameDetails as any)?.metacritic?.score && (
                       <div className="top-sellers__detail-block">
-                        <span className="top-sellers__detail-label">Metacritic:</span>
-                        <span className="top-sellers__detail-value" style={{ color: "#2ecc71" }}>
+                        <span className="top-sellers__detail-label">
+                          Metacritic:
+                        </span>
+                        <span
+                          className="top-sellers__detail-value"
+                          style={{ color: "#2ecc71" }}
+                        >
                           {(activeGameDetails as any).metacritic.score}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="top-sellers__detail-block" style={{ marginTop: "16px" }}>
-                    <span className="top-sellers__detail-label">Fontes de Download:</span>
+                  <div
+                    className="top-sellers__detail-block"
+                    style={{ marginTop: "16px" }}
+                  >
+                    <span className="top-sellers__detail-label">
+                      Fontes de Download:
+                    </span>
                     <div className="top-sellers__detail-sources">
                       {activeGame.downloadSources?.map((source) => (
-                        <span key={source} className="top-sellers__detail-source-badge">
+                        <span
+                          key={source}
+                          className="top-sellers__detail-source-badge"
+                        >
                           {source}
                         </span>
                       ))}

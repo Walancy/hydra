@@ -50,13 +50,14 @@ export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
   const prev = (active - 1 + games.length) % games.length;
   const next = (active + 1) % games.length;
 
-  const displayedSlots = games.length >= 3
-    ? [
-      { game: games[prev], slot: "prev" as const },
-      { game: games[active], slot: "main" as const },
-      { game: games[next], slot: "next" as const },
-    ]
-    : [{ game: games[0], slot: "main" as const }];
+  const displayedSlots =
+    games.length >= 3
+      ? [
+          { game: games[prev], slot: "prev" as const },
+          { game: games[active], slot: "main" as const },
+          { game: games[next], slot: "next" as const },
+        ]
+      : [{ game: games[0], slot: "main" as const }];
 
   return (
     <div className="featured-carousel" aria-label="Jogos em destaque">
@@ -90,7 +91,9 @@ export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
               {game.downloadSources?.length > 0 && (
                 <div className="featured-carousel__sources">
                   {game.downloadSources.slice(0, 2).map((s) => (
-                    <span key={s} className="featured-carousel__source-badge">{s}</span>
+                    <span key={s} className="featured-carousel__source-badge">
+                      {s}
+                    </span>
                   ))}
                 </div>
               )}

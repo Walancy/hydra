@@ -38,7 +38,18 @@
     justify-content: center;
     height: 100%;
     padding: 0 calc(globals.$spacing-unit * 3);
-    gap: calc(globals.$spacing-unit * 1); // Reduzido para testar (era 2)
+    gap: calc(globals.$spacing-unit * 1);
+
+    @media (max-width: 1100px) {
+      padding: 0 calc(globals.$spacing-unit * 2);
+    }
+    @media (max-width: 800px) {
+      padding: 0 calc(globals.$spacing-unit * 1.5);
+      gap: calc(globals.$spacing-unit * 0.75);
+    }
+    @media (max-width: 600px) {
+      padding: 0 calc(globals.$spacing-unit * 1);
+    }
   }
 
   &__tabs {
@@ -47,6 +58,11 @@
     margin: 0;
     padding: 0;
     gap: globals.$spacing-unit;
+
+    @media (max-width: 600px) {
+      gap: calc(globals.$spacing-unit * 0.5);
+      flex-wrap: wrap;
+    }
   }
 
   &__slider {
@@ -54,11 +70,29 @@
     gap: calc(globals.$spacing-unit * 1.5);
     overflow-x: auto;
     overflow-y: visible;
-    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 3) calc(globals.$spacing-unit * 1.5); // Reduzido (era 3 em cima e embaixo)
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 3) calc(globals.$spacing-unit * 1.5);
     margin: 0 calc(globals.$spacing-unit * -3);
     scroll-behavior: smooth;
     align-items: center;
     min-height: 290px;
+
+    @media (max-width: 1100px) {
+      padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 1);
+      margin: 0 calc(globals.$spacing-unit * -2);
+      min-height: 240px;
+      gap: globals.$spacing-unit;
+    }
+    @media (max-width: 800px) {
+      padding: calc(globals.$spacing-unit * 0.5) calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 1);
+      margin: 0 calc(globals.$spacing-unit * -1.5);
+      min-height: 200px;
+    }
+    @media (max-width: 600px) {
+      padding: calc(globals.$spacing-unit * 0.5) calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 0.75);
+      margin: 0 calc(globals.$spacing-unit * -1);
+      min-height: 170px;
+      gap: calc(globals.$spacing-unit * 0.75);
+    }
 
     &::-webkit-scrollbar {
       height: 0;
@@ -66,6 +100,7 @@
     }
   }
 
+  // ---- Card ----
   &__card {
     flex-shrink: 0;
     width: 140px;
@@ -79,12 +114,20 @@
     border: none;
     padding: 0;
 
+    @media (max-width: 1100px) { width: 120px; }
+    @media (max-width: 800px)  { width: 100px; }
+    @media (max-width: 600px)  { width: 80px; border-radius: 6px; }
+
     &:hover {
       opacity: 0.85;
     }
 
     &--selected {
       width: 180px;
+
+      @media (max-width: 1100px) { width: 150px; }
+      @media (max-width: 800px)  { width: 130px; }
+      @media (max-width: 600px)  { width: 105px; }
 
       &:hover {
         opacity: 1;
@@ -106,14 +149,24 @@
     height: 100%;
     aspect-ratio: 2 / 3;
     border-radius: 8px;
+
+    @media (max-width: 800px) { width: 85px; }
+    @media (max-width: 600px) { width: 70px; }
   }
 
+  // ---- Bottom info ----
   &__bottom-segment {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     width: 100%;
     gap: calc(globals.$spacing-unit * 3);
+
+    @media (max-width: 1100px) { gap: calc(globals.$spacing-unit * 2); }
+    @media (max-width: 800px) {
+      flex-direction: column;
+      gap: calc(globals.$spacing-unit * 1);
+    }
   }
 
   &__details {
@@ -121,6 +174,8 @@
     min-height: 90px;
     flex: 1;
     min-width: 0;
+
+    @media (max-width: 800px) { min-height: auto; padding-top: calc(globals.$spacing-unit * 0.5); }
   }
 
   &__game-title {
@@ -128,6 +183,10 @@
     font-weight: 400;
     color: #fff;
     margin: 0;
+
+    @media (max-width: 1100px) { font-size: 26px; }
+    @media (max-width: 800px)  { font-size: 22px; }
+    @media (max-width: 600px)  { font-size: 18px; }
   }
 
   &__game-meta {
@@ -135,18 +194,25 @@
     font-weight: 400;
     color: rgba(255, 255, 255, 0.7);
     margin: 2px 0 0;
+
+    @media (max-width: 600px) { font-size: 12px; }
   }
 
   &__view-button {
     min-width: 180px;
     padding: 0 32px;
+
+    @media (max-width: 800px) { min-width: 140px; padding: 0 20px; }
+    @media (max-width: 600px) { min-width: unset; padding: 0 16px; }
   }
 
   &__actions {
     display: flex;
     gap: 8px;
     align-items: center;
-    margin-top: 12px; // Reduzido (era 12)
+    margin-top: 12px;
+
+    @media (max-width: 600px) { margin-top: 8px; }
   }
 
   &__add-button,
@@ -171,15 +237,12 @@
     background: rgba(255, 255, 255, 0.12);
     padding: 2px 10px;
     border-radius: 12px;
+
+    @media (max-width: 600px) { font-size: 10px; padding: 2px 8px; }
   }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

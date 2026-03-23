@@ -22,15 +22,10 @@
     gap: 14px;
     width: 100%;
 
-    @media (max-width: 1200px) {
-      grid-template-columns: repeat(4, 1fr);
-    }
-    @media (max-width: 900px) {
-      grid-template-columns: repeat(3, 1fr);
-    }
-    @media (max-width: 600px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
+    @media (max-width: 1300px) { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 1000px) { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 700px)  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    @media (max-width: 480px)  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
   }
 }
 

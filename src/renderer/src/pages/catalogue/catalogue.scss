@@ -1,5 +1,11 @@
 @use "../../scss/globals.scss";
 
+// ── Breakpoints ──────────────────────────────────────────────
+// xl  ≥ 1400px  (default)
+// lg  ≥ 1100px
+// md  ≥  800px
+// sm  <  800px  (compact)
+
 .catalogue {
   overflow-y: auto;
   display: flex;
@@ -20,10 +26,10 @@
     height: 100vh;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.25; // Sutil para não atrapalhar a leitura
+    opacity: 0.25;
   }
 
-  // ----- Sticky filter bar (fixed at top, centered) -----
+  // ----- Sticky filter bar -----
   &__filter-bar {
     position: sticky;
     top: 0;
@@ -31,7 +37,7 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    background: rgba(28, 28, 28, 0.88);
+    background: rgba(16, 16, 16, 0.774);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     padding: 6px 0;
@@ -47,6 +53,15 @@
     width: 100%;
     max-width: 1400px;
     padding: 0 48px;
+
+    @media (max-width: 1100px) {
+      padding: 0 24px;
+    }
+
+    @media (max-width: 800px) {
+      padding: 0 12px;
+      gap: 6px;
+    }
   }
 
   // ----- Active filter tags -----
@@ -59,6 +74,14 @@
     max-width: 1400px;
     padding: 8px 48px 0;
     align-self: center;
+
+    @media (max-width: 1100px) {
+      padding: 8px 24px 0;
+    }
+
+    @media (max-width: 800px) {
+      padding: 8px 12px 0;
+    }
   }
 
   &__filters-list {
@@ -90,6 +113,12 @@
 
     @media (max-width: 1100px) {
       padding: 16px 24px 48px;
+      gap: 24px;
+    }
+
+    @media (max-width: 800px) {
+      padding: 12px 12px 40px;
+      gap: 20px;
     }
   }
 
@@ -97,5 +126,9 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 8px;
+
+    @media (max-width: 800px) {
+      justify-content: center;
+    }
   }
 }

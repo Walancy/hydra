@@ -22,7 +22,9 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    setAdded(library.some((l) => l.shop === game.shop && l.objectId === game.objectId));
+    setAdded(
+      library.some((l) => l.shop === game.shop && l.objectId === game.objectId)
+    );
   }, [library, game]);
 
   const handleLibrary = useCallback(
@@ -34,7 +36,11 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
         if (added) {
           await window.electron.removeGameFromLibrary(game.shop, game.objectId);
         } else {
-          await window.electron.addGameToLibrary(game.shop, game.objectId, game.title);
+          await window.electron.addGameToLibrary(
+            game.shop,
+            game.objectId,
+            game.title
+          );
           setIsAnimating(true);
           setTimeout(() => setIsAnimating(false), 300);
         }
@@ -49,7 +55,9 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
   const genres = game.genres
     ?.map((g) => {
       const enIdx = steamGenres["en"]?.indexOf(g);
-      return enIdx !== undefined && enIdx >= 0 ? (steamGenres["pt"]?.[enIdx] ?? g) : g;
+      return enIdx !== undefined && enIdx >= 0
+        ? (steamGenres["pt"]?.[enIdx] ?? g)
+        : g;
     })
     .slice(0, 3);
 
@@ -59,23 +67,36 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
       onClick={() => navigate(buildGameDetailsPath(game))}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && navigate(buildGameDetailsPath(game))}
+      onKeyDown={(e) =>
+        e.key === "Enter" && navigate(buildGameDetailsPath(game))
+      }
       aria-label={game.title}
     >
       {/* Cover image area - fixed ratio */}
       <div className="cat-card__cover-wrap">
         {game.libraryImageUrl ? (
-          <img src={game.libraryImageUrl} alt={game.title} className="cat-card__cover" loading="lazy" />
+          <img
+            src={game.libraryImageUrl}
+            alt={game.title}
+            className="cat-card__cover"
+            loading="lazy"
+          />
         ) : (
-          <div className="cat-card__placeholder"><QuestionIcon size={28} /></div>
+          <div className="cat-card__placeholder">
+            <QuestionIcon size={28} />
+          </div>
         )}
 
         <button
           type="button"
-          className={cn("cat-card__action-btn", { "cat-card__action-btn--animate": isAnimating })}
+          className={cn("cat-card__action-btn", {
+            "cat-card__action-btn--animate": isAnimating,
+          })}
           onClick={handleLibrary}
           disabled={isBusy}
-          aria-label={added ? "Remover da biblioteca" : "Adicionar à biblioteca"}
+          aria-label={
+            added ? "Remover da biblioteca" : "Adicionar à biblioteca"
+          }
         >
           {added ? <DashIcon size={14} /> : <PlusIcon size={14} />}
         </button>
@@ -87,7 +108,9 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
           <span className="cat-card__title">{game.title}</span>
           <div className="cat-card__sources">
             {game.downloadSources?.slice(0, 2).map((s) => (
-              <span key={s} className="cat-card__source-badge">{s}</span>
+              <span key={s} className="cat-card__source-badge">
+                {s}
+              </span>
             ))}
           </div>
         </div>
@@ -123,7 +146,9 @@ export function CatalogueSection({
                 </div>
               </div>
             ))
-          : games.map((game) => <CatalogueCard key={game.id ?? game.objectId} game={game} />)}
+          : games.map((game) => (
+              <CatalogueCard key={game.id ?? game.objectId} game={game} />
+            ))}
       </div>
     </section>
   );

@@ -6,7 +6,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 70px 0 28px;
+  padding: 40px 0 28px;
+
+  @media (max-width: 1100px) { padding: 24px 0 20px; }
+  @media (max-width: 800px)  { padding: 16px 0 16px; }
 
   &__track {
     display: flex;
@@ -30,19 +33,23 @@
     aspect-ratio: 3.5 / 5;
     transition: transform 0.3s ease;
 
+    @media (max-width: 1100px) { max-width: 240px; }
+    @media (max-width: 800px)  { max-width: 200px; }
+
+    // Em telas pequenas, esconde slides laterais
+    @media (max-width: 600px) {
+      &--prev, &--next { display: none; }
+      max-width: 100%;
+      width: 100%;
+    }
+
     &:hover {
       transform: scale(1.02);
       z-index: 5;
     }
 
-    &--main {
-      z-index: 2;
-    }
-
-    &--prev,
-    &--next {
-      z-index: 1;
-    }
+    &--main { z-index: 2; }
+    &--prev, &--next { z-index: 1; }
   }
 
   // Imagem hero (fundo)
