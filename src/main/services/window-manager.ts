@@ -218,7 +218,7 @@ export class WindowManager {
 
     this.mainWindow.on("ready-to-show", () => {
       if (!app.isPackaged || isStaging)
-        WindowManager.mainWindow?.webContents.openDevTools();
+        WindowManager.mainWindow?.webContents.openDevTools({ mode: "detach" });
       WindowManager.mainWindow?.show();
     });
 
@@ -282,7 +282,7 @@ export class WindowManager {
 
       authWindow.removeMenu();
 
-      if (!app.isPackaged) authWindow.webContents.openDevTools();
+      if (!app.isPackaged) authWindow.webContents.openDevTools({ mode: "detach" });
 
       authWindow.loadURL(
         `${import.meta.env.MAIN_VITE_AUTH_URL}${page}?${searchParams.toString()}`
@@ -374,6 +374,9 @@ export class WindowManager {
   public static async createNotificationWindow() {
     if (this.notificationWindow) return;
 
+    // In dev mode this window renders black and overlays the whole desktop - skip it
+    if (!app.isPackaged) return;
+
     if (process.platform === "darwin") {
       return;
     }
@@ -419,9 +422,8 @@ export class WindowManager {
     this.notificationWindow.setAlwaysOnTop(true, "screen-saver", 1);
     this.loadWindowURL(this.notificationWindow, "achievement-notification");
 
-    if (!app.isPackaged || isStaging) {
-      this.notificationWindow.webContents.openDevTools();
-    }
+
+
   }
 
   public static async showAchievementTestNotification() {
@@ -497,9 +499,8 @@ export class WindowManager {
 
       editorWindow.once("ready-to-show", () => {
         editorWindow.show();
-        this.mainWindow?.webContents.openDevTools();
         if (!app.isPackaged || isStaging) {
-          editorWindow.webContents.openDevTools();
+          editorWindow.webContents.openDevTools({ mode: "detach" });
         }
       });
 
@@ -578,7 +579,7 @@ export class WindowManager {
     });
 
     if (!app.isPackaged || isStaging) {
-      this.gameLauncherWindow.webContents.openDevTools();
+      this.gameLauncherWindow.webContents.openDevTools({ mode: "detach" });
     }
   }
 

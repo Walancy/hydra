@@ -15,20 +15,21 @@ export interface FilterSectionProps {
     checked: boolean;
   }[];
   onSelect: (value: string | number) => void;
-  color: string;
+  icon: React.ReactNode;
   onClear: () => void;
 }
 
 export function FilterSection({
   title,
   items,
-  color,
+  icon,
   onSelect,
   onClear,
 }: FilterSectionProps) {
   const content = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState("");
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [height, setHeight] = useState(0);
   const { t } = useTranslation("catalogue");
 
@@ -60,12 +61,30 @@ export function FilterSection({
     }
   }, [isOpen, filteredItems, height, search]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   if (!items.length) {
     return null;
   }
 
   return (
-    <div className="filter-section">
+    <div className="filter-section" ref={containerRef}>
       <button
         type="button"
         className="filter-section__button"
@@ -78,14 +97,8 @@ export function FilterSection({
           }`}
         />
         <div className="filter-section__header">
-          <div
-            className="filter-section__orb"
-            style={{ backgroundColor: color }}
-          />
+          {icon}
           <h3 className="filter-section__title">{title}</h3>
-          <span className="filter-section__header-count">
-            {formatNumber(selectedItemsCount || items.length)}
-          </span>
         </div>
       </button>
 

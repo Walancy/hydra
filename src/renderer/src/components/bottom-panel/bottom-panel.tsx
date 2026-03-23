@@ -151,15 +151,25 @@ export function BottomPanel() {
     extraction,
   ]);
 
+  const hasActiveStatus = useMemo(() => {
+    return (
+      !!commonRedistStatus ||
+      !!extraction ||
+      !!lastPacket
+    );
+  }, [commonRedistStatus, extraction, lastPacket]);
+
   return (
     <footer className="bottom-panel">
-      <button
-        type="button"
-        className="bottom-panel__downloads-button"
-        onClick={() => navigate("/downloads")}
-      >
-        <small>{status}</small>
-      </button>
+      {hasActiveStatus && (
+        <button
+          type="button"
+          className="bottom-panel__downloads-button"
+          onClick={() => navigate("/downloads")}
+        >
+          <small>{status}</small>
+        </button>
+      )}
 
       <button
         data-open-workwonders-changelog-mini

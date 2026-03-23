@@ -1,2 +1,2 @@
-export { db } from "./level";
+export { db, openDB } from "./level";
 export * from "./sublevels";

@@ -8,13 +8,14 @@
   -webkit-app-region: drag;
   width: 100%;
   padding: calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 3);
+  padding-top: calc(35px + globals.$spacing-unit * 2);
   padding-bottom: calc(globals.$spacing-unit * 3);
   color: globals.$muted-color;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.35) 40%,
-    rgba(0, 0, 0, 0.15) 70%,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.2) 75%,
     transparent 100%
   );
   position: absolute;
@@ -111,7 +112,7 @@
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all ease 0.15s;
-    padding: 8px;
+    padding: 8px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,7 +121,7 @@
 
     &:hover {
       color: #fff;
-      background-color: rgba(255, 255, 255, 0.06);
+      background-color: rgba(255, 255, 255, 0.05);
     }
 
     &--active {
@@ -140,15 +141,13 @@
     border-radius: 100px;
     -webkit-app-region: no-drag;
     transition: all ease 0.15s;
-    padding: 4px 12px;
+    padding: 8px 16px;
     color: rgba(255, 255, 255, 0.6);
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: transparent;
 
     &:hover {
       color: #fff;
-      background-color: rgba(0, 0, 0, 0.6);
+      background-color: rgba(255, 255, 255, 0.05);
     }
   }
 

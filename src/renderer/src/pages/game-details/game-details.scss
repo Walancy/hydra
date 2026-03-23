@@ -5,7 +5,8 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: calc(100% + 95px);
+    margin-top: -95px;
     transition: all ease 0.3s;
 
     &--blurred {

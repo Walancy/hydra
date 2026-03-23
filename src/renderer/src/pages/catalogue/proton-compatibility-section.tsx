@@ -13,7 +13,7 @@ interface ProtonCompatibilitySectionProps {
   protonValue: string;
   deckChecked: boolean;
   deckLabel: string;
-  color: string;
+  icon: React.ReactNode;
   onProtonChange: (value: string) => void;
   onDeckChange: (checked: boolean) => void;
 }
@@ -26,13 +26,14 @@ export function ProtonCompatibilitySection({
   protonValue,
   deckChecked,
   deckLabel,
-  color,
+  icon,
   onProtonChange,
   onDeckChange,
 }: ProtonCompatibilitySectionProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [height, setHeight] = useState(0);
   const content = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (content.current) {
@@ -40,8 +41,26 @@ export function ProtonCompatibilitySection({
     }
   }, [isOpen, protonValue, deckChecked]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="filter-section proton-compatibility-section">
+    <div className="filter-section proton-compatibility-section" ref={containerRef}>
       <button
         type="button"
         className="filter-section__button"
@@ -55,10 +74,7 @@ export function ProtonCompatibilitySection({
         />
 
         <div className="filter-section__header">
-          <div
-            className="filter-section__orb"
-            style={{ backgroundColor: color }}
-          />
+          {icon}
           <h3 className="filter-section__title">{title}</h3>
         </div>
       </button>

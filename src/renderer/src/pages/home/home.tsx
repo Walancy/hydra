@@ -15,6 +15,7 @@ import { buildGameDetailsPath } from "@renderer/helpers";
 import { CatalogueCategory } from "@shared";
 import cn from "classnames";
 import { GameInfo } from "./game-info";
+import { HeroCarousel } from "./hero-carousel";
 import "./home.scss";
 
 export default function Home() {
@@ -271,9 +272,19 @@ export default function Home() {
                 ))}
           </div>
 
-          {selectedGame && (
-            <GameInfo game={selectedGame} showAddButton={!isMyGames} />
-          )}
+          <div className="home__bottom-segment">
+            {selectedGame && (
+              <GameInfo
+                game={selectedGame}
+                showAddButton={!isMyGames}
+                showRemoveButton={isMyGames}
+              />
+            )}
+            
+            {!isMyGames && catalogue[CatalogueCategory.Hot]?.length > 0 && (
+              <HeroCarousel games={catalogue[CatalogueCategory.Hot]} />
+            )}
+          </div>
         </div>
       </section>
     </SkeletonTheme>

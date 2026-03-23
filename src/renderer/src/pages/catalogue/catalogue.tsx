@@ -19,6 +19,14 @@ import { GameItem } from "./game-item";
 import { FilterItem } from "./filter-item";
 import { debounce } from "lodash-es";
 import { Button } from "@renderer/components/button/button";
+import {
+  TagIcon,
+  DownloadIcon,
+  PeopleIcon,
+  BriefcaseIcon,
+  ProjectIcon,
+  DeviceDesktopIcon
+} from "@primer/octicons-react";
 
 const ProtonCompatibilitySection = lazy(async () => {
   const mod = await import("./proton-compatibility-section");
@@ -32,17 +40,7 @@ type CompatibilityThreshold<Value extends string> = {
   color?: string;
 };
 
-const filterCategoryColors = {
-  genres: "hsl(262deg 50% 47%)",
-  tags: "hsl(95deg 50% 20%)",
-  downloadSourceFingerprints: "hsl(27deg 50% 40%)",
-  developers: "hsl(340deg 50% 46%)",
-  publishers: "hsl(200deg 50% 30%)",
-  protondbSupportBadges: "#F50057",
-  deckCompatibility: "#F50057",
-};
 
-const PAGE_SIZE = 20;
 
 const clearAllCategoryFilters = {
   genres: [],
@@ -97,6 +95,7 @@ export default function Catalogue() {
 
   const [itemsCount, setItemsCount] = useState(0);
 
+  const [pageSize, setPageSize] = useState(24);
   const { formatNumber } = useFormat();
 
   const dispatch = useAppDispatch();
@@ -153,14 +152,38 @@ export default function Catalogue() {
     debouncedSearch(
       filters,
       downloadSources,
-      PAGE_SIZE,
-      (page - 1) * PAGE_SIZE
+      pageSize,
+      (page - 1) * pageSize
     );
 
     return () => {
       debouncedSearch.cancel();
     };
-  }, [filters, downloadSources, page, debouncedSearch]);
+  }, [filters, downloadSources, page, pageSize, debouncedSearch]);
+
+  const gamesContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!gamesContainerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        // gap = 16px, item min-width ~200px (grid template is minmax(200px, 1fr))
+        const cols = Math.max(1, Math.floor((width + 16) / 216));
+        
+        // Puxar itens pra renderizar em proporção a 4 linhas perfeitas invisíveis para preencher a tela inteira.
+        let dynamicPageSize = cols * 4;
+        if (dynamicPageSize < 12) dynamicPageSize = 12;
+        if (dynamicPageSize > 60) dynamicPageSize = 60; // Limite de sanidade da API
+
+        setPageSize(dynamicPageSize);
+      }
+    });
+
+    observer.observe(gamesContainerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
 
   const language = i18n.language.split("-")[0];
 
@@ -210,7 +233,7 @@ export default function Catalogue() {
           (key) => steamGenresMapping[key] === genre
         ) as string,
         filterType: t("genres"),
-        orbColor: filterCategoryColors.genres,
+        icon: <ProjectIcon size={14} />,
         key: "genres",
         value: genre,
       })),
@@ -220,7 +243,7 @@ export default function Catalogue() {
           (key) => steamUserTags[language][key] === tag
         ),
         filterType: t("tags"),
-        orbColor: filterCategoryColors.tags,
+        icon: <TagIcon size={14} />,
         key: "tags",
         value: tag,
       })),
@@ -230,7 +253,7 @@ export default function Catalogue() {
           (source) => source.fingerprint === fingerprint
         )?.name as string,
         filterType: t("download_sources"),
-        orbColor: filterCategoryColors.downloadSourceFingerprints,
+        icon: <DownloadIcon size={14} />,
         key: "downloadSourceFingerprints",
         value: fingerprint,
       })),
@@ -238,7 +261,7 @@ export default function Catalogue() {
       ...filters.developers.map((developer) => ({
         label: developer,
         filterType: t("developers"),
-        orbColor: filterCategoryColors.developers,
+        icon: <PeopleIcon size={14} />,
         key: "developers",
         value: developer,
       })),
@@ -246,7 +269,7 @@ export default function Catalogue() {
       ...filters.publishers.map((publisher) => ({
         label: decodeHTML(publisher),
         filterType: t("publishers"),
-        orbColor: filterCategoryColors.publishers,
+        icon: <BriefcaseIcon size={14} />,
         key: "publishers",
         value: publisher,
       })),
@@ -258,7 +281,7 @@ export default function Catalogue() {
             {
               label: t(protonThreshold.labelKey),
               filterType: t("protondb"),
-              orbColor: filterCategoryColors.protondbSupportBadges,
+              icon: <DeviceDesktopIcon size={14} />,
               key: "protondbSupportBadges",
               value: "threshold",
             },
@@ -270,7 +293,7 @@ export default function Catalogue() {
             {
               label: t("steam_deck_compatible"),
               filterType: t("steam_deck_minimum"),
-              orbColor: filterCategoryColors.deckCompatibility,
+              icon: <DeviceDesktopIcon size={14} />,
               key: "deckCompatibility",
               value: "threshold",
             },
@@ -293,11 +316,13 @@ export default function Catalogue() {
         title: t("genres"),
         items: steamGenresFilterItems,
         key: "genres",
+        icon: <ProjectIcon size={16} />
       },
       {
         title: t("tags"),
         items: steamUserTagsFilterItems,
         key: "tags",
+        icon: <TagIcon size={16} />
       },
       {
         title: t("download_sources"),
@@ -311,6 +336,7 @@ export default function Catalogue() {
             ),
           })),
         key: "downloadSourceFingerprints",
+        icon: <DownloadIcon size={16} />
       },
       {
         title: t("developers"),
@@ -320,6 +346,7 @@ export default function Catalogue() {
           checked: filters.developers.includes(developer),
         })),
         key: "developers",
+        icon: <PeopleIcon size={16} />
       },
       {
         title: t("publishers"),
@@ -329,6 +356,7 @@ export default function Catalogue() {
           checked: filters.publishers.includes(publisher),
         })),
         key: "publishers",
+        icon: <BriefcaseIcon size={16} />
       },
     ];
   }, [
@@ -356,81 +384,7 @@ export default function Catalogue() {
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>
-      <div className="catalogue__header">
-        <div className="catalogue__filters-wrapper">
-          <ul className="catalogue__filters-list">
-            {groupedFilters.map((filter) => (
-              <li key={`${filter.key}-${filter.value}`}>
-                <FilterItem
-                  filter={filter.label ?? ""}
-                  filterType={filter.filterType}
-                  orbColor={filter.orbColor}
-                  onRemove={() => {
-                    if (filter.value === "threshold") {
-                      dispatch(setFilters({ [filter.key]: [] }));
-                      return;
-                    }
-
-                    dispatch(
-                      setFilters({
-                        [filter.key]: filters[filter.key].filter(
-                          (item) => item !== filter.value
-                        ),
-                      })
-                    );
-                  }}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {selectedFiltersCount > 0 && (
-          <Button
-            type="button"
-            theme="outline"
-            className="catalogue__clear-all-button"
-            onClick={() => dispatch(setFilters(clearAllCategoryFilters))}
-          >
-            {t("clear_filters", {
-              filterCount: formatNumber(selectedFiltersCount),
-            })}
-          </Button>
-        )}
-      </div>
-
       <div className="catalogue__content">
-        <div className="catalogue__games-container">
-          {isLoading ? (
-            <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
-              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} className="catalogue__skeleton" />
-              ))}
-            </SkeletonTheme>
-          ) : (
-            results.map((game) => <GameItem key={game.id} game={game} />)
-          )}
-
-          <div className="catalogue__pagination-container">
-            <span className="catalogue__result-count">
-              {t("result_count", {
-                resultCount: formatNumber(itemsCount),
-              })}
-            </span>
-
-            <Pagination
-              page={page}
-              totalPages={Math.ceil(itemsCount / PAGE_SIZE)}
-              onPageChange={(page) => {
-                dispatch(setPage(page));
-                if (cataloguePageRef.current) {
-                  cataloguePageRef.current.scrollTop = 0;
-                }
-              }}
-            />
-          </div>
-        </div>
-
         <div className="catalogue__filters-container">
           <div className="catalogue__filters-sections">
             {shouldShowProtonFeatures && (
@@ -449,7 +403,7 @@ export default function Catalogue() {
                   protonValue={protonThresholdValue}
                   deckChecked={isDeckCompatible}
                   deckLabel={t("steam_deck_compatible")}
-                  color={filterCategoryColors.protondbSupportBadges}
+                  icon={<DeviceDesktopIcon size={16} />}
                   onProtonChange={(value) => {
                     const nextThreshold = protonCompatibilityThresholds.find(
                       (threshold) => threshold.value === value
@@ -481,7 +435,7 @@ export default function Catalogue() {
                 key={section.key}
                 title={section.title}
                 onClear={() => dispatch(setFilters({ [section.key]: [] }))}
-                color={filterCategoryColors[section.key]}
+                icon={section.icon}
                 onSelect={(value) => {
                   if (filters[section.key].includes(value)) {
                     dispatch(
@@ -511,6 +465,80 @@ export default function Catalogue() {
             ))}
           </div>
         </div>
+
+        <div className="catalogue__header">
+          <div className="catalogue__filters-wrapper">
+            <ul className="catalogue__filters-list">
+              {groupedFilters.map((filter) => (
+                <li key={`${filter.key}-${filter.value}`}>
+                  <FilterItem
+                    filter={filter.label ?? ""}
+                    filterType={filter.filterType}
+                    icon={filter.icon}
+                    onRemove={() => {
+                      if (filter.value === "threshold") {
+                        dispatch(setFilters({ [filter.key]: [] }));
+                        return;
+                      }
+
+                      dispatch(
+                        setFilters({
+                          [filter.key]: filters[filter.key].filter(
+                            (item) => item !== filter.value
+                          ),
+                        })
+                      );
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {selectedFiltersCount > 0 && (
+            <Button
+              type="button"
+              theme="outline"
+              className="catalogue__clear-all-button"
+              onClick={() => dispatch(setFilters(clearAllCategoryFilters))}
+            >
+              {t("clear_filters_button", { defaultValue: "Limpar Filtros" })}
+            </Button>
+          )}
+        </div>
+
+          <div className="catalogue__games-container" ref={gamesContainerRef}>
+          {isLoading ? (
+            <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
+              {Array.from({ length: pageSize }).map((_, i) => (
+                <Skeleton key={i} className="catalogue__skeleton" />
+              ))}
+            </SkeletonTheme>
+          ) : (
+            results.map((game) => <GameItem key={game.id} game={game} />)
+          )}
+        </div>
+        
+        <div className="catalogue__pagination-container">
+          <span className="catalogue__result-count">
+            {t("result_count", {
+              resultCount: formatNumber(itemsCount),
+            })}
+          </span>
+
+          <Pagination
+            page={page}
+            totalPages={Math.ceil(itemsCount / pageSize)}
+            onPageChange={(page) => {
+              dispatch(setPage(page));
+              if (cataloguePageRef.current) {
+                cataloguePageRef.current.scrollTop = 0;
+              }
+            }}
+          />
+        </div>
+
+
       </div>
     </div>
   );

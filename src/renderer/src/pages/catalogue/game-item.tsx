@@ -7,8 +7,9 @@ import { Link } from "@renderer/components/link/link";
 import "./game-item.scss";
 import { useTranslation } from "react-i18next";
 import { CatalogueSearchResult } from "@types";
-import { QuestionIcon, PlusIcon, CheckIcon } from "@primer/octicons-react";
+import { QuestionIcon, PlusIcon, DashIcon } from "@primer/octicons-react";
 import cn from "classnames";
+import { Button } from "@renderer/components/button/button";
 
 const ProtonDBBadge = lazy(async () => {
   const mod = await import("./protondb-badge");
@@ -27,8 +28,8 @@ export function GameItem({ game }: GameItemProps) {
   const { steamGenres } = useAppSelector((state) => state.catalogueSearch);
 
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
-
   const [added, setAdded] = useState(false);
+  const [isAnimatingAdd, setIsAnimatingAdd] = useState(false);
 
   const { library, updateLibrary } = useLibrary();
   const shouldShowProtonFeatures = window.electron.platform === "linux";
@@ -53,8 +54,22 @@ export function GameItem({ game }: GameItemProps) {
         game.title
       );
       updateLibrary();
+      setIsAnimatingAdd(true);
+      setTimeout(() => setIsAnimatingAdd(false), 300);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsAddingToLibrary(false);
+    }
+  };
+
+  const removeGameFromLibrary = async () => {
+    setIsAddingToLibrary(true);
+
+    try {
+      await window.electron.removeGameFromLibrary(game.shop, game.objectId);
+      updateLibrary();
+    } catch (error) {
     } finally {
       setIsAddingToLibrary(false);
     }
@@ -85,8 +100,6 @@ export function GameItem({ game }: GameItemProps) {
           className="game-item__cover"
           src={game.libraryImageUrl}
           alt={game.title}
-          width={200}
-          height={103}
           loading="lazy"
         />
       );
@@ -125,10 +138,29 @@ export function GameItem({ game }: GameItemProps) {
               <ProtonDBBadge badge={protonBadge} />
             </Suspense>
           )}
+
+          <Button
+            theme="primary"
+            className={cn("game-item__action-btn", {
+              "game-item__action-btn--animated": isAnimatingAdd,
+            })}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              added ? removeGameFromLibrary() : addGameToLibrary();
+            }}
+            title={added ? t("remove_from_library", { defaultValue: "Remover" }) : t("add_to_library")}
+            aria-label={added ? t("remove_from_library", { defaultValue: "Remover" }) : t("add_to_library")}
+            disabled={isAddingToLibrary}
+          >
+            {added ? <DashIcon size={16} /> : <PlusIcon size={16} />}
+          </Button>
         </div>
 
         <div className="game-item__details">
-          <span>{game.title}</span>
+          <div className="game-item__title-row">
+            <span className="game-item__title">{game.title}</span>
+          </div>
           <span className="game-item__genres">{genres.join(", ")}</span>
 
           <div className="game-item__repackers">
@@ -136,20 +168,9 @@ export function GameItem({ game }: GameItemProps) {
               <Badge key={sourceName}>{sourceName}</Badge>
             ))}
           </div>
+
         </div>
       </Link>
-      <button
-        type="button"
-        className={cn("game-item__plus-wrapper", {
-          "game-item__plus-wrapper--added": added,
-        })}
-        onClick={addGameToLibrary}
-        title={added ? t("already_in_library") : t("add_to_library")}
-        aria-label={added ? t("already_in_library") : t("add_to_library")}
-        disabled={added || isAddingToLibrary}
-      >
-        {added ? <CheckIcon size={16} /> : <PlusIcon size={16} />}
-      </button>
     </article>
   );
 }

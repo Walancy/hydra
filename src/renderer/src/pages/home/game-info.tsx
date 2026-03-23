@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { PlusIcon, CheckIcon } from "@primer/octicons-react";
+import { PlusIcon, CheckIcon, DashIcon } from "@primer/octicons-react";
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { Button } from "@renderer/components";
@@ -13,6 +13,7 @@ import "./home.scss";
 interface GameInfoProps {
   game: ShopAssets;
   showAddButton?: boolean;
+  showRemoveButton?: boolean;
 }
 
 const detailsCache = new Map<string, ShopDetailsWithAssets>();
@@ -78,6 +79,7 @@ const UUID_RE = /^[0-9a-f-]{36}$/i;
 export function GameInfo({
   game,
   showAddButton = false,
+  showRemoveButton = false,
 }: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
@@ -86,6 +88,7 @@ export function GameInfo({
     (g) => g.objectId === game.objectId && g.shop === game.shop
   );
   const [isAdding, setIsAdding] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [details, setDetails] = useState<ShopDetailsWithAssets | null>(
     detailsCache.get(game.objectId) ?? null
   );
@@ -175,6 +178,28 @@ export function GameInfo({
         >
           {t("see_more")}
         </Button>
+        {showRemoveButton && isInLibrary && (
+          <Button
+            className="home__remove-button"
+            theme="outline"
+            disabled={isRemoving}
+            onClick={async () => {
+              if (isRemoving) return;
+              setIsRemoving(true);
+              try {
+                await window.electron.removeGameFromLibrary(
+                  game.shop,
+                  game.objectId
+                );
+                updateLibrary();
+              } finally {
+                setIsRemoving(false);
+              }
+            }}
+          >
+            <DashIcon size={16} />
+          </Button>
+        )}
         {showAddButton && (
           <Button
             className="home__add-button"

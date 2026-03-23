@@ -5,16 +5,11 @@
   align-items: center;
   gap: 8px;
   color: globals.$body-color;
-  background-color: color-mix(
-    in srgb,
-    globals.$dark-background-color 84%,
-    var(--filter-item-color) 16%
-  );
+  background-color: rgba(255, 255, 255, 0.05);
   padding: 4px 6px 4px 10px;
   border-radius: 8px;
-  border: solid 1px
-    color-mix(in srgb, globals.$border-color 70%, var(--filter-item-color) 30%);
-  font-size: 12px;
+  border: none;
+  font-size: 13px;
   min-height: 32px;
   max-width: 100%;
 
@@ -28,20 +23,15 @@
     align-items: center;
   }
 
-  &__orb {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.28);
-    align-self: center;
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
   }
 
   &__remove-button {
-    color: color-mix(
-      in srgb,
-      globals.$body-color 84%,
-      var(--filter-item-color) 16%
-    );
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,30 +65,29 @@
 }
 
 .filter-section {
-  background-color: globals.$background-color;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background-color: transparent;
+  position: relative;
+  overflow: visible;
 
   &__button {
-    padding: calc(globals.$spacing-unit * 2.5) calc(globals.$spacing-unit * 2);
+    padding: 8px 16px;
+    border-radius: 100px;
     display: flex;
     align-items: center;
-    background-color: globals.$background-color;
-    color: globals.$muted-color;
-    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: globals.$body-color;
     cursor: pointer;
     transition:
       background-color 0.2s ease,
       color 0.2s ease;
-    gap: globals.$spacing-unit;
-    font-size: globals.$body-font-size;
-    font-weight: bold;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
     border: none;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.12);
     }
 
     &:active {
@@ -135,14 +124,8 @@
     flex-shrink: 0;
   }
 
-  &__orb {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-
   &__title {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -151,9 +134,14 @@
 
   &__content {
     overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+    transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
     background-color: globals.$dark-background-color;
-    position: relative;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 250px;
+    z-index: 100;
+    border-radius: 8px;
   }
 
   &__content-inner {

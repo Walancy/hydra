@@ -2,8 +2,8 @@
 
 .home {
   width: 100%;
-  height: calc(100% + 60px);
-  margin-top: -60px;
+  height: calc(100% + 95px);
+  margin-top: -95px;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -110,9 +110,19 @@
     border-radius: 8px;
   }
 
+  &__bottom-segment {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    gap: calc(globals.$spacing-unit * 3);
+  }
+
   &__details {
     padding-top: globals.$spacing-unit;
     min-height: 90px;
+    flex: 1;
+    min-width: 0;
   }
 
   &__game-title {
@@ -141,7 +151,8 @@
     margin-top: 12px;
   }
 
-  &__add-button {
+  &__add-button,
+  &__remove-button {
     width: 40px;
     min-height: 40px;
     padding: 0;

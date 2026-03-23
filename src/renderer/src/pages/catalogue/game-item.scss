@@ -1,14 +1,16 @@
 @use "../../scss/globals.scss";
 
 .game-item {
-  background-color: globals.$dark-background-color;
+  background-color: rgba(255, 255, 255, 0.12);
   width: 100%;
   color: #fff;
   overflow: hidden;
   position: relative;
-  border-radius: 4px;
-  border: 1px solid globals.$border-color;
-  min-height: 103px;
+  border-radius: 8px;
+  border: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   &:hover .game-item__content-link {
     background-color: rgba(255, 255, 255, 0.05);
@@ -22,10 +24,11 @@
   }
 
   &__content-link {
-    display: flex;
-    align-items: center;
-    gap: calc(globals.$spacing-unit * 2);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
     width: 100%;
+    height: 100%;
     color: inherit;
     transition: background-color 0.2s ease;
     text-decoration: none;
@@ -73,18 +76,18 @@
   }
 
   &__cover {
-    width: 200px;
+    width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
   &__cover-wrapper {
     position: relative;
-    width: 200px;
-    min-width: 200px;
-    height: 103px;
+    width: 100%;
+    height: 112px;
+    min-height: 112px;
     overflow: hidden;
-    border-right: 1px solid globals.$border-color;
+    border: none;
   }
 
   &__cover-placeholder {
@@ -92,8 +95,8 @@
     align-items: center;
     justify-content: center;
     color: globals.$body-color;
-    width: 200px;
-    height: 103px;
+    width: 100%;
+    height: 100%;
     background: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.1) 0%,
@@ -104,14 +107,14 @@
 
   &__compatibility-badge-group {
     position: absolute;
-    right: 8px;
+    left: 8px;
     bottom: 8px;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     max-width: calc(100% - 52px);
     pointer-events: none;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 
   &__compatibility-badge {
@@ -161,11 +164,58 @@
   }
 
   &__details {
+    position: relative;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 6px;
+    padding: 12px;
+  }
+
+  &__title-row {
+    display: flex;
     align-items: flex-start;
-    gap: 4px;
-    padding: calc(globals.$spacing-unit * 2) 0;
+    width: 100%;
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__action-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    padding: 0;
+    flex-shrink: 0;
+    align-self: flex-start;
+    border-radius: 100px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    &--animated {
+      animation: add-game-bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
   }
 
   &__genres {
@@ -179,5 +229,19 @@
     display: flex;
     gap: globals.$spacing-unit;
     flex-wrap: wrap;
+  }
+}
+
+@keyframes add-game-bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+    background-color: rgba(255, 255, 255, 0.5);
+    color: #111;
+  }
+  100% {
+    transform: scale(1);
   }
 }

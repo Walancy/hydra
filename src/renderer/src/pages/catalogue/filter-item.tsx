@@ -3,36 +3,33 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "react-tooltip";
 import "./filter.scss";
-import type { CSSProperties } from "react";
 
 interface FilterItemProps {
   filter: string;
   filterType: string;
-  orbColor: string;
+  icon: React.ReactNode;
   onRemove: () => void;
 }
 
 export function FilterItem({
   filter,
   filterType,
-  orbColor,
+  icon,
   onRemove,
 }: FilterItemProps) {
   const { t } = useTranslation("catalogue");
   const tooltipId = useId();
 
   return (
-    <div
-      className="filter-item"
-      style={{ "--filter-item-color": orbColor } as CSSProperties}
-    >
+    <div className="filter-item">
       <div
-        className="filter-item__orb"
-        style={{ backgroundColor: orbColor }}
+        className="filter-item__icon"
         data-tooltip-id={tooltipId}
         data-tooltip-content={filterType}
         data-tooltip-place="top"
-      />
+      >
+        {icon}
+      </div>
       <span className="filter-item__label">{filter}</span>
       <button
         type="button"

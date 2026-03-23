@@ -24,9 +24,13 @@
 
 html,
 body,
-#root,
-main {
+#root {
   height: 100%;
+}
+
+main {
+  flex: 1;
+  min-height: 0;
 }
 
 body {
@@ -67,6 +71,7 @@ main {
 
 #root {
   flex-direction: column;
+  position: relative;
 }
 
 main {
@@ -111,20 +116,22 @@ progress[value] {
     position: relative;
     height: 100%;
     background-color: transparent;
-    padding-top: 60px;
+    padding-top: 95px;
   }
 }
 
 .title-bar {
   display: flex;
-  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 35px;
-  min-height: 35px;
   background-color: transparent;
   align-items: center;
   padding: 0 calc(globals.$spacing-unit * 2);
   -webkit-app-region: drag;
-  z-index: 4;
+  z-index: 200;
 
   &__cloud-text {
     background: linear-gradient(270deg, #16b195 50%, #3e62c0 100%);

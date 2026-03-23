@@ -14,7 +14,7 @@ import {
 } from "@main/services";
 import resources from "@locales";
 import { PythonRPC } from "./services/python-rpc";
-import { db, gamesSublevel, levelKeys } from "./level";
+import { db, openDB, gamesSublevel, levelKeys } from "./level";
 import { GameShop, UserPreferences } from "@types";
 import { launchGame } from "./helpers";
 import { loadState } from "./main";
@@ -133,6 +133,7 @@ app.whenReady().then(async () => {
     });
   });
 
+  await openDB();
   await loadState();
 
   const language = await db

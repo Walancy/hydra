@@ -3,6 +3,7 @@ import {
   GearIcon,
   HeartFillIcon,
   HeartIcon,
+  DashIcon,
   PinIcon,
   PinSlashIcon,
   PlayIcon,
@@ -189,6 +190,29 @@ export function HeroPanelActions() {
 
   const deleting = game ? isGameDeleting(game?.id) : false;
 
+  const removeGameFromLibraryButton = game ? (
+    <Button
+      theme="outline"
+      disabled={toggleLibraryGameDisabled}
+      onClick={async () => {
+        setToggleLibraryGameDisabled(true);
+        try {
+          await window.electron.removeGameFromLibrary(
+            game.shop,
+            game.objectId
+          );
+          updateLibrary();
+          updateGame();
+        } finally {
+          setToggleLibraryGameDisabled(false);
+        }
+      }}
+      className="hero-panel-actions__action"
+    >
+      <DashIcon />
+    </Button>
+  ) : null;
+
   const addGameToLibraryButton = (
     <Button
       theme="outline"
@@ -286,6 +310,8 @@ export function HeroPanelActions() {
             {game.isPinned ? <PinSlashIcon /> : <PinIcon />}
           </Button>
         )}
+
+        {removeGameFromLibraryButton}
 
         <Button
           onClick={() => {
