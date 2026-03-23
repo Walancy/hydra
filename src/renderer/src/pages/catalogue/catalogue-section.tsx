@@ -62,7 +62,7 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
     .slice(0, 3);
 
   return (
-    <article
+    <div
       className="cat-card"
       onClick={() => navigate(buildGameDetailsPath(game))}
       role="button"
@@ -118,7 +118,7 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
           {genres?.length > 0 ? genres.join(", ") : "\u00A0"}
         </span>
       </div>
-    </article>
+    </div>
   );
 }
 

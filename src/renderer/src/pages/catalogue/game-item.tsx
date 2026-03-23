@@ -69,7 +69,8 @@ export function GameItem({ game }: GameItemProps) {
     try {
       await window.electron.removeGameFromLibrary(game.shop, game.objectId);
       updateLibrary();
-    } catch (error) {
+    } catch (_error) {
+      // falha silenciosa: a remoção da biblioteca não é crítica
     } finally {
       setIsAddingToLibrary(false);
     }

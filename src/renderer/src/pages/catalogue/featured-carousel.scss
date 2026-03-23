@@ -8,8 +8,12 @@
   justify-content: center;
   padding: 40px 0 28px;
 
-  @media (max-width: 1100px) { padding: 24px 0 20px; }
-  @media (max-width: 800px)  { padding: 16px 0 16px; }
+  @media (max-width: 1100px) {
+    padding: 24px 0 20px;
+  }
+  @media (max-width: 800px) {
+    padding: 16px 0 16px;
+  }
 
   &__track {
     display: flex;
@@ -33,12 +37,19 @@
     aspect-ratio: 3.5 / 5;
     transition: transform 0.3s ease;
 
-    @media (max-width: 1100px) { max-width: 240px; }
-    @media (max-width: 800px)  { max-width: 200px; }
+    @media (max-width: 1100px) {
+      max-width: 240px;
+    }
+    @media (max-width: 800px) {
+      max-width: 200px;
+    }
 
     // Em telas pequenas, esconde slides laterais
     @media (max-width: 600px) {
-      &--prev, &--next { display: none; }
+      &--prev,
+      &--next {
+        display: none;
+      }
       max-width: 100%;
       width: 100%;
     }
@@ -48,8 +59,13 @@
       z-index: 5;
     }
 
-    &--main { z-index: 2; }
-    &--prev, &--next { z-index: 1; }
+    &--main {
+      z-index: 2;
+    }
+    &--prev,
+    &--next {
+      z-index: 1;
+    }
   }
 
   // Imagem hero (fundo)
@@ -65,10 +81,12 @@
   &__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top,
-        rgba(0, 0, 0, 0.85) 0%,
-        rgba(0, 0, 0, 0.3) 50%,
-        transparent 100%);
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.3) 50%,
+      transparent 100%
+    );
     pointer-events: none;
   }
 
