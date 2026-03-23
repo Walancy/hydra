@@ -3,11 +3,7 @@
 .bottom-panel {
   width: 100%;
   border-top: none;
-  background: linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    transparent 100%
-  );
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
   padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2)
     calc(globals.$spacing-unit);
   display: flex;

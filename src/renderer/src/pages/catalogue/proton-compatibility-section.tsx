@@ -60,7 +60,10 @@ export function ProtonCompatibilitySection({
   }, [isOpen]);
 
   return (
-    <div className="filter-section proton-compatibility-section" ref={containerRef}>
+    <div
+      className="filter-section proton-compatibility-section"
+      ref={containerRef}
+    >
       <button
         type="button"
         className="filter-section__button"

@@ -280,7 +280,7 @@ export default function Home() {
                 showRemoveButton={isMyGames}
               />
             )}
-            
+
             {!isMyGames && catalogue[CatalogueCategory.Hot]?.length > 0 && (
               <HeroCarousel games={catalogue[CatalogueCategory.Hot]} />
             )}

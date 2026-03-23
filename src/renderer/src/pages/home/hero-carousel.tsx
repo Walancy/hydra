@@ -18,11 +18,30 @@ function formatDate(dateStr: string): string {
   if (parts.length < 3) return dateStr;
 
   const months: Record<string, string> = {
-    jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun",
-    jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
-    janeiro: "Jan", fevereiro: "Feb", março: "Mar", abril: "Apr", maio: "May",
-    junho: "Jun", julho: "Jul", agosto: "Aug", setembro: "Sep", outubro: "Oct",
-    novembro: "Nov", dezembro: "Dec",
+    jan: "Jan",
+    feb: "Feb",
+    mar: "Mar",
+    apr: "Apr",
+    may: "May",
+    jun: "Jun",
+    jul: "Jul",
+    aug: "Aug",
+    sep: "Sep",
+    oct: "Oct",
+    nov: "Nov",
+    dec: "Dec",
+    janeiro: "Jan",
+    fevereiro: "Feb",
+    março: "Mar",
+    abril: "Apr",
+    maio: "May",
+    junho: "Jun",
+    julho: "Jul",
+    agosto: "Aug",
+    setembro: "Sep",
+    outubro: "Oct",
+    novembro: "Nov",
+    dezembro: "Dec",
   };
 
   const year = parts.find((p) => p.length === 4 && !isNaN(Number(p)));
@@ -100,10 +119,12 @@ function CarouselSlide({
       ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_hero.jpg`
       : game.libraryImageUrl);
 
-  const logoImage = !logoFailed && (
-    game.logoImageUrl ||
-    (game.shop === "steam" ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/logo.png` : undefined)
-  );
+  const logoImage =
+    !logoFailed &&
+    (game.logoImageUrl ||
+      (game.shop === "steam"
+        ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/logo.png`
+        : undefined));
 
   return (
     <div
@@ -123,7 +144,7 @@ function CarouselSlide({
           }
         }}
       />
-      
+
       <div className="hero-carousel__overlay">
         <div className="hero-carousel__content">
           {logoImage ? (
@@ -139,7 +160,7 @@ function CarouselSlide({
           )}
           {meta && <span className="hero-carousel__meta">{meta}</span>}
         </div>
-        
+
         <Button
           className="hero-carousel__view-button"
           theme="primary"
@@ -173,7 +194,9 @@ export function HeroCarousel({ games }: Readonly<HeroCarouselProps>) {
 
   return (
     <div className="hero-carousel-container">
-      <h3 className="hero-carousel-container__title">{t("featured_games", "Jogos em Destaque")}</h3>
+      <h3 className="hero-carousel-container__title">
+        {t("featured_games", "Jogos em Destaque")}
+      </h3>
       <div className="hero-carousel">
         <div className="hero-carousel__slides">
           {featuredGames.map((game, index) => (

@@ -282,7 +282,8 @@ export class WindowManager {
 
       authWindow.removeMenu();
 
-      if (!app.isPackaged) authWindow.webContents.openDevTools({ mode: "detach" });
+      if (!app.isPackaged)
+        authWindow.webContents.openDevTools({ mode: "detach" });
 
       authWindow.loadURL(
         `${import.meta.env.MAIN_VITE_AUTH_URL}${page}?${searchParams.toString()}`
@@ -421,9 +422,6 @@ export class WindowManager {
 
     this.notificationWindow.setAlwaysOnTop(true, "screen-saver", 1);
     this.loadWindowURL(this.notificationWindow, "achievement-notification");
-
-
-
   }
 
   public static async showAchievementTestNotification() {

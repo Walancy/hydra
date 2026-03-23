@@ -44,7 +44,10 @@
     margin: 0;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out, transform 0.5s ease-in-out;
+    transition:
+      opacity 0.5s ease-in-out,
+      visibility 0.5s ease-in-out,
+      transform 0.5s ease-in-out;
     background: transparent;
     transform: scale(1.05);
 

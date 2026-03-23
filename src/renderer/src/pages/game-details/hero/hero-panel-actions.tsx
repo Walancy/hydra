@@ -197,10 +197,7 @@ export function HeroPanelActions() {
       onClick={async () => {
         setToggleLibraryGameDisabled(true);
         try {
-          await window.electron.removeGameFromLibrary(
-            game.shop,
-            game.objectId
-          );
+          await window.electron.removeGameFromLibrary(game.shop, game.objectId);
           updateLibrary();
           updateGame();
         } finally {

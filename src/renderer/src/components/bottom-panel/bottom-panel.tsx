@@ -152,11 +152,7 @@ export function BottomPanel() {
   ]);
 
   const hasActiveStatus = useMemo(() => {
-    return (
-      !!commonRedistStatus ||
-      !!extraction ||
-      !!lastPacket
-    );
+    return !!commonRedistStatus || !!extraction || !!lastPacket;
   }, [commonRedistStatus, extraction, lastPacket]);
 
   return (

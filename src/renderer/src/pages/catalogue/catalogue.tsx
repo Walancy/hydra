@@ -25,7 +25,7 @@ import {
   PeopleIcon,
   BriefcaseIcon,
   ProjectIcon,
-  DeviceDesktopIcon
+  DeviceDesktopIcon,
 } from "@primer/octicons-react";
 
 const ProtonCompatibilitySection = lazy(async () => {
@@ -39,8 +39,6 @@ type CompatibilityThreshold<Value extends string> = {
   values: Value[];
   color?: string;
 };
-
-
 
 const clearAllCategoryFilters = {
   genres: [],
@@ -149,12 +147,7 @@ export default function Catalogue() {
     setIsLoading(true);
     abortControllerRef.current?.abort();
 
-    debouncedSearch(
-      filters,
-      downloadSources,
-      pageSize,
-      (page - 1) * pageSize
-    );
+    debouncedSearch(filters, downloadSources, pageSize, (page - 1) * pageSize);
 
     return () => {
       debouncedSearch.cancel();
@@ -170,7 +163,7 @@ export default function Catalogue() {
         const width = entry.contentRect.width;
         // gap = 16px, item min-width ~200px (grid template is minmax(200px, 1fr))
         const cols = Math.max(1, Math.floor((width + 16) / 216));
-        
+
         // Puxar itens pra renderizar em proporção a 4 linhas perfeitas invisíveis para preencher a tela inteira.
         let dynamicPageSize = cols * 4;
         if (dynamicPageSize < 12) dynamicPageSize = 12;
@@ -183,7 +176,6 @@ export default function Catalogue() {
     observer.observe(gamesContainerRef.current);
     return () => observer.disconnect();
   }, []);
-
 
   const language = i18n.language.split("-")[0];
 
@@ -316,13 +308,13 @@ export default function Catalogue() {
         title: t("genres"),
         items: steamGenresFilterItems,
         key: "genres",
-        icon: <ProjectIcon size={16} />
+        icon: <ProjectIcon size={16} />,
       },
       {
         title: t("tags"),
         items: steamUserTagsFilterItems,
         key: "tags",
-        icon: <TagIcon size={16} />
+        icon: <TagIcon size={16} />,
       },
       {
         title: t("download_sources"),
@@ -336,7 +328,7 @@ export default function Catalogue() {
             ),
           })),
         key: "downloadSourceFingerprints",
-        icon: <DownloadIcon size={16} />
+        icon: <DownloadIcon size={16} />,
       },
       {
         title: t("developers"),
@@ -346,7 +338,7 @@ export default function Catalogue() {
           checked: filters.developers.includes(developer),
         })),
         key: "developers",
-        icon: <PeopleIcon size={16} />
+        icon: <PeopleIcon size={16} />,
       },
       {
         title: t("publishers"),
@@ -356,7 +348,7 @@ export default function Catalogue() {
           checked: filters.publishers.includes(publisher),
         })),
         key: "publishers",
-        icon: <BriefcaseIcon size={16} />
+        icon: <BriefcaseIcon size={16} />,
       },
     ];
   }, [
@@ -507,7 +499,7 @@ export default function Catalogue() {
           )}
         </div>
 
-          <div className="catalogue__games-container" ref={gamesContainerRef}>
+        <div className="catalogue__games-container" ref={gamesContainerRef}>
           {isLoading ? (
             <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
               {Array.from({ length: pageSize }).map((_, i) => (
@@ -518,7 +510,7 @@ export default function Catalogue() {
             results.map((game) => <GameItem key={game.id} game={game} />)
           )}
         </div>
-        
+
         <div className="catalogue__pagination-container">
           <span className="catalogue__result-count">
             {t("result_count", {
@@ -537,8 +529,6 @@ export default function Catalogue() {
             }}
           />
         </div>
-
-
       </div>
     </div>
   );

@@ -149,8 +149,16 @@ export function GameItem({ game }: GameItemProps) {
               e.stopPropagation();
               added ? removeGameFromLibrary() : addGameToLibrary();
             }}
-            title={added ? t("remove_from_library", { defaultValue: "Remover" }) : t("add_to_library")}
-            aria-label={added ? t("remove_from_library", { defaultValue: "Remover" }) : t("add_to_library")}
+            title={
+              added
+                ? t("remove_from_library", { defaultValue: "Remover" })
+                : t("add_to_library")
+            }
+            aria-label={
+              added
+                ? t("remove_from_library", { defaultValue: "Remover" })
+                : t("add_to_library")
+            }
             disabled={isAddingToLibrary}
           >
             {added ? <DashIcon size={16} /> : <PlusIcon size={16} />}
@@ -168,7 +176,6 @@ export function GameItem({ game }: GameItemProps) {
               <Badge key={sourceName}>{sourceName}</Badge>
             ))}
           </div>
-
         </div>
       </Link>
     </article>
