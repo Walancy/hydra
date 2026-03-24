@@ -34,9 +34,9 @@ import {
 } from "@renderer/components";
 import { useSearchParams } from "react-router-dom";
 import { LibraryGameCard } from "./library-game-card";
-import { LibraryGameCardLarge } from "./library-game-card-large";
 import { ViewOptions, ViewMode } from "./view-options";
 import { FilterOptions, SortOption } from "./filter-options";
+import { LibraryCatalogueView } from "./library-catalogue-view";
 import "./library.scss";
 
 const PixelBlast = lazy(
@@ -175,6 +175,18 @@ export default function Library() {
   const handleCloseContextMenu = useCallback(() => {
     setGameContextMenu((prev) => ({ ...prev, visible: false }));
   }, []);
+
+  const handleToggleFavorite = useCallback(
+    async (game: LibraryGame) => {
+      if (game.favorite) {
+        await window.electron.removeGameFromFavorites(game.shop, game.objectId);
+      } else {
+        await window.electron.addGameToFavorites(game.shop, game.objectId);
+      }
+      updateLibrary();
+    },
+    [updateLibrary]
+  );
 
   const handleOpenCollectionContextMenu = useCallback(
     (
@@ -472,20 +484,7 @@ export default function Library() {
     });
   }, [filteredLibrary, sortBy]);
 
-  const favoritesCount = useMemo(() => {
-    return library.filter((game) => game.favorite).length;
-  }, [library]);
-
-  const libraryCollections = useMemo<GameCollection[]>(() => {
-    return [
-      {
-        id: FAVORITES_COLLECTION_ID,
-        name: t("favorites"),
-        gamesCount: favoritesCount,
-      },
-      ...collections,
-    ];
-  }, [collections, favoritesCount, t]);
+  const libraryCollections = collections;
 
   const hasGames = library.length > 0;
   const hasNoFilteredGames = sortedLibrary.length === 0;
@@ -527,25 +526,46 @@ export default function Library() {
               <FilterOptions sortBy={sortBy} onSortChange={handleSortChange} />
             </div>
             <div className="library__controls-right">
+              <button
+                type="button"
+                className={`library__favorites-btn ${
+                  isFavoritesCollectionSelected
+                    ? "library__favorites-btn--active"
+                    : ""
+                }`}
+                onClick={() =>
+                  handleCollectionSelect(
+                    isFavoritesCollectionSelected
+                      ? null
+                      : FAVORITES_COLLECTION_ID
+                  )
+                }
+                title={t("favorites")}
+                aria-pressed={isFavoritesCollectionSelected}
+              >
+                <HeartIcon size={16} />
+              </button>
               <ViewOptions
                 viewMode={viewMode}
                 onViewModeChange={handleViewModeChange}
               />
             </div>
           </div>
-          <div
-            className="library__collections"
-            role="group"
-            aria-label={t("collections")}
-          >
-            {libraryCollections.map((collection) => {
-              const isFavoritesCollection =
-                collection.id === FAVORITES_COLLECTION_ID;
-              return (
+          {libraryCollections.length > 0 && (
+            <div
+              className="library__collections"
+              role="group"
+              aria-label={t("collections")}
+            >
+              {libraryCollections.map((collection) => (
                 <button
                   key={collection.id}
                   type="button"
-                  className={`library__collection-item ${selectedCollectionId === collection.id ? "library__collection-item--active" : ""}`}
+                  className={`library__collection-item ${
+                    selectedCollectionId === collection.id
+                      ? "library__collection-item--active"
+                      : ""
+                  }`}
                   onClick={() =>
                     handleCollectionSelect(
                       selectedCollectionId === collection.id
@@ -553,26 +573,19 @@ export default function Library() {
                         : collection.id
                     )
                   }
-                  onContextMenu={
-                    isFavoritesCollection
-                      ? undefined
-                      : (event) =>
-                          handleOpenCollectionContextMenu(event, collection)
+                  onContextMenu={(event) =>
+                    handleOpenCollectionContextMenu(event, collection)
                   }
                 >
-                  {isFavoritesCollection ? (
-                    <HeartIcon size={16} />
-                  ) : (
-                    <FileDirectoryIcon size={16} />
-                  )}
+                  <FileDirectoryIcon size={16} />
                   <span>{collection.name}</span>
                   <span className="library__collection-count">
                     {collection.gamesCount}
                   </span>
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <div className="library__content">
@@ -610,29 +623,26 @@ export default function Library() {
           !shouldShowFavoritesEmptyState &&
           !shouldShowCollectionEmptyState && (
             <AnimatePresence mode="wait">
-              {viewMode === "large" && (
+              {viewMode === "compact" && (
                 <motion.div
-                  key={`${sortBy}-large`}
-                  className="library__games-list library__games-list--large"
+                  key={`${sortBy}-catalogue`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {sortedLibrary.map((game) => (
-                    <LibraryGameCardLarge
-                      key={`${game.shop}-${game.objectId}`}
-                      game={game}
-                      onContextMenu={handleOpenContextMenu}
-                    />
-                  ))}
+                  <LibraryCatalogueView
+                    games={sortedLibrary}
+                    onContextMenu={handleOpenContextMenu}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
                 </motion.div>
               )}
 
-              {viewMode !== "large" && (
+              {viewMode === "grid" && (
                 <motion.ul
-                  key={`${sortBy}-${viewMode}`}
-                  className={`library__games-grid library__games-grid--${viewMode}`}
+                  key={`${sortBy}-grid`}
+                  className="library__games-grid library__games-grid--grid"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
@@ -648,6 +658,7 @@ export default function Library() {
                         onMouseEnter={handleOnMouseEnterGameCard}
                         onMouseLeave={handleOnMouseLeaveGameCard}
                         onContextMenu={handleOpenContextMenu}
+                        onToggleFavorite={handleToggleFavorite}
                       />
                     </li>
                   ))}
@@ -655,6 +666,7 @@ export default function Library() {
               )}
             </AnimatePresence>
           )}
+
 
         {gameContextMenu.game && (
           <GameContextMenu

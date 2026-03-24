@@ -1,11 +1,13 @@
 import { LibraryGame } from "@types";
 import { useGameCard } from "@renderer/hooks";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import {
   ClockIcon,
   AlertFillIcon,
   TrophyIcon,
   ImageIcon,
+  HeartIcon,
+  HeartFillIcon,
 } from "@primer/octicons-react";
 import "./library-game-card.scss";
 import { logger } from "@renderer/logger";
@@ -20,6 +22,7 @@ interface LibraryGameCardProps {
   ) => void;
   onShowTooltip?: (gameId: string) => void;
   onHideTooltip?: () => void;
+  onToggleFavorite?: (game: LibraryGame) => void;
 }
 
 export const LibraryGameCard = memo(function LibraryGameCard({
@@ -27,15 +30,25 @@ export const LibraryGameCard = memo(function LibraryGameCard({
   onMouseEnter,
   onMouseLeave,
   onContextMenu,
+  onToggleFavorite,
 }: Readonly<LibraryGameCardProps>) {
   const { formatPlayTime, handleCardClick, handleContextMenuClick } =
     useGameCard(game, onContextMenu);
 
+  const handleFavClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onToggleFavorite?.(game);
+    },
+    [game, onToggleFavorite]
+  );
+
   const sources = [
-    game.customIconUrl, // Level 0
-    game.coverImageUrl, // Level 1
-    game.libraryImageUrl, // Level 2
-    game.iconUrl, // Level 3
+    game.customIconUrl,
+    game.coverImageUrl,
+    game.libraryImageUrl,
+    game.iconUrl,
   ].filter((url) => url && url.trim() !== "");
 
   const [fallbackIndex, setFallbackIndex] = useState(0);
@@ -43,32 +56,21 @@ export const LibraryGameCard = memo(function LibraryGameCard({
 
   const resolveImageSource = (imageUrl: string | null | undefined): string => {
     if (!imageUrl) return "";
-
-    const trimmedImageUrl = imageUrl.trim();
-    if (!trimmedImageUrl) return "";
-
+    const trimmed = imageUrl.trim();
+    if (!trimmed) return "";
     if (
-      trimmedImageUrl.startsWith("http://") ||
-      trimmedImageUrl.startsWith("https://") ||
-      trimmedImageUrl.startsWith("data:") ||
-      trimmedImageUrl.startsWith("blob:")
-    ) {
-      return trimmedImageUrl;
-    }
-
-    if (trimmedImageUrl.startsWith("local:")) {
-      const normalizedLocalPath = trimmedImageUrl
-        .slice("local:".length)
-        .replaceAll("\\", "/");
-      return `local:${normalizedLocalPath}`;
-    }
-
-    const normalizedPath = trimmedImageUrl.replaceAll("\\", "/");
-    if (/^[A-Za-z]:\//.test(normalizedPath) || normalizedPath.startsWith("/")) {
-      return `local:${normalizedPath}`;
-    }
-
-    return normalizedPath;
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    )
+      return trimmed;
+    if (trimmed.startsWith("local:"))
+      return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+    const normalized = trimmed.replaceAll("\\", "/");
+    if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+      return `local:${normalized}`;
+    return normalized;
   };
 
   const activeImageSource = resolveImageSource(sources[fallbackIndex]);
@@ -78,9 +80,8 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       failedUrl: sources[fallbackIndex],
       level: fallbackIndex,
     });
-
     if (fallbackIndex < sources.length - 1) {
-      setFallbackIndex((prevIndex) => prevIndex + 1);
+      setFallbackIndex((prev) => prev + 1);
     } else {
       setImageError(true);
     }
@@ -90,6 +91,15 @@ export const LibraryGameCard = memo(function LibraryGameCard({
     setFallbackIndex(0);
     setImageError(false);
   }, [game.id]);
+
+  const achievementPercent =
+    (game.achievementCount ?? 0) > 0
+      ? Math.round(
+          ((game.unlockedAchievementCount ?? 0) /
+            (game.achievementCount ?? 1)) *
+            100
+        )
+      : null;
 
   return (
     <button
@@ -101,63 +111,10 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       onClick={handleCardClick}
       onContextMenu={handleContextMenuClick}
     >
-      <div className="library-game-card__overlay">
-        <div className="library-game-card__top-section">
-          <div className="library-game-card__playtime">
-            {game.hasManuallyUpdatedPlaytime ? (
-              <AlertFillIcon
-                size={11}
-                className="library-game-card__manual-playtime"
-              />
-            ) : (
-              <ClockIcon size={11} />
-            )}
-            <span className="library-game-card__playtime-long">
-              {formatPlayTime(game.playTimeInMilliseconds)}
-            </span>
-            <span className="library-game-card__playtime-short">
-              {formatPlayTime(game.playTimeInMilliseconds, true)}
-            </span>
-          </div>
-        </div>
-
-        {(game.achievementCount ?? 0) > 0 && (
-          <div className="library-game-card__achievements">
-            <div className="library-game-card__achievement-header">
-              <div className="library-game-card__achievements-gap">
-                <TrophyIcon
-                  size={13}
-                  className="library-game-card__achievement-trophy"
-                />
-                <span className="library-game-card__achievement-count">
-                  {game.unlockedAchievementCount ?? 0} /{" "}
-                  {game.achievementCount ?? 0}
-                </span>
-              </div>
-              <span className="library-game-card__achievement-percentage">
-                {Math.round(
-                  ((game.unlockedAchievementCount ?? 0) /
-                    (game.achievementCount ?? 1)) *
-                    100
-                )}
-                %
-              </span>
-            </div>
-            <div className="library-game-card__achievement-progress">
-              <div
-                className="library-game-card__achievement-bar"
-                style={{
-                  width: `${((game.unlockedAchievementCount ?? 0) / (game.achievementCount ?? 1)) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
+      {/* Image */}
       {imageError || !activeImageSource ? (
         <div className="library-game-card__cover-placeholder">
-          <ImageIcon size={48} />
+          <ImageIcon size={32} />
         </div>
       ) : (
         <img
@@ -168,6 +125,54 @@ export const LibraryGameCard = memo(function LibraryGameCard({
           onError={handleImageError}
         />
       )}
+
+      {/* Gradient overlay with info at bottom */}
+      <div className="library-game-card__overlay">
+        {/* Fav button — top right */}
+        {onToggleFavorite && (
+          <button
+            type="button"
+            className={`library-game-card__fav-btn${game.favorite ? " library-game-card__fav-btn--active" : ""}`}
+            onClick={handleFavClick}
+            aria-label={game.favorite ? "Remover dos favoritos" : "Favoritar"}
+            title={game.favorite ? "Remover dos favoritos" : "Favoritar"}
+          >
+            {game.favorite ? (
+              <HeartFillIcon size={11} />
+            ) : (
+              <HeartIcon size={11} />
+            )}
+          </button>
+        )}
+
+        {/* Info strip at bottom */}
+        <div className="library-game-card__info">
+          <span className="library-game-card__info-title">{game.title}</span>
+          <div className="library-game-card__meta">
+            <span className="library-game-card__meta-item" title="Tempo jogado">
+              {game.hasManuallyUpdatedPlaytime ? (
+                <AlertFillIcon
+                  size={10}
+                  className="library-game-card__manual-playtime"
+                />
+              ) : (
+                <ClockIcon size={10} />
+              )}
+              <span>{formatPlayTime(game.playTimeInMilliseconds, true)}</span>
+            </span>
+
+            {achievementPercent !== null && (
+              <span
+                className="library-game-card__meta-item library-game-card__meta-item--trophy"
+                title="Conquistas"
+              >
+                <TrophyIcon size={10} />
+                <span>{achievementPercent}%</span>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
     </button>
   );
 });

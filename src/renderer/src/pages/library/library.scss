@@ -7,7 +7,8 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding-top: 80px; // altura do header fixo
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   &__bg-effect {
@@ -29,9 +30,10 @@
     background: rgba(globals.$background-color, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    z-index: 5;
+    z-index: 40;
     flex-shrink: 0;
-    position: relative;
+    position: sticky;
+    top: 0;
   }
 
   &__content {
@@ -39,7 +41,6 @@
       calc(globals.$spacing-unit * 4);
     flex: 1;
     width: 100%;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: calc(globals.$spacing-unit * 3);
@@ -89,6 +90,32 @@
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
+  }
+
+  &__favorites-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 100px;
+    color: rgba(255, 255, 255, 0.45);
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    &--active {
+      color: #e05c7a;
+
+      &:hover {
+        color: #e87b96;
+        background: rgba(224, 92, 122, 0.08);
+      }
+    }
   }
 
   &__header-controls {
@@ -256,20 +283,26 @@
     gap: calc(globals.$spacing-unit * 2);
     width: 100%;
 
-    // Grid view - larger cards
-    &--grid {
-      grid-template-columns: repeat(3, 1fr);
+    // Cada li deve preencher a célula completamente
+    & > li {
+      display: flex;
+      flex-direction: column;
+    }
 
-      @container #{globals.$app-container} (min-width: 900px) {
+    // Grid view - 5 colunas
+    &--grid {
+      grid-template-columns: repeat(2, 1fr);
+
+      @media (min-width: 700px) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (min-width: 1000px) {
         grid-template-columns: repeat(5, 1fr);
       }
 
-      @container #{globals.$app-container} (min-width: 1300px) {
+      @media (min-width: 1600px) {
         grid-template-columns: repeat(7, 1fr);
-      }
-
-      @container #{globals.$app-container} (min-width: 2000px) {
-        grid-template-columns: repeat(9, 1fr);
       }
     }
 

@@ -1,0 +1,185 @@
+@use "../../scss/globals.scss";
+
+.lib-cat-view {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+
+  &__section {
+    width: 100%;
+  }
+
+  &__section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: globals.$body-color;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__section-icon {
+    color: #e05c7a;
+    flex-shrink: 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    width: 100%;
+
+    @media (max-width: 1300px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    @media (max-width: 1000px) {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 700px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+  }
+}
+
+// ─── Card ───────────────────────────────────────────────
+
+.lib-cat-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+  user-select: none;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+  }
+
+  // Cover — landscape ratio like catalogue (215/460 ≈ 46.74%)
+  &__cover-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 46.74%;
+    background: #111;
+    overflow: hidden;
+  }
+
+  &__cover {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+  }
+
+  &:hover &__cover {
+    transform: scale(1.04);
+  }
+
+  &__placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  // Favorite toggle button
+  &__fav-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      background 0.2s ease,
+      color 0.2s ease;
+    z-index: 3;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.75);
+      color: #e05c7a;
+    }
+
+    &--active {
+      opacity: 1;
+      color: #e05c7a;
+      background: rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  &:hover &__fav-btn {
+    opacity: 1;
+  }
+
+  // Info strip
+  &__info {
+    padding: 7px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 12px;
+    font-weight: 600;
+    color: globals.$body-color;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.38);
+    white-space: nowrap;
+
+    &--trophy {
+      color: rgba(255, 200, 80, 0.6);
+    }
+  }
+}

@@ -12,7 +12,6 @@ import {
 import { settingsContext } from "@renderer/context";
 import { useAppSelector } from "@renderer/hooks";
 import languageResources from "@locales";
-import { SettingsAppearance } from "./appearance/settings-appearance";
 
 interface LanguageOption {
   option: string;
@@ -125,28 +124,30 @@ export function SettingsContextGeneral({
       <div className="settings-context-panel__group">
         <h3>{t("app_basics")}</h3>
 
-        <TextField
-          label={t("downloads_path")}
-          value={form.downloadsPath}
-          readOnly
-          disabled
-          rightContent={
-            <Button theme="outline" onClick={handleChooseDownloadsPath}>
-              {t("change")}
-            </Button>
-          }
-        />
+        <div className="settings-context-panel__row">
+          <SelectField
+            label={t("language")}
+            value={form.language}
+            onChange={handleLanguageChange}
+            options={languageOptions.map((language) => ({
+              key: language.option,
+              value: language.option,
+              label: language.nativeName,
+            }))}
+          />
 
-        <SelectField
-          label={t("language")}
-          value={form.language}
-          onChange={handleLanguageChange}
-          options={languageOptions.map((language) => ({
-            key: language.option,
-            value: language.option,
-            label: language.nativeName,
-          }))}
-        />
+          <TextField
+            label={t("downloads_path")}
+            value={form.downloadsPath}
+            readOnly
+            disabled
+            rightContent={
+              <Button theme="outline" onClick={handleChooseDownloadsPath}>
+                {t("change")}
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <div className="settings-context-panel__group">
@@ -216,11 +217,6 @@ export function SettingsContextGeneral({
           />
         </div>
       )}
-
-      <div className="settings-context-panel__group">
-        <h3>{t("appearance")}</h3>
-        <SettingsAppearance appearance={appearance} />
-      </div>
     </div>
   );
 }

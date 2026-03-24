@@ -1,4 +1,6 @@
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { SortAscIcon, ChevronDownIcon, CheckIcon } from "@primer/octicons-react";
 import "./filter-options.scss";
 
 export type SortOption =
@@ -18,6 +20,8 @@ export function FilterOptions({
   onSortChange,
 }: Readonly<FilterOptionsProps>) {
   const { t } = useTranslation("library");
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const options: { value: SortOption; labelKey: string }[] = [
     { value: "recently_played", labelKey: "recently_played" },
@@ -27,24 +31,72 @@ export function FilterOptions({
     { value: "installed_first", labelKey: "sort_installed_first" },
   ];
 
+  const activeLabel =
+    options.find((o) => o.value === sortBy)?.labelKey ?? "recently_played";
+
+  const handleSelect = useCallback(
+    (value: SortOption) => {
+      onSortChange(value);
+      setOpen(false);
+    },
+    [onSortChange]
+  );
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
   return (
-    <div
-      className="library-filter-options__pills"
-      role="group"
-      aria-label={t("sort_by")}
-    >
-      {options.map(({ value, labelKey }) => (
-        <button
-          key={value}
-          type="button"
-          className={`library-filter-options__pill${
-            sortBy === value ? " library-filter-options__pill--active" : ""
-          }`}
-          onClick={() => onSortChange(value)}
+    <div className="library-filter-options" ref={containerRef}>
+      <button
+        type="button"
+        className={`library-filter-options__trigger${open ? " library-filter-options__trigger--open" : ""}`}
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <SortAscIcon size={14} className="library-filter-options__icon" />
+        <span className="library-filter-options__label">{t(activeLabel)}</span>
+        <ChevronDownIcon
+          size={12}
+          className={`library-filter-options__chevron${open ? " library-filter-options__chevron--open" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <ul
+          className="library-filter-options__dropdown"
+          role="listbox"
+          aria-label={t("sort_by")}
         >
-          {t(labelKey)}
-        </button>
-      ))}
+          {options.map(({ value, labelKey }) => (
+            <li
+              key={value}
+              role="option"
+              aria-selected={sortBy === value}
+              className={`library-filter-options__option${sortBy === value ? " library-filter-options__option--active" : ""}`}
+              onClick={() => handleSelect(value)}
+            >
+              <span>{t(labelKey)}</span>
+              {sortBy === value && (
+                <CheckIcon size={12} className="library-filter-options__check" />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

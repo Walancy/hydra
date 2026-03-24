@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 
 export type SettingsCategoryId =
   | "general"
+  | "appearance"
   | "downloads"
   | "notifications"
   | "content_gameplay"
@@ -27,6 +28,7 @@ const legacyTabMap: Record<number, SettingsCategoryId> = {
 const isSettingsCategoryId = (value: string): value is SettingsCategoryId => {
   return [
     "general",
+    "appearance",
     "downloads",
     "notifications",
     "content_gameplay",
@@ -127,7 +129,7 @@ export function SettingsContextProvider({
   }, [defaultTab]);
 
   useEffect(() => {
-    if (appearance.theme) setCurrentCategoryId("general");
+    if (appearance.theme) setCurrentCategoryId("appearance");
   }, [appearance.theme]);
 
   useEffect(() => {

@@ -22,6 +22,8 @@ import { SettingsContextNotifications } from "./settings-context-notifications";
 import { SettingsContextContentGameplay } from "./settings-context-content-gameplay";
 import { SettingsContextIntegrations } from "./settings-context-integrations";
 import { SettingsContextCompatibility } from "./settings-context-compatibility";
+import { SettingsAppearance } from "./appearance/settings-appearance";
+import { PaintbrushIcon } from "@primer/octicons-react";
 
 export default function Settings() {
   const { t } = useTranslation("settings");
@@ -34,6 +36,11 @@ export default function Settings() {
         id: "general" as const,
         label: t("general"),
         icon: <GearIcon size={16} />,
+      },
+      {
+        id: "appearance" as const,
+        label: t("appearance"),
+        icon: <PaintbrushIcon size={16} />,
       },
       {
         id: "downloads" as const,
@@ -87,6 +94,10 @@ export default function Settings() {
           const renderCategory = () => {
             if (selectedCategoryId === "general") {
               return <SettingsContextGeneral appearance={appearance} />;
+            }
+
+            if (selectedCategoryId === "appearance") {
+              return <SettingsAppearance appearance={appearance} />;
             }
 
             if (selectedCategoryId === "downloads") {
