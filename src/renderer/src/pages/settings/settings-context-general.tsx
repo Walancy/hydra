@@ -18,17 +18,7 @@ interface LanguageOption {
   nativeName: string;
 }
 
-interface SettingsContextGeneralProps {
-  appearance: {
-    theme: string | null;
-    authorId: string | null;
-    authorName: string | null;
-  };
-}
-
-export function SettingsContextGeneral({
-  appearance,
-}: Readonly<SettingsContextGeneralProps>) {
+export function SettingsContextGeneral() {
   const { t } = useTranslation("settings");
   const { updateUserPreferences } = useContext(settingsContext);
 

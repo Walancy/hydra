@@ -667,7 +667,6 @@ export default function Library() {
             </AnimatePresence>
           )}
 
-
         {gameContextMenu.game && (
           <GameContextMenu
             game={gameContextMenu.game}

@@ -30,7 +30,7 @@
     padding: calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 1.75);
     border-right: 1px solid globals.$border-color;
     background: globals.$dark-background-color;
-    overflow-y: auto;   // sidebar rola se tiver muitos itens
+    overflow-y: auto; // sidebar rola se tiver muitos itens
     scrollbar-width: none;
 
     &::-webkit-scrollbar {
@@ -96,8 +96,7 @@
     &__sidebar {
       width: 100%;
       min-width: 0;
-      padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2)
-        globals.$spacing-unit;
+      padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2) globals.$spacing-unit;
       border-right: none;
       border-bottom: 1px solid globals.$border-color;
       flex-direction: row;
@@ -131,6 +130,25 @@
       margin: 0 0 4px;
     }
   }
+
+  // Idioma à esquerda + diretório à direita na mesma linha
+  &__row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: calc(globals.$spacing-unit * 2);
+
+    // idioma: width fixo
+    .select-field__container {
+      flex-shrink: 0;
+      width: 40px;
+    }
+
+    // diretório: ocupa o resto
+    .text-field-container {
+      flex: 1;
+    }
+  }
 }
 
 // ── Overrides de componentes dentro do painel settings ──
@@ -162,19 +180,27 @@
     border-color: rgba(255, 255, 255, 0.1) !important;
     border-radius: 100px !important;
     width: 100%;
+    padding: 0 12px 0 16px;
 
     &:hover {
       border-color: rgba(255, 255, 255, 0.25) !important;
     }
 
-    select {
-      border-radius: 100px !important;
-      background-color: transparent !important;
-    }
-
+    // remove aparência nativa e padroniza
+    select,
     &__option {
-      background-color: #111 !important;
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      background-color: transparent !important;
       border-radius: 0 !important;
+      border: none !important;
+      padding: 0 !important;
+      color: rgba(255, 255, 255, 0.85) !important;
+      font-size: 13px !important;
+      font-family: inherit !important;
+      cursor: pointer !important;
+      width: 100% !important;
+      height: 100% !important;
     }
   }
 

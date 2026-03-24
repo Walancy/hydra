@@ -65,7 +65,8 @@ const LibraryCatCard = memo(function LibraryCatCard({
   const achievementPercent =
     (game.achievementCount ?? 0) > 0
       ? Math.round(
-          ((game.unlockedAchievementCount ?? 0) / (game.achievementCount ?? 1)) *
+          ((game.unlockedAchievementCount ?? 0) /
+            (game.achievementCount ?? 1)) *
             100
         )
       : null;
@@ -101,10 +102,18 @@ const LibraryCatCard = memo(function LibraryCatCard({
           type="button"
           className={`lib-cat-card__fav-btn${game.favorite ? " lib-cat-card__fav-btn--active" : ""}`}
           onClick={handleFavorite}
-          aria-label={game.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-          title={game.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+          aria-label={
+            game.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
+          }
+          title={
+            game.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
+          }
         >
-          {game.favorite ? <HeartFillIcon size={11} /> : <HeartIcon size={11} />}
+          {game.favorite ? (
+            <HeartFillIcon size={11} />
+          ) : (
+            <HeartIcon size={11} />
+          )}
         </button>
       </div>
 
@@ -121,7 +130,10 @@ const LibraryCatCard = memo(function LibraryCatCard({
 
           {/* Achievements */}
           {achievementPercent !== null && (
-            <span className="lib-cat-card__meta-item lib-cat-card__meta-item--trophy" title="Conquistas">
+            <span
+              className="lib-cat-card__meta-item lib-cat-card__meta-item--trophy"
+              title="Conquistas"
+            >
               <TrophyIcon size={10} />
               <span>{achievementPercent}%</span>
             </span>

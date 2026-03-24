@@ -93,7 +93,7 @@ export default function Settings() {
 
           const renderCategory = () => {
             if (selectedCategoryId === "general") {
-              return <SettingsContextGeneral appearance={appearance} />;
+              return <SettingsContextGeneral />;
             }
 
             if (selectedCategoryId === "appearance") {

@@ -1,6 +1,10 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { SortAscIcon, ChevronDownIcon, CheckIcon } from "@primer/octicons-react";
+import {
+  SortAscIcon,
+  ChevronDownIcon,
+  CheckIcon,
+} from "@primer/octicons-react";
 import "./filter-options.scss";
 
 export type SortOption =
@@ -91,7 +95,10 @@ export function FilterOptions({
             >
               <span>{t(labelKey)}</span>
               {sortBy === value && (
-                <CheckIcon size={12} className="library-filter-options__check" />
+                <CheckIcon
+                  size={12}
+                  className="library-filter-options__check"
+                />
               )}
             </li>
           ))}
