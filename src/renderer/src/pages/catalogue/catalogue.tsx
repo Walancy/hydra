@@ -5,6 +5,7 @@ import type {
 } from "@types";
 
 import { useAppDispatch, useAppSelector, useFormat } from "@renderer/hooks";
+import { useLibrary } from "@renderer/hooks/use-library";
 import {
   lazy,
   Suspense,
@@ -94,6 +95,7 @@ export default function Catalogue() {
   const cataloguePageRef = useRef<HTMLDivElement>(null);
 
   const { steamDevelopers, steamPublishers, downloadSources } = useCatalogue();
+  const { library } = useLibrary();
   const { steamGenres, steamUserTags, filters, page } = useAppSelector(
     (state) => state.catalogueSearch
   );
@@ -378,20 +380,74 @@ export default function Catalogue() {
     [steamGenresMapping, dispatch]
   );
 
+  // Seeded daily shuffle — mesmo resultado para o dia, muda à meia-noite
+  const dailyShuffled = useMemo(() => {
+    if (!results.length) return [];
+    const today = new Date();
+    let seed =
+      today.getFullYear() * 10000 +
+      (today.getMonth() + 1) * 100 +
+      today.getDate();
+    const copy = [...results];
+    for (let i = copy.length - 1; i > 0; i--) {
+      seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
+      const j = seed % (i + 1);
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }, [results]);
+
   // Home sections from results pool
   const sections = useMemo(() => {
     if (hasActiveFilters || !results.length) return [];
-    const pool = [...results];
-    const take = (n: number) => pool.splice(0, n);
+
+    const used = new Set<string>();
+
+    // Destaques do Dia — embaralhado com seed diária
+    const destaques = dailyShuffled.slice(0, SECTION_SIZE);
+    destaques.forEach((g) => used.add(g.objectId));
+
+    // Mais Populares — jogos com mais fontes de download disponíveis
+    const populares = [...results]
+      .filter((g) => !used.has(g.objectId))
+      .sort(
+        (a, b) =>
+          (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
+      )
+      .slice(0, SECTION_SIZE);
+    populares.forEach((g) => used.add(g.objectId));
+
+    // Recomendados para Você — pontuados por overlap de gêneros com a biblioteca
+    const libraryIds = new Set(library.map((g) => g.objectId));
+    const genreFreq: Record<string, number> = {};
+    results
+      .filter((g) => libraryIds.has(g.objectId))
+      .flatMap((g) => g.genres)
+      .forEach((genre) => {
+        genreFreq[genre] = (genreFreq[genre] ?? 0) + 1;
+      });
+    const hasGenreProfile = Object.keys(genreFreq).length > 0;
+
+    const recomendados = [...results]
+      .filter((g) => !used.has(g.objectId) && !libraryIds.has(g.objectId))
+      .map((g) => ({
+        game: g,
+        score: hasGenreProfile
+          ? g.genres.reduce((acc, genre) => acc + (genreFreq[genre] ?? 0), 0)
+          : 0,
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, SECTION_SIZE)
+      .map(({ game }) => game);
+
     return [
-      { title: "Destaques do Dia", games: take(SECTION_SIZE) },
-      { title: "Mais Populares", games: take(SECTION_SIZE) },
-      { title: "Recomendados para Você", games: take(SECTION_SIZE) },
+      { title: "Destaques do Dia", games: destaques },
+      { title: "Mais Populares", games: populares },
+      { title: "Recomendados para Você", games: recomendados },
     ].filter((s) => s.games.length > 0);
-  }, [results, hasActiveFilters]);
+  }, [results, hasActiveFilters, dailyShuffled, library]);
 
   const featuredGames = useMemo(() => results.slice(0, 9), [results]);
-  const topSellerGames = useMemo(() => results.slice(30, 60), [results]);
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>
@@ -531,7 +587,7 @@ export default function Catalogue() {
               </>
             )}
             <CategoryExplorer onSelectGenre={handleGenreClick} />
-            <TopSellers games={topSellerGames} isLoading={isLoading} />
+            <TopSellers games={results} isLoading={isLoading} />
           </>
         )}
 

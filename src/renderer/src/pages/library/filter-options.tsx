@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { SelectField } from "@renderer/components";
 import "./filter-options.scss";
 
 export type SortOption =
@@ -20,41 +19,32 @@ export function FilterOptions({
 }: Readonly<FilterOptionsProps>) {
   const { t } = useTranslation("library");
 
+  const options: { value: SortOption; labelKey: string }[] = [
+    { value: "recently_played", labelKey: "recently_played" },
+    { value: "most_played", labelKey: "sort_most_played" },
+    { value: "title_asc", labelKey: "sort_title_asc" },
+    { value: "title_desc", labelKey: "sort_title_desc" },
+    { value: "installed_first", labelKey: "sort_installed_first" },
+  ];
+
   return (
-    <div className="library-filter-options__container">
-      <span className="library-filter-options__label">{t("sort_by")}</span>
-      <SelectField
-        className="library-filter-options__select"
-        value={sortBy}
-        onChange={(event) => onSortChange(event.target.value as SortOption)}
-        options={[
-          {
-            key: "title-asc",
-            value: "title_asc",
-            label: t("sort_title_asc"),
-          },
-          {
-            key: "recently-played",
-            value: "recently_played",
-            label: t("recently_played"),
-          },
-          {
-            key: "most-played",
-            value: "most_played",
-            label: t("sort_most_played"),
-          },
-          {
-            key: "installed-first",
-            value: "installed_first",
-            label: t("sort_installed_first"),
-          },
-          {
-            key: "title-desc",
-            value: "title_desc",
-            label: t("sort_title_desc"),
-          },
-        ]}
-      />
+    <div
+      className="library-filter-options__pills"
+      role="group"
+      aria-label={t("sort_by")}
+    >
+      {options.map(({ value, labelKey }) => (
+        <button
+          key={value}
+          type="button"
+          className={`library-filter-options__pill${
+            sortBy === value ? " library-filter-options__pill--active" : ""
+          }`}
+          onClick={() => onSortChange(value)}
+        >
+          {t(labelKey)}
+        </button>
+      ))}
     </div>
   );
 }

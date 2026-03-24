@@ -6,11 +6,12 @@ import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { useTranslation } from "react-i18next";
 import "./top-sellers.scss";
 
+// Mapeamento de gêneros Steam por tab (valores en pois o catálogo usa inglês internamente)
+const TAB_GENRES: Record<string, string[]> = {};
+
 const TABS = [
   { key: "popular", label: "Mais Populares" },
   { key: "new", label: "Lançamentos" },
-  { key: "action", label: "Ação" },
-  { key: "rpg", label: "RPG" },
 ];
 
 interface TopSellersProps {
@@ -103,6 +104,18 @@ function formatDate(dateStr: string): string {
 
 const detailsCache = new Map<string, ShopDetailsWithAssets>();
 
+// Parseia formatos de data Steam: "21 Nov, 2023", "Nov 21, 2023", "Q4 2023", etc.
+const parseReleaseDate = (dateStr: string | undefined): number => {
+  if (!dateStr) return 0;
+  // Normaliza "21 Nov, 2023" → "Nov 21, 2023"
+  const normalized = dateStr.replace(
+    /^(\d{1,2})\s+([A-Za-z]+),?\s*(\d{4})$/,
+    "$2 $1, $3"
+  );
+  const ts = new Date(normalized).getTime();
+  return isNaN(ts) ? 0 : ts;
+};
+
 export function TopSellers({
   games,
   isLoading = false,
@@ -113,15 +126,119 @@ export function TopSellers({
     useState<ShopDetailsWithAssets | null>(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [isHoveringPanel, setIsHoveringPanel] = useState(false);
+  const [releaseTimestamps, setReleaseTimestamps] = useState<
+    Record<string, number>
+  >({});
   const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortFetchRef = useRef<AbortController | null>(null);
   const { i18n } = useTranslation("catalogue");
   const navigate = useNavigate();
 
-  // Simulate distinct tabs by taking different slices
   const tabGames = useMemo(() => {
-    const offset = TABS.findIndex((t) => t.key === activeTab) * 3;
-    return games.slice(offset, offset + 10);
-  }, [games, activeTab]);
+    if (!games.length) return [];
+
+    if (activeTab === "popular") {
+      return [...games]
+        .sort(
+          (a, b) =>
+            (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
+        )
+        .slice(0, 10);
+    }
+
+    if (activeTab === "new") {
+      return [...games]
+        .sort((a, b) => {
+          const tsA = releaseTimestamps[a.objectId];
+          const tsB = releaseTimestamps[b.objectId];
+          // Ambos com data real: mais recente primeiro
+          if (tsA && tsB) return tsB - tsA;
+          // Só um tem data: o que tem data fica na frente
+          if (tsA) return -1;
+          if (tsB) return 1;
+          // Nenhum tem data ainda: AppID como proxy (maior = mais recente no Steam)
+          return parseInt(b.objectId) - parseInt(a.objectId);
+        })
+        .slice(0, 10);
+    }
+
+    const targetGenres = TAB_GENRES[activeTab] ?? [];
+    const filtered = games.filter((g) =>
+      g.genres?.some((genre) =>
+        targetGenres.some(
+          (t) =>
+            genre.toLowerCase().includes(t.toLowerCase()) ||
+            t.toLowerCase().includes(genre.toLowerCase())
+        )
+      )
+    );
+
+    // Fallback: se não há jogos suficientes do gênero, completa com os mais populares
+    if (filtered.length < 5) {
+      const fallback = [...games]
+        .sort(
+          (a, b) =>
+            (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
+        )
+        .filter((g) => !filtered.find((f) => f.objectId === g.objectId));
+      return [...filtered, ...fallback].slice(0, 10);
+    }
+
+    return filtered
+      .sort(
+        (a, b) =>
+          (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
+      )
+      .slice(0, 10);
+  }, [games, activeTab, releaseTimestamps]);
+
+  // Pré-busca datas de lançamento em lotes de 5 quando a aba "Lançamentos" está ativa
+  useEffect(() => {
+    if (activeTab !== "new" || !games.length) return;
+
+    abortFetchRef.current?.abort();
+    const abort = new AbortController();
+    abortFetchRef.current = abort;
+
+    const fetchBatch = async (batch: CatalogueSearchResult[]) => {
+      await Promise.all(
+        batch.map(async (game) => {
+          if (abort.signal.aborted) return;
+          const cached = detailsCache.get(game.objectId);
+          const source = cached
+            ? cached
+            : await window.electron
+                .getGameShopDetails(
+                  game.objectId,
+                  game.shop,
+                  getSteamLanguage(i18n.language)
+                )
+                .catch(() => null);
+          if (source && !abort.signal.aborted) {
+            detailsCache.set(game.objectId, source);
+            const ts = parseReleaseDate(source.release_date?.date);
+            if (ts > 0) {
+              setReleaseTimestamps((prev) => ({
+                ...prev,
+                [game.objectId]: ts,
+              }));
+            }
+          }
+        })
+      );
+    };
+
+    const run = async () => {
+      const BATCH = 5;
+      for (let i = 0; i < games.length; i += BATCH) {
+        if (abort.signal.aborted) break;
+        await fetchBatch(games.slice(i, i + BATCH));
+      }
+    };
+
+    run();
+    return () => abort.abort();
+  }, [activeTab, games, i18n.language]);
 
   const activeGame = tabGames[hoveredIndex] ?? tabGames[0];
 

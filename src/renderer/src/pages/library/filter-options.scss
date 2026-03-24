@@ -1,20 +1,44 @@
 @use "../../scss/globals.scss";
 
 .library-filter-options {
-  &__container {
+  &__pills {
     display: flex;
-    gap: calc(globals.$spacing-unit);
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
-  &__label {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
+  &__pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
     white-space: nowrap;
-  }
+    transition: all 0.15s ease;
 
-  &__select {
-    min-width: 220px;
+    &:hover {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    &--active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
   }
 }

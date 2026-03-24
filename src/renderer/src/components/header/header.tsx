@@ -321,10 +321,43 @@ export function Header() {
         </section>
 
         <nav className="header__nav">
+          {navRoutes.map(({ path, nameKey }) => (
+            <button
+              key={path}
+              type="button"
+              className={cn("header__nav-item", {
+                "header__nav-item--active":
+                  path === "/"
+                    ? location.pathname === "/"
+                    : location.pathname.startsWith(path),
+              })}
+              onClick={() => navigate(path)}
+            >
+              {t(nameKey, { ns: "sidebar" })}
+            </button>
+          ))}
+        </nav>
+
+        <section className="header__section header__section--right">
+          {isOnLibraryPage && window.electron.platform === "win32" && (
+            <button
+              type="button"
+              className={cn("header__action-button", {
+                "header__action-button--scanning": isScanning,
+              })}
+              onClick={() => setShowScanModal(true)}
+              data-tooltip-id={scanButtonTooltipId}
+              data-tooltip-content={t("scan_games_tooltip")}
+              data-tooltip-place="bottom"
+            >
+              <SyncIcon size={16} />
+            </button>
+          )}
+
           {isSearchOpen ? (
             <div
               ref={searchContainerRef}
-              className="header__search-bar header__search-bar--inline"
+              className="header__search-bar header__search-bar--right"
             >
               <SearchIcon size={14} className="header__search-bar-icon" />
               <input
@@ -351,51 +384,23 @@ export function Header() {
                   <XIcon size={14} />
                 </button>
               )}
+              <button
+                type="button"
+                className="header__action-button"
+                onClick={handleToggleSearch}
+              >
+                <XIcon size={16} />
+              </button>
             </div>
           ) : (
-            navRoutes.map(({ path, nameKey }) => (
-              <button
-                key={path}
-                type="button"
-                className={cn("header__nav-item", {
-                  "header__nav-item--active":
-                    path === "/"
-                      ? location.pathname === "/"
-                      : location.pathname.startsWith(path),
-                })}
-                onClick={() => navigate(path)}
-              >
-                {t(nameKey, { ns: "sidebar" })}
-              </button>
-            ))
-          )}
-        </nav>
-
-        <section className="header__section header__section--right">
-          {isOnLibraryPage && window.electron.platform === "win32" && (
             <button
               type="button"
-              className={cn("header__action-button", {
-                "header__action-button--scanning": isScanning,
-              })}
-              onClick={() => setShowScanModal(true)}
-              data-tooltip-id={scanButtonTooltipId}
-              data-tooltip-content={t("scan_games_tooltip")}
-              data-tooltip-place="bottom"
+              className="header__action-button"
+              onClick={handleToggleSearch}
             >
-              <SyncIcon size={16} />
+              <SearchIcon size={16} />
             </button>
           )}
-
-          <button
-            type="button"
-            className={cn("header__action-button", {
-              "header__action-button--active": isSearchOpen,
-            })}
-            onClick={handleToggleSearch}
-          >
-            {isSearchOpen ? <XIcon size={16} /> : <SearchIcon size={16} />}
-          </button>
 
           <button
             type="button"

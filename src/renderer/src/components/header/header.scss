@@ -11,13 +11,11 @@
   padding-top: calc(35px + globals.$spacing-unit * 2);
   padding-bottom: calc(globals.$spacing-unit * 3);
   color: globals.$muted-color;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.55) 45%,
-    rgba(0, 0, 0, 0.2) 75%,
-    transparent 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.55) 45%,
+      rgba(0, 0, 0, 0.2) 75%,
+      transparent 100%);
   position: absolute;
   top: 0;
   left: 0;
@@ -95,6 +93,20 @@
       animation: search-expand 0.18s cubic-bezier(0.2, 0, 0.2, 1);
       -webkit-app-region: no-drag;
     }
+
+    // Variante direita: expande da esquerda para a direita com largura fixa
+    &--right {
+      position: static;
+      transform: none;
+      top: unset;
+      left: unset;
+      width: 450px;
+      height: 40px;
+      padding: 0 12px;
+      transform-origin: right center;
+      animation: search-expand-right 0.22s cubic-bezier(0.2, 0, 0.2, 1);
+      -webkit-app-region: no-drag;
+    }
   }
 
   &__search-bar-icon {
@@ -106,7 +118,7 @@
     background-color: transparent;
     border: none;
     width: 100%;
-    height: 28px;
+    height: 100%;
     outline: none;
     color: #dadbe1;
     cursor: default;
@@ -172,6 +184,7 @@
     from {
       transform: rotate(0deg);
     }
+
     to {
       transform: rotate(360deg);
     }
@@ -182,6 +195,7 @@
       opacity: 0;
       transform: translateX(-50%) translateY(-4px);
     }
+
     to {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
@@ -193,9 +207,22 @@
       opacity: 0;
       transform: scaleX(0.7);
     }
+
     to {
       opacity: 1;
       transform: scaleX(1);
+    }
+  }
+
+  @keyframes search-expand-right {
+    from {
+      opacity: 0;
+      clip-path: inset(0 0 0 100%);
+    }
+
+    to {
+      opacity: 1;
+      clip-path: inset(0 0 0 0%);
     }
   }
 
@@ -212,6 +239,9 @@
     &--right {
       flex-shrink: 0;
       margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: globals.$spacing-unit;
     }
   }
 
@@ -239,6 +269,7 @@
     transform: translateX(20px);
     opacity: 0;
   }
+
   100% {
     transform: translateX(0);
     opacity: 1;
@@ -250,6 +281,7 @@
     transform: translateX(0px);
     opacity: 1;
   }
+
   100% {
     transform: translateX(20px);
     opacity: 0;

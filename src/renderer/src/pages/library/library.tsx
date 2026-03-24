@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   useLibrary,
@@ -31,6 +38,10 @@ import { LibraryGameCardLarge } from "./library-game-card-large";
 import { ViewOptions, ViewMode } from "./view-options";
 import { FilterOptions, SortOption } from "./filter-options";
 import "./library.scss";
+
+const PixelBlast = lazy(
+  () => import("@renderer/components/PixelBlast/PixelBlast")
+);
 
 const FAVORITES_COLLECTION_ID = "__favorites__";
 const SORT_OPTIONS: SortOption[] = [
@@ -490,14 +501,31 @@ export default function Library() {
     hasNoFilteredGames;
 
   return (
-    <section className="library__content">
+    <section className="library__page">
+      <div className="library__bg-effect">
+        <Suspense fallback={null}>
+          <PixelBlast
+            variant="square"
+            pixelSize={3}
+            color="#07e874ff"
+            patternScale={3.5}
+            patternDensity={1.6}
+            enableRipples
+            rippleSpeed={0.3}
+            rippleThickness={0.07}
+            rippleIntensityScale={1.2}
+            speed={0.4}
+            transparent
+            edgeFade={0.4}
+          />
+        </Suspense>
+      </div>
       {hasGames && (
-        <div className="library__page-header">
+        <div className="library__filter-bar">
           <div className="library__controls-row">
             <div className="library__controls-left">
               <FilterOptions sortBy={sortBy} onSortChange={handleSortChange} />
             </div>
-
             <div className="library__controls-right">
               <ViewOptions
                 viewMode={viewMode}
@@ -505,7 +533,6 @@ export default function Library() {
               />
             </div>
           </div>
-
           <div
             className="library__collections"
             role="group"
@@ -514,7 +541,6 @@ export default function Library() {
             {libraryCollections.map((collection) => {
               const isFavoritesCollection =
                 collection.id === FAVORITES_COLLECTION_ID;
-
               return (
                 <button
                   key={collection.id}
@@ -549,158 +575,159 @@ export default function Library() {
           </div>
         </div>
       )}
-
-      {!hasGames && (
-        <div className="library__no-games">
-          <div className="library__telescope-icon">
-            <TelescopeIcon size={24} />
+      <div className="library__content">
+        {!hasGames && (
+          <div className="library__no-games">
+            <div className="library__telescope-icon">
+              <TelescopeIcon size={24} />
+            </div>
+            <h2>{t("no_games_title")}</h2>
+            <p>{t("no_games_description")}</p>
           </div>
-          <h2>{t("no_games_title")}</h2>
-          <p>{t("no_games_description")}</p>
-        </div>
-      )}
-
-      {shouldShowFavoritesEmptyState && (
-        <div className="library__empty">
-          <div className="library__icon-container">
-            <HeartIcon size={24} />
-          </div>
-          <h2>{t("empty_favorites_title")}</h2>
-          <p>{t("empty_favorites_description")}</p>
-        </div>
-      )}
-
-      {shouldShowCollectionEmptyState && (
-        <div className="library__empty">
-          <div className="library__icon-container">
-            <FileDirectoryIcon size={24} />
-          </div>
-          <h2>{t("empty_collection_title")}</h2>
-          <p>{t("empty_collection_description")}</p>
-        </div>
-      )}
-
-      {hasGames &&
-        !shouldShowFavoritesEmptyState &&
-        !shouldShowCollectionEmptyState && (
-          <AnimatePresence mode="wait">
-            {viewMode === "large" && (
-              <motion.div
-                key={`${sortBy}-large`}
-                className="library__games-list library__games-list--large"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {sortedLibrary.map((game) => (
-                  <LibraryGameCardLarge
-                    key={`${game.shop}-${game.objectId}`}
-                    game={game}
-                    onContextMenu={handleOpenContextMenu}
-                  />
-                ))}
-              </motion.div>
-            )}
-
-            {viewMode !== "large" && (
-              <motion.ul
-                key={`${sortBy}-${viewMode}`}
-                className={`library__games-grid library__games-grid--${viewMode}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {sortedLibrary.map((game) => (
-                  <li
-                    key={`${game.shop}-${game.objectId}`}
-                    style={{ listStyle: "none" }}
-                  >
-                    <LibraryGameCard
-                      game={game}
-                      onMouseEnter={handleOnMouseEnterGameCard}
-                      onMouseLeave={handleOnMouseLeaveGameCard}
-                      onContextMenu={handleOpenContextMenu}
-                    />
-                  </li>
-                ))}
-              </motion.ul>
-            )}
-          </AnimatePresence>
         )}
 
-      {gameContextMenu.game && (
-        <GameContextMenu
-          game={gameContextMenu.game}
-          visible={gameContextMenu.visible}
-          position={gameContextMenu.position}
-          onClose={handleCloseContextMenu}
-        />
-      )}
-
-      <ContextMenu
-        items={collectionContextMenuItems}
-        visible={collectionContextMenu.visible}
-        position={collectionContextMenu.position}
-        onClose={handleCloseCollectionContextMenu}
-      />
-
-      <Modal
-        visible={showRenameCollectionModal}
-        title={t("rename_collection")}
-        description={t("rename_collection_description")}
-        onClose={handleCloseRenameCollectionModal}
-      >
-        <div className="library__collection-modal">
-          <TextField
-            label={t("collection_name", { ns: "sidebar" })}
-            placeholder={t("collection_name_placeholder", { ns: "sidebar" })}
-            value={collectionName}
-            onChange={(event) => setCollectionName(event.target.value)}
-            theme="dark"
-            disabled={isRenamingCollection}
-            maxLength={60}
-          />
-
-          <div className="library__collection-modal-actions">
-            <Button
-              type="button"
-              theme="outline"
-              onClick={handleCloseRenameCollectionModal}
-              disabled={isRenamingCollection}
-            >
-              {t("cancel", { ns: "sidebar" })}
-            </Button>
-
-            <Button
-              type="button"
-              theme="primary"
-              onClick={handleRenameCollection}
-              disabled={!collectionName.trim() || isRenamingCollection}
-            >
-              {isRenamingCollection
-                ? t("renaming_collection")
-                : t("rename_collection")}
-            </Button>
+        {shouldShowFavoritesEmptyState && (
+          <div className="library__empty">
+            <div className="library__icon-container">
+              <HeartIcon size={24} />
+            </div>
+            <h2>{t("empty_favorites_title")}</h2>
+            <p>{t("empty_favorites_description")}</p>
           </div>
-        </div>
-      </Modal>
+        )}
 
-      <ConfirmationModal
-        visible={showDeleteCollectionModal}
-        title={t("delete_collection_title")}
-        descriptionText={t("delete_collection_description", {
-          collectionName: activeCollection?.name ?? "",
-        })}
-        onClose={handleCloseDeleteCollectionModal}
-        onConfirm={() => {
-          void handleDeleteCollection();
-        }}
-        cancelButtonLabel={t("cancel", { ns: "sidebar" })}
-        confirmButtonLabel={t("delete_collection")}
-        buttonsIsDisabled={isDeletingCollection}
-      />
+        {shouldShowCollectionEmptyState && (
+          <div className="library__empty">
+            <div className="library__icon-container">
+              <FileDirectoryIcon size={24} />
+            </div>
+            <h2>{t("empty_collection_title")}</h2>
+            <p>{t("empty_collection_description")}</p>
+          </div>
+        )}
+
+        {hasGames &&
+          !shouldShowFavoritesEmptyState &&
+          !shouldShowCollectionEmptyState && (
+            <AnimatePresence mode="wait">
+              {viewMode === "large" && (
+                <motion.div
+                  key={`${sortBy}-large`}
+                  className="library__games-list library__games-list--large"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {sortedLibrary.map((game) => (
+                    <LibraryGameCardLarge
+                      key={`${game.shop}-${game.objectId}`}
+                      game={game}
+                      onContextMenu={handleOpenContextMenu}
+                    />
+                  ))}
+                </motion.div>
+              )}
+
+              {viewMode !== "large" && (
+                <motion.ul
+                  key={`${sortBy}-${viewMode}`}
+                  className={`library__games-grid library__games-grid--${viewMode}`}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {sortedLibrary.map((game) => (
+                    <li
+                      key={`${game.shop}-${game.objectId}`}
+                      style={{ listStyle: "none" }}
+                    >
+                      <LibraryGameCard
+                        game={game}
+                        onMouseEnter={handleOnMouseEnterGameCard}
+                        onMouseLeave={handleOnMouseLeaveGameCard}
+                        onContextMenu={handleOpenContextMenu}
+                      />
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          )}
+
+        {gameContextMenu.game && (
+          <GameContextMenu
+            game={gameContextMenu.game}
+            visible={gameContextMenu.visible}
+            position={gameContextMenu.position}
+            onClose={handleCloseContextMenu}
+          />
+        )}
+
+        <ContextMenu
+          items={collectionContextMenuItems}
+          visible={collectionContextMenu.visible}
+          position={collectionContextMenu.position}
+          onClose={handleCloseCollectionContextMenu}
+        />
+
+        <Modal
+          visible={showRenameCollectionModal}
+          title={t("rename_collection")}
+          description={t("rename_collection_description")}
+          onClose={handleCloseRenameCollectionModal}
+        >
+          <div className="library__collection-modal">
+            <TextField
+              label={t("collection_name", { ns: "sidebar" })}
+              placeholder={t("collection_name_placeholder", { ns: "sidebar" })}
+              value={collectionName}
+              onChange={(event) => setCollectionName(event.target.value)}
+              theme="dark"
+              disabled={isRenamingCollection}
+              maxLength={60}
+            />
+
+            <div className="library__collection-modal-actions">
+              <Button
+                type="button"
+                theme="outline"
+                onClick={handleCloseRenameCollectionModal}
+                disabled={isRenamingCollection}
+              >
+                {t("cancel", { ns: "sidebar" })}
+              </Button>
+
+              <Button
+                type="button"
+                theme="primary"
+                onClick={handleRenameCollection}
+                disabled={!collectionName.trim() || isRenamingCollection}
+              >
+                {isRenamingCollection
+                  ? t("renaming_collection")
+                  : t("rename_collection")}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        <ConfirmationModal
+          visible={showDeleteCollectionModal}
+          title={t("delete_collection_title")}
+          descriptionText={t("delete_collection_description", {
+            collectionName: activeCollection?.name ?? "",
+          })}
+          onClose={handleCloseDeleteCollectionModal}
+          onConfirm={() => {
+            void handleDeleteCollection();
+          }}
+          cancelButtonLabel={t("cancel", { ns: "sidebar" })}
+          confirmButtonLabel={t("delete_collection")}
+          buttonsIsDisabled={isDeletingCollection}
+        />
+      </div>
     </section>
   );
 }

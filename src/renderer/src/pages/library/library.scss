@@ -1,15 +1,50 @@
 @use "../../scss/globals.scss";
 
 .library {
-  &__content {
-    padding: calc(globals.$spacing-unit * 2);
+  &__page {
+    position: relative;
     height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 80px; // altura do header fixo
+  }
+
+  &__bg-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.25;
+  }
+
+  &__filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 1.5) 250px;
+    background: rgba(globals.$background-color, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 5;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  &__content {
+    padding: calc(globals.$spacing-unit * 3) 250px calc(globals.$spacing-unit * 4);
+    flex: 1;
     width: 100%;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: calc(globals.$spacing-unit * 3);
     align-items: flex-start;
+    position: relative;
+    z-index: 1;
   }
 
   &__header {
@@ -19,11 +54,9 @@
     width: 100%;
   }
 
+  // page-header agora é library__filter-bar (fora do scroll) — manter classe vazia por compat.
   &__page-header {
-    display: flex;
-    flex-direction: column;
-    gap: calc(globals.$spacing-unit * 3);
-    width: 100%;
+    display: contents;
   }
 
   &__page-title {
@@ -37,21 +70,24 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     width: 100%;
-    position: relative;
   }
 
   &__controls-left {
     display: flex;
     align-items: center;
-    gap: calc(globals.$spacing-unit);
+    gap: 4px;
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   &__controls-right {
     display: flex;
     align-items: center;
-    gap: calc(globals.$spacing-unit);
+    gap: 4px;
+    flex-shrink: 0;
   }
 
   &__header-controls {
@@ -59,16 +95,19 @@
     flex-direction: column;
     align-items: end;
     gap: calc(globals.$spacing-unit * 1);
+
     &__left {
       display: flex;
       flex-direction: column;
       gap: calc(globals.$spacing-unit * 1);
     }
   }
+
   &__header-title {
     font-size: 20px;
     font-weight: 700;
   }
+
   &__filter-label {
     font-size: 14px;
     font-weight: 600;
@@ -149,18 +188,16 @@
   }
 
   &__collections {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: calc(globals.$spacing-unit);
     width: 100%;
-    overflow: hidden;
+    overflow-x: auto;
+    scrollbar-width: none;
 
-    @container #{globals.$app-container} (min-width: 900px) {
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-
-    @container #{globals.$app-container} (min-width: 1300px) {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    &::-webkit-scrollbar {
+      display: none;
     }
   }
 
@@ -220,31 +257,6 @@
 
     // Grid view - larger cards
     &--grid {
-      grid-template-columns: repeat(2, 1fr);
-
-      @container #{globals.$app-container} (min-width: 900px) {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      @container #{globals.$app-container} (min-width: 1300px) {
-        grid-template-columns: repeat(5, 1fr);
-      }
-
-      @container #{globals.$app-container} (min-width: 2000px) {
-        grid-template-columns: repeat(6, 1fr);
-      }
-
-      @container #{globals.$app-container} (min-width: 2600px) {
-        grid-template-columns: repeat(8, 1fr);
-      }
-
-      @container #{globals.$app-container} (min-width: 3000px) {
-        grid-template-columns: repeat(12, 1fr);
-      }
-    }
-
-    // Compact view - smaller cards with responsive design
-    &--compact {
       grid-template-columns: repeat(3, 1fr);
 
       @container #{globals.$app-container} (min-width: 900px) {
@@ -258,13 +270,22 @@
       @container #{globals.$app-container} (min-width: 2000px) {
         grid-template-columns: repeat(9, 1fr);
       }
+    }
 
-      @container #{globals.$app-container} (min-width: 2600px) {
-        grid-template-columns: repeat(12, 1fr);
+    // Compact view - smaller cards
+    &--compact {
+      grid-template-columns: repeat(4, 1fr);
+
+      @container #{globals.$app-container} (min-width: 900px) {
+        grid-template-columns: repeat(7, 1fr);
       }
 
-      @container #{globals.$app-container} (min-width: 3000px) {
-        grid-template-columns: repeat(14, 1fr);
+      @container #{globals.$app-container} (min-width: 1300px) {
+        grid-template-columns: repeat(7, 1fr);
+      }
+
+      @container #{globals.$app-container} (min-width: 2000px) {
+        grid-template-columns: repeat(12, 1fr);
       }
     }
   }
