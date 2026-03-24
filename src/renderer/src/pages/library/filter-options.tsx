@@ -90,8 +90,12 @@ export function FilterOptions({
               key={value}
               role="option"
               aria-selected={sortBy === value}
+              tabIndex={0}
               className={`library-filter-options__option${sortBy === value ? " library-filter-options__option--active" : ""}`}
               onClick={() => handleSelect(value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") handleSelect(value);
+              }}
             >
               <span>{t(labelKey)}</span>
               {sortBy === value && (
