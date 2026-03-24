@@ -11,11 +11,13 @@
   padding-top: calc(35px + globals.$spacing-unit * 2);
   padding-bottom: calc(globals.$spacing-unit * 3);
   color: globals.$muted-color;
-  background: linear-gradient(180deg,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.55) 45%,
-      rgba(0, 0, 0, 0.2) 75%,
-      transparent 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.2) 75%,
+    transparent 100%
+  );
   position: absolute;
   top: 0;
   left: 0;
