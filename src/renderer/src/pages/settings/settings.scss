@@ -96,8 +96,7 @@
     &__sidebar {
       width: 100%;
       min-width: 0;
-      padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2)
-        globals.$spacing-unit;
+      padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2) globals.$spacing-unit;
       border-right: none;
       border-bottom: 1px solid globals.$border-color;
       flex-direction: row;
@@ -139,15 +138,16 @@
     align-items: flex-end;
     gap: calc(globals.$spacing-unit * 2);
 
-    // idioma: width fixo
+    // idioma: largura confortável para exibir o nome do idioma
     .select-field__container {
       flex-shrink: 0;
-      width: 40px;
+      width: 220px;
     }
 
-    // diretório: ocupa o resto
+    // diretório: ocupa o máximo de espaço disponível
     .text-field-container {
       flex: 1;
+      min-width: 0;
     }
   }
 }
@@ -155,6 +155,7 @@
 // ── Overrides de componentes dentro do painel settings ──
 // Padrão visual: border-radius 100px + glassmorphism igual header/catálogo.
 .settings__panel {
+
   // ── TextField — igual campo de busca da header ────────
   .text-field-container__text-field {
     background-color: rgba(0, 0, 0, 0.4) !important;

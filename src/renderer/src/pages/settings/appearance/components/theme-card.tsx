@@ -1,6 +1,7 @@
 import { PencilIcon, TrashIcon } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@renderer/components/button/button";
+import { Toggle } from "@renderer/components/toggle/toggle";
 import type { Theme } from "@types";
 import { useNavigate } from "react-router-dom";
 import "./theme-card.scss";
@@ -21,46 +22,37 @@ export const ThemeCard = ({ theme, onListUpdated }: ThemeCardProps) => {
 
   const [deleteThemeModalVisible, setDeleteThemeModalVisible] = useState(false);
 
-  const handleSetTheme = async () => {
+  const handleToggleTheme = async (active: boolean) => {
     try {
-      const currentTheme = (await levelDBService.get(
-        theme.id,
-        "themes"
-      )) as Theme | null;
+      if (active) {
+        const currentTheme = (await levelDBService.get(
+          theme.id,
+          "themes"
+        )) as Theme | null;
 
-      if (!currentTheme) return;
+        if (!currentTheme) return;
 
-      const allThemes = (await levelDBService.values("themes")) as {
-        id: string;
-        isActive?: boolean;
-      }[];
-      const activeTheme = allThemes.find((t) => t.isActive);
+        const allThemes = (await levelDBService.values("themes")) as {
+          id: string;
+          isActive?: boolean;
+        }[];
+        const activeTheme = allThemes.find((t) => t.isActive);
 
-      if (activeTheme) {
+        if (activeTheme) {
+          removeCustomCss();
+          await window.electron.toggleCustomTheme(activeTheme.id, false);
+        }
+
+        if (currentTheme.code) injectCustomCss(currentTheme.code);
+        await window.electron.toggleCustomTheme(currentTheme.id, true);
+      } else {
         removeCustomCss();
-        await window.electron.toggleCustomTheme(activeTheme.id, false);
+        await window.electron.toggleCustomTheme(theme.id, false);
       }
-
-      if (currentTheme.code) {
-        injectCustomCss(currentTheme.code);
-      }
-
-      await window.electron.toggleCustomTheme(currentTheme.id, true);
 
       onListUpdated();
     } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleUnsetTheme = async () => {
-    try {
-      removeCustomCss();
-      await window.electron.toggleCustomTheme(theme.id, false);
-
-      onListUpdated();
-    } catch (error) {
-      console.error(error);
+      // handled silently
     }
   };
 
@@ -81,12 +73,16 @@ export const ThemeCard = ({ theme, onListUpdated }: ThemeCardProps) => {
       >
         <div className="theme-card__header">
           <div className="theme-card__header__title">{theme.name}</div>
+
+          <Toggle
+            checked={!!theme.isActive}
+            onChange={handleToggleTheme}
+          />
         </div>
 
         {theme.authorName && (
           <p className="theme-card__author">
             {t("by")}
-
             <button
               className="theme-card__author__name"
               onClick={() => navigate(`/profile/${theme.author}`)}
@@ -97,18 +93,6 @@ export const ThemeCard = ({ theme, onListUpdated }: ThemeCardProps) => {
         )}
 
         <div className="theme-card__actions">
-          <div className="theme-card__actions__left">
-            {theme.isActive ? (
-              <Button onClick={handleUnsetTheme} theme="dark">
-                {t("unset_theme")}
-              </Button>
-            ) : (
-              <Button onClick={handleSetTheme} theme="outline">
-                {t("set_theme")}
-              </Button>
-            )}
-          </div>
-
           <div className="theme-card__actions__right">
             <Button
               className={

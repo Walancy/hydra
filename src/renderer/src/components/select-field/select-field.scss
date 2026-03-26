@@ -1,54 +1,141 @@
 @use "../../scss/globals.scss";
 
 .select-field {
-  display: inline-flex;
-  transition: all ease 0.2s;
-  width: fit-content;
+  display: flex;
   align-items: center;
-  border-radius: 8px;
-  border: 1px solid globals.$border-color;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   height: 40px;
   min-height: 40px;
+  padding: 0 globals.$spacing-unit;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  user-select: none;
 
   &__container {
     flex: 1;
-  }
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-  }
-
-  &--focused {
-    border-color: #dadbe1;
+    position: relative;
   }
 
   &--primary {
-    background-color: globals.$dark-background-color;
+    background-color: rgba(255, 255, 255, 0.06);
   }
 
   &--dark {
-    background-color: globals.$background-color;
+    background-color: rgba(0, 0, 0, 0.4);
   }
 
-  &__option {
-    background-color: globals.$dark-background-color;
-    border-right: 4px solid;
-    border-color: transparent;
-    border-radius: 8px;
-    width: fit-content;
-    height: 100%;
-    outline: none;
-    color: #dadbe1;
-    cursor: default;
-    font-family: inherit;
+  &:hover,
+  &--open {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &:focus-visible {
+    border-color: globals.$brand-teal;
+  }
+
+  &__value {
+    flex: 1;
     font-size: globals.$body-font-size;
+    font-family: inherit;
+    color: globals.$muted-color;
+    white-space: nowrap;
+    overflow: hidden;
     text-overflow: ellipsis;
-    padding: globals.$spacing-unit;
+  }
+
+  &__chevron {
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+
+    &--open {
+      transform: rotate(180deg);
+    }
   }
 
   &__label {
     margin-bottom: globals.$spacing-unit;
     display: block;
     color: globals.$body-color;
+    font-size: globals.$body-font-size;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background-color: #1a1a1e;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 4px;
+    margin: 0;
+    list-style: none;
+    max-height: 220px;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 100px;
+    border: solid 1px transparent;
+    font-size: globals.$body-font-size;
+    font-family: inherit;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: all ease 0.2s;
+    background: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+
+    &--selected {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    &--focused {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: #fff;
+    }
+
+    &--selected#{&}--focused {
+      background: rgba(255, 255, 255, 0.15);
+    }
   }
 }

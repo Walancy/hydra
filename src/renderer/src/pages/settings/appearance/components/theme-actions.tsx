@@ -49,6 +49,15 @@ export const ThemeActions = ({
           </Button>
 
           <Button
+            theme="outline"
+            className="settings-appearance__button"
+            onClick={() => setAddThemeModalVisible(true)}
+          >
+            <PlusIcon />
+            {t("create_theme")}
+          </Button>
+
+          <Button
             theme="danger"
             className="settings-appearance__button"
             onClick={() => setDeleteAllThemesModalVisible(true)}
@@ -56,17 +65,6 @@ export const ThemeActions = ({
           >
             <TrashIcon />
             {t("clear_themes")}
-          </Button>
-        </div>
-
-        <div className="settings-appearance__actions-right">
-          <Button
-            theme="outline"
-            className="settings-appearance__button"
-            onClick={() => setAddThemeModalVisible(true)}
-          >
-            <PlusIcon />
-            {t("create_theme")}
           </Button>
         </div>
       </div>
