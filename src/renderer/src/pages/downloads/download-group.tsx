@@ -28,6 +28,7 @@ import {
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  CalendarIcon,
   ClockIcon,
   ColumnsIcon,
   DownloadIcon,
@@ -588,7 +589,7 @@ export function DownloadGroup({
     [pauseDownloadOriginal]
   );
 
-  const { formatDistance } = useDate();
+  const { formatDistance, formatDateTime } = useDate();
 
   // Get speed history and peak speeds from Redux (centralized state)
   const speedHistory = useAppSelector((state) => state.download.speedHistory);
@@ -1057,9 +1058,32 @@ export function DownloadGroup({
                   </button>
                   <div className="download-group__simple-meta">
                     <div className="download-group__simple-meta-row">
+                      <span className="download-group__simple-meta-icon">
+                        <DownloadIcon size={12} />
+                      </span>
                       <Badge>
                         {DOWNLOADER_NAME[Number(game.download!.downloader)]}
                       </Badge>
+                    </div>
+                    {game.download?.timestamp ? (
+                      <div className="download-group__simple-meta-row">
+                        <span className="download-group__simple-meta-icon">
+                          <CalendarIcon size={12} />
+                        </span>
+                        <span>
+                          {formatDateTime(
+                            new Date(game.download.timestamp)
+                          )}
+                        </span>
+                      </div>
+                    ) : null}
+                    <div className="download-group__simple-meta-row">
+                      <span className="download-group__simple-meta-icon">
+                        <FileDirectoryIcon size={12} />
+                      </span>
+                      <span className="download-group__simple-meta-path">
+                        {game.download?.downloadPath ?? "—"}
+                      </span>
                     </div>
                     <div className="download-group__simple-meta-row">
                       {extraction?.visibleId === game.id ? (

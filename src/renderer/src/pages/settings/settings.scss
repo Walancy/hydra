@@ -1,40 +1,48 @@
 @use "../../scss/globals.scss";
 
 .settings {
+  &__bg-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.25;
+  }
+
   &__container {
-    padding: 24px;
+    padding: calc(globals.$spacing-unit * 3) 250px calc(globals.$spacing-unit * 4);
     width: 100%;
-    // altura total menos o padding-top do container__content (95px)
-    // e o padding vertical do próprio container (24px × 2)
-    height: calc(100vh - 95px - 48px);
+    height: 100%;
     display: flex;
-    align-self: stretch; // estica para preencher a coluna do flex
+    align-self: stretch;
+    z-index: 1;
+    position: relative;
   }
 
   &__content {
-    background-color: globals.$background-color;
+    background-color: transparent;
     width: 100%;
     height: 100%;
-    border: solid 1px globals.$border-color;
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.7);
-    border-radius: 8px;
+    border: none;
     display: flex;
-    overflow: hidden;
-    min-height: 0; // permite que o flex shrink funcione corretamente
+    gap: calc(globals.$spacing-unit * 4);
+    min-height: 0;
   }
 
   &__sidebar {
     width: max-content;
-    min-width: 220px;
-    max-width: 320px;
+    min-width: 200px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: globals.$spacing-unit;
-    padding: calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 1.75);
-    border-right: 1px solid globals.$border-color;
-    background: globals.$dark-background-color;
-    overflow-y: auto; // sidebar rola se tiver muitos itens
+    padding: 0;
+    border-right: none;
+    background: transparent;
+    overflow-y: auto;
     scrollbar-width: none;
 
     &::-webkit-scrollbar {
@@ -88,8 +96,8 @@
     flex-direction: column;
     gap: calc(globals.$spacing-unit * 2.5);
     min-width: 0;
-    padding: calc(globals.$spacing-unit * 2.5);
-    overflow-y: auto; // só o painel rola — sidebar fica fixa
+    padding: 0;
+    overflow-y: visible;
   }
 
   @media (max-width: 860px) {
@@ -118,22 +126,40 @@
 .settings-context-panel {
   display: flex;
   flex-direction: column;
-  gap: calc(globals.$spacing-unit * 2);
+  gap: calc(globals.$spacing-unit * 1.5);
 
   &__group {
     display: flex;
     flex-direction: column;
     gap: calc(globals.$spacing-unit * 1.5);
-    padding-top: calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 2);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
 
     h3 {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.4);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       margin: 0 0 4px;
     }
+  }
+
+  &__section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
   }
 
   // Idioma à esquerda + diretório à direita na mesma linha

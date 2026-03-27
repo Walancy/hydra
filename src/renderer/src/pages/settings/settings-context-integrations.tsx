@@ -6,10 +6,11 @@ export function SettingsContextIntegrations() {
 
   return (
     <div className="settings-context-panel">
-      <div className="settings-context-panel__group">
-        <h3>{t("debrid_services")}</h3>
-        <SettingsDebrid />
-      </div>
+      <span className="settings-context-panel__section-label">
+        {t("debrid_services")}
+      </span>
+      <SettingsDebrid />
     </div>
   );
 }
+

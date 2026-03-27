@@ -3,7 +3,7 @@
 .settings-appearance {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 
   &__actions {
     display: flex;
@@ -16,10 +16,66 @@
     }
   }
 
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0;
+  }
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    &--active {
+      color: rgba(255, 255, 255, 0.95);
+      border-bottom-color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__tab-count {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
   &__themes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 10px;
+  }
+
+  &__empty-state {
+    grid-column: 1 / -1;
+    padding: 40px 24px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 13px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
   }
 
   &__no-themes {

@@ -5,7 +5,7 @@ import {
 } from "@renderer/context";
 import { SettingsAccount } from "./settings-account";
 import { useUserDetails } from "@renderer/hooks";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import "./settings.scss";
 import {
   BellIcon,
@@ -24,6 +24,10 @@ import { SettingsContextIntegrations } from "./settings-context-integrations";
 import { SettingsContextCompatibility } from "./settings-context-compatibility";
 import { SettingsAppearance } from "./appearance/settings-appearance";
 import { PaintbrushIcon } from "@primer/octicons-react";
+
+const PixelBlast = lazy(
+  () => import("@renderer/components/PixelBlast/PixelBlast")
+);
 
 export default function Settings() {
   const { t } = useTranslation("settings");
@@ -124,34 +128,55 @@ export default function Settings() {
           };
 
           return (
-            <section className="settings__container">
-              <div className="settings__content">
-                <aside className="settings__sidebar">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      className={`settings__sidebar-button ${
-                        currentCategory.id === category.id
-                          ? "settings__sidebar-button--active"
-                          : ""
-                      }`}
-                      onClick={() => setCurrentCategoryId(category.id)}
-                    >
-                      <span className="settings__sidebar-button-icon">
-                        {category.icon}
-                      </span>
-                      <span>{category.label}</span>
-                    </button>
-                  ))}
-                </aside>
-
-                <div className="settings__panel">
-                  <h2>{currentCategory.label}</h2>
-                  {renderCategory()}
-                </div>
+            <>
+              <div className="settings__bg-effect">
+                <Suspense fallback={null}>
+                  <PixelBlast
+                    variant="square"
+                    pixelSize={3}
+                    color="#6366f1"
+                    patternScale={3.5}
+                    patternDensity={1.6}
+                    enableRipples
+                    rippleSpeed={0.3}
+                    rippleThickness={0.07}
+                    rippleIntensityScale={1.2}
+                    speed={0.4}
+                    transparent
+                    edgeFade={0.4}
+                  />
+                </Suspense>
               </div>
-            </section>
+
+              <section className="settings__container">
+                <div className="settings__content">
+                  <aside className="settings__sidebar">
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        type="button"
+                        className={`settings__sidebar-button ${
+                          currentCategory.id === category.id
+                            ? "settings__sidebar-button--active"
+                            : ""
+                        }`}
+                        onClick={() => setCurrentCategoryId(category.id)}
+                      >
+                        <span className="settings__sidebar-button-icon">
+                          {category.icon}
+                        </span>
+                        <span>{category.label}</span>
+                      </button>
+                    ))}
+                  </aside>
+
+                  <div className="settings__panel">
+                    <h2>{currentCategory.label}</h2>
+                    {renderCategory()}
+                  </div>
+                </div>
+              </section>
+            </>
           );
         }}
       </SettingsContextConsumer>
