@@ -40,7 +40,11 @@ import {
   CloudIcon,
   BookIcon,
 } from "@primer/octicons-react";
-import { Plug as PlugIcon, Paintbrush as PaintbrushIcon, ArrowRightLeft as ArrowRightLeftIcon } from "lucide-react";
+import {
+  Plug as PlugIcon,
+  Paintbrush as PaintbrushIcon,
+  ArrowRightLeft as ArrowRightLeftIcon,
+} from "lucide-react";
 import { SidebarGameItem } from "./sidebar-game-item";
 import { SidebarAddingCustomGameModal } from "./sidebar-adding-custom-game-modal";
 import { SidebarFavoriteCard } from "./sidebar-favorite-card";
@@ -78,7 +82,9 @@ export function Sidebar() {
 
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const stored = initialSidebarWidth ? Number(initialSidebarWidth) : SIDEBAR_INITIAL_WIDTH;
+    const stored = initialSidebarWidth
+      ? Number(initialSidebarWidth)
+      : SIDEBAR_INITIAL_WIDTH;
     return Math.max(stored, SIDEBAR_MIN_WIDTH);
   });
 
@@ -513,7 +519,9 @@ export function Sidebar() {
       (game) =>
         game.download &&
         !game.executablePath &&
-        (game.download.queued || game.download.status === "active" || game.download.status === "paused")
+        (game.download.queued ||
+          game.download.status === "active" ||
+          game.download.status === "paused")
     );
   }, [sortedLibrary]);
 
@@ -536,7 +544,6 @@ export function Sidebar() {
           <h1 className="sidebar__brand-name">HYDRA</h1>
         </div>
         <div className="sidebar__content">
-
           {/* ── Nav·Links rápidos ── */}
           <nav className="sidebar__nav-links">
             <button
@@ -597,7 +604,9 @@ export function Sidebar() {
               type="button"
               className="sidebar__nav-link"
               onClick={() =>
-                window.electron.openExternal("https://library.hydra.wiki/sources")
+                window.electron.openExternal(
+                  "https://library.hydra.wiki/sources"
+                )
               }
             >
               <BookIcon size={14} />
@@ -614,7 +623,7 @@ export function Sidebar() {
               className="sidebar__game-toggle-btn"
               onClick={() => setShowInstalledGames(!showInstalledGames)}
             >
-              <div 
+              <div
                 key={showInstalledGames ? "installed" : "favorites"}
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
@@ -643,25 +652,37 @@ export function Sidebar() {
                 </div>
               </div>
               <span className="sidebar__game-toggle-count">
-                {showInstalledGames ? installedGames.length : favoriteGames.length}
+                {showInstalledGames
+                  ? installedGames.length
+                  : favoriteGames.length}
               </span>
             </button>
 
-            <div key={showInstalledGames ? "installed" : "favorites"} className="sidebar__favorites-list">
-              {(showInstalledGames ? installedGames : favoriteGames).length === 0 ? (
+            <div
+              key={showInstalledGames ? "installed" : "favorites"}
+              className="sidebar__favorites-list"
+            >
+              {(showInstalledGames ? installedGames : favoriteGames).length ===
+              0 ? (
                 <p className="sidebar__menu-empty">
                   {showInstalledGames
-                    ? t("no_installed_games", { defaultValue: "Nenhum jogo instalado" })
-                    : t("no_favorites", { defaultValue: "Nenhum jogo favorito" })}
+                    ? t("no_installed_games", {
+                        defaultValue: "Nenhum jogo instalado",
+                      })
+                    : t("no_favorites", {
+                        defaultValue: "Nenhum jogo favorito",
+                      })}
                 </p>
               ) : (
-                (showInstalledGames ? installedGames : favoriteGames).map((game) => (
-                  <SidebarFavoriteCard
-                    key={game.id}
-                    game={game}
-                    onClick={handleSidebarGameClick}
-                  />
-                ))
+                (showInstalledGames ? installedGames : favoriteGames).map(
+                  (game) => (
+                    <SidebarFavoriteCard
+                      key={game.id}
+                      game={game}
+                      onClick={handleSidebarGameClick}
+                    />
+                  )
+                )
               )}
             </div>
           </div>
@@ -675,7 +696,9 @@ export function Sidebar() {
           onClick={handleAddGameButtonClick}
         >
           <PlusIcon size={14} />
-          <span>{t("add_custom_game_tooltip", { defaultValue: "Adicionar jogo" })}</span>
+          <span>
+            {t("add_custom_game_tooltip", { defaultValue: "Adicionar jogo" })}
+          </span>
         </button>
 
         {hasActiveSubscription && (

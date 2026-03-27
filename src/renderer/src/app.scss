@@ -149,7 +149,10 @@ progress[value] {
     margin-right: 8px;
     -webkit-app-region: no-drag;
 
-    path, circle, rect, polygon {
+    path,
+    circle,
+    rect,
+    polygon {
       fill: #fff;
     }
   }

@@ -47,7 +47,7 @@
     gap: calc(globals.$spacing-unit * 2);
     width: 100%;
     overflow: auto;
-    
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -204,7 +204,7 @@
     justify-content: center;
     padding: calc(globals.$spacing-unit * 3.5) 0;
     gap: 12px;
-    
+
     &-icon {
       width: 32px;
       height: 32px;
@@ -224,7 +224,6 @@
   }
 
   &__section-title {
-
     text-transform: uppercase;
     font-weight: bold;
   }
@@ -295,7 +294,8 @@
 
   &__game-toggle-letter {
     opacity: 0;
-    animation: sidebar-letter-fade-in 0.35s forwards cubic-bezier(0.19, 1, 0.22, 1);
+    animation: sidebar-letter-fade-in 0.35s forwards
+      cubic-bezier(0.19, 1, 0.22, 1);
   }
 
   &__game-toggle-icon {
@@ -491,7 +491,9 @@
     cursor: pointer;
     width: 100%;
     border-radius: 6px;
-    transition: color 0.12s ease, background-color 0.12s ease;
+    transition:
+      color 0.12s ease,
+      background-color 0.12s ease;
 
     &:hover {
       color: rgba(255, 255, 255, 0.9);
@@ -534,7 +536,8 @@
 
     > * {
       opacity: 0;
-      animation: sidebar-item-fade-in 0.3s forwards cubic-bezier(0.19, 1, 0.22, 1);
+      animation: sidebar-item-fade-in 0.3s forwards
+        cubic-bezier(0.19, 1, 0.22, 1);
 
       @for $i from 1 through 20 {
         &:nth-child(#{$i}) {

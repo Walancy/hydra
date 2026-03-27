@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sidebar, BottomPanel, Header, Toast, Modal } from "@renderer/components";
+import {
+  Sidebar,
+  BottomPanel,
+  Header,
+  Toast,
+  Modal,
+} from "@renderer/components";
 import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
 import { WorkWonders } from "workwonders-sdk";
 import {
@@ -423,14 +429,16 @@ export function App() {
         </div>
       )}
 
-      <Modal 
-        visible={showThemeModal} 
-        title="Gerenciar Temas" 
+      <Modal
+        visible={showThemeModal}
+        title="Gerenciar Temas"
         onClose={() => setShowThemeModal(false)}
         large
       >
         <div style={{ height: "450px", overflow: "hidden" }}>
-          <SettingsAppearance appearance={{ theme: null, authorId: null, authorName: null }} />
+          <SettingsAppearance
+            appearance={{ theme: null, authorId: null, authorName: null }}
+          />
         </div>
       </Modal>
 

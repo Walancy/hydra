@@ -74,10 +74,7 @@ export const ThemeCard = ({ theme, onListUpdated }: ThemeCardProps) => {
         <div className="theme-card__header">
           <div className="theme-card__header__title">{theme.name}</div>
 
-          <Toggle
-            checked={!!theme.isActive}
-            onChange={handleToggleTheme}
-          />
+          <Toggle checked={!!theme.isActive} onChange={handleToggleTheme} />
         </div>
 
         {theme.authorName && (
