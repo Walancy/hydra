@@ -31,6 +31,20 @@
     -webkit-app-region: no-drag;
   }
 
+  &__logo {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    opacity: 0.85;
+    -webkit-app-region: no-drag;
+
+    path,
+    circle,
+    rect {
+      fill: #fff;
+    }
+  }
+
   &__nav {
     display: flex;
     align-items: center;
@@ -137,7 +151,9 @@
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all ease 0.15s;
-    padding: 8px 16px;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -166,7 +182,7 @@
     border-radius: 100px;
     -webkit-app-region: no-drag;
     transition: all ease 0.15s;
-    padding: 8px 16px;
+    padding: 8px 12px;
     color: rgba(255, 255, 255, 0.6);
     background-color: transparent;
 

@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./theme-editor.scss";
 import Editor from "@monaco-editor/react";
 import { AchievementCustomNotificationPosition, Theme } from "@types";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, SelectField, TextField } from "@renderer/components";
 import {
   CheckIcon,
   UploadIcon,
   TrashIcon,
   PlayIcon,
+  ArrowLeftIcon,
 } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import cn from "classnames";
@@ -30,6 +31,7 @@ const notificationVariations = {
 
 export default function ThemeEditor() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [theme, setTheme] = useState<Theme | null>(null);
   const [code, setCode] = useState("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -213,6 +215,14 @@ export default function ThemeEditor() {
           "theme-editor__header--darwin": window.electron.platform === "darwin",
         })}
       >
+        <button
+          type="button"
+          className="theme-editor__back-button"
+          onClick={() => navigate(-1)}
+          aria-label="Voltar"
+        >
+          <ArrowLeftIcon size={16} />
+        </button>
         <h1>{theme?.name}</h1>
         {hasUnsavedChanges && (
           <div className="theme-editor__header__status"></div>

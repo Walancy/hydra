@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sidebar, BottomPanel, Header, Toast } from "@renderer/components";
+import { Sidebar, BottomPanel, Header, Toast, Modal } from "@renderer/components";
+import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
 import { WorkWonders } from "workwonders-sdk";
 import {
   useAppDispatch,
@@ -26,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { useSubscription } from "./hooks/use-subscription";
 import { HydraCloudModal } from "./pages/shared-modals/hydra-cloud/hydra-cloud-modal";
 import { ArchiveDeletionModal } from "./pages/downloads/archive-deletion-error-modal";
+import { SettingsAppearance } from "@renderer/pages/settings/appearance/settings-appearance";
 
 import {
   injectCustomCss,
@@ -35,6 +37,7 @@ import {
 } from "./helpers";
 import { levelDBService } from "./services/leveldb.service";
 import type { UserPreferences } from "@types";
+import cn from "classnames";
 import "./app.scss";
 
 export interface AppProps {
@@ -51,6 +54,16 @@ type WorkWondersWithKnowledge = WorkWonders & {
 export function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const { updateLibrary, library } = useLibrary();
+
+  const [isSidebarForceOpen, setIsSidebarForceOpen] = useState(false);
+  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
+
+  const handleSidebarEnter = useCallback(() => setIsSidebarHovered(true), []);
+  const handleSidebarLeave = useCallback(() => {
+    setIsSidebarHovered(false);
+    setIsSidebarForceOpen(false);
+  }, []);
 
   // Listen for new download options updates
   useDownloadOptionsListener();
@@ -369,14 +382,57 @@ export function App() {
     <>
       {window.electron.platform === "win32" && (
         <div className="title-bar">
+          <HydraIcon className="title-bar__logo" aria-hidden="true" />
+          {!isSidebarHovered && !isSidebarForceOpen && (
+            <div className="title-bar__options">
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() => setIsSidebarForceOpen(true)}
+              >
+                Menu
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() => window.electron.scanInstalledGames()}
+              >
+                Importar
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() => setShowThemeModal(true)}
+              >
+                Tema
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() => window.electron.openDevTools()}
+              >
+                DevTools
+              </button>
+            </div>
+          )}
           <h4>
-            Hydra
             {hasActiveSubscription && (
               <span className="title-bar__cloud-text"> Cloud</span>
             )}
           </h4>
         </div>
       )}
+
+      <Modal 
+        visible={showThemeModal} 
+        title="Gerenciar Temas" 
+        onClose={() => setShowThemeModal(false)}
+        large
+      >
+        <div style={{ height: "450px", overflow: "hidden" }}>
+          <SettingsAppearance appearance={{ theme: null, authorId: null, authorName: null }} />
+        </div>
+      </Modal>
 
       <Toast
         visible={toast.visible}
@@ -400,7 +456,13 @@ export function App() {
       />
 
       <main>
-        <div className="sidebar-wrapper">
+        <div
+          className={cn("sidebar-wrapper", {
+            "sidebar-wrapper--force-open": isSidebarForceOpen,
+          })}
+          onMouseEnter={handleSidebarEnter}
+          onMouseLeave={handleSidebarLeave}
+        >
           <Sidebar />
         </div>
 

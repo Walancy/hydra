@@ -417,7 +417,7 @@ export function Header() {
             onClick={handleProfileClick}
           >
             <Avatar
-              size={24}
+              size={28}
               src={userDetails?.profileImageUrl}
               alt={userDetails?.displayName}
             />

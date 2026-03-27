@@ -16,20 +16,21 @@ export interface AvatarProps
 }
 
 export function Avatar({ size, alt, src, className, ...props }: AvatarProps) {
+  if (!src) {
+    // sem foto: ícone simples igual ao de notificações (16px)
+    return <PersonIcon size={16} />;
+  }
+
   return (
     <div className="profile-avatar" style={{ width: size, height: size }}>
-      {src ? (
-        <img
-          className={cn("profile-avatar__image", className)}
-          alt={alt}
-          src={src}
-          width={size}
-          height={size}
-          {...props}
-        />
-      ) : (
-        <PersonIcon size={size * 0.7} />
-      )}
+      <img
+        className={cn("profile-avatar__image", className)}
+        alt={alt}
+        src={src}
+        width={size}
+        height={size}
+        {...props}
+      />
     </div>
   );
 }

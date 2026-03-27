@@ -27,26 +27,30 @@ import "./sidebar.scss";
 import { buildGameDetailsPath } from "@renderer/helpers";
 
 import { sortBy } from "lodash-es";
+import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
 import cn from "classnames";
 import {
   CommentDiscussionIcon,
-  PlayIcon,
   PlusIcon,
   ChevronRightIcon,
-  HeartIcon,
-  FileDirectoryIcon,
   PencilIcon,
   TrashIcon,
+  TrophyIcon,
+  PeopleIcon,
+  CloudIcon,
+  BookIcon,
 } from "@primer/octicons-react";
+import { Plug as PlugIcon, Paintbrush as PaintbrushIcon, ArrowRightLeft as ArrowRightLeftIcon } from "lucide-react";
 import { SidebarGameItem } from "./sidebar-game-item";
 import { SidebarAddingCustomGameModal } from "./sidebar-adding-custom-game-modal";
+import { SidebarFavoriteCard } from "./sidebar-favorite-card";
 import { setFriendRequestCount } from "@renderer/features/user-details-slice";
 import { setCollections } from "@renderer/features";
 import { useDispatch } from "react-redux";
 
-const SIDEBAR_MIN_WIDTH = 200;
-const SIDEBAR_INITIAL_WIDTH = 250;
-const SIDEBAR_MAX_WIDTH = 450;
+const SIDEBAR_MIN_WIDTH = 260;
+const SIDEBAR_INITIAL_WIDTH = 300;
+const SIDEBAR_MAX_WIDTH = 500;
 const FAVORITES_COLLECTION_ID = "__favorites__";
 
 const initialSidebarWidth = window.localStorage.getItem("sidebarWidth");
@@ -73,9 +77,10 @@ export function Sidebar() {
   const [filteredLibrary, setFilteredLibrary] = useState<LibraryGame[]>([]);
 
   const [isResizing, setIsResizing] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(
-    initialSidebarWidth ? Number(initialSidebarWidth) : SIDEBAR_INITIAL_WIDTH
-  );
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const stored = initialSidebarWidth ? Number(initialSidebarWidth) : SIDEBAR_INITIAL_WIDTH;
+    return Math.max(stored, SIDEBAR_MIN_WIDTH);
+  });
 
   const location = useLocation();
 
@@ -89,10 +94,42 @@ export function Sidebar() {
 
   const { showWarningToast, showSuccessToast, showErrorToast } = useToast();
 
-  const [showPlayableOnly, setShowPlayableOnly] = useState(false);
-  const [isCollectionsCollapsed, setIsCollectionsCollapsed] = useState(false);
-  const [isGamesCollapsed, setIsGamesCollapsed] = useState(false);
+  const [isGamesCollapsed, setIsGamesCollapsed] = useState(true);
+  const [isInstalledCollapsed, setIsInstalledCollapsed] = useState(true);
+  const [isDownloadingCollapsed, setIsDownloadingCollapsed] = useState(true);
+  const [showInstalledGames, setShowInstalledGames] = useState(false);
   const [showAddGameModal, setShowAddGameModal] = useState(false);
+  const [onlineFriendsCount, setOnlineFriendsCount] = useState(0);
+  const [totalAchievements, setTotalAchievements] = useState(0);
+
+  useEffect(() => {
+    if (!userDetails?.id) {
+      setOnlineFriendsCount(0);
+      setTotalAchievements(0);
+      return;
+    }
+
+    window.electron.hydraApi
+      .get<{ friends?: { currentGame: any }[] }>("/profile/friends")
+      .then((data) => {
+        if (data?.friends) {
+          setOnlineFriendsCount(
+            data.friends.filter((f) => f.currentGame).length
+          );
+        }
+      })
+      .catch(() => {});
+
+    window.electron.hydraApi
+      .get<any>(`/users/${userDetails.id}/stats`)
+      .then((data) => {
+        if (data?.unlockedAchievementSum) {
+          setTotalAchievements(data.unlockedAchievementSum);
+        }
+      })
+      .catch(() => {});
+  }, [userDetails?.id]);
+
   const [showCreateCollectionModal, setShowCreateCollectionModal] =
     useState(false);
   const [collectionContextMenu, setCollectionContextMenu] = useState<{
@@ -120,21 +157,8 @@ export function Sidebar() {
     return searchParams.get("collection");
   }, [location.pathname, searchParams]);
 
-  const handlePlayButtonClick = () => {
-    setShowPlayableOnly(!showPlayableOnly);
-  };
-
   const handleAddGameButtonClick = () => {
     setShowAddGameModal(true);
-  };
-
-  const handleCreateCollectionButtonClick = () => {
-    if (!userDetails) {
-      window.electron.openAuthWindow(AuthPage.SignIn);
-      return;
-    }
-
-    setShowCreateCollectionModal(true);
   };
 
   const handleCloseAddGameModal = () => {
@@ -311,29 +335,6 @@ export function Sidebar() {
     }
   };
 
-  const handleSidebarCollectionClick = (collectionId: string) => {
-    const params = new URLSearchParams();
-    params.set("collection", collectionId);
-
-    const path = `/library?${params.toString()}`;
-    if (path !== `${location.pathname}${location.search}`) {
-      navigate(path);
-    }
-  };
-
-  const handleOpenCollectionContextMenu = (
-    event: React.MouseEvent<HTMLButtonElement>,
-    collection: GameCollection
-  ) => {
-    event.preventDefault();
-
-    setCollectionContextMenu({
-      collection,
-      visible: true,
-      position: { x: event.clientX, y: event.clientY },
-    });
-  };
-
   const handleCloseCollectionContextMenu = () => {
     setCollectionContextMenu((prev) => ({ ...prev, visible: false }));
   };
@@ -499,16 +500,22 @@ export function Sidebar() {
     return sortedLibrary.filter((game) => game.favorite).length;
   }, [sortedLibrary]);
 
-  const sidebarCollections = useMemo<GameCollection[]>(() => {
-    return [
-      {
-        id: FAVORITES_COLLECTION_ID,
-        name: t("favorites"),
-        gamesCount: favoritesCount,
-      },
-      ...collections,
-    ];
-  }, [collections, favoritesCount, t]);
+  const favoriteGames = useMemo(() => {
+    return sortedLibrary.filter((game) => game.favorite);
+  }, [sortedLibrary]);
+
+  const installedGames = useMemo(() => {
+    return sortedLibrary.filter(isGamePlayable);
+  }, [sortedLibrary]);
+
+  const downloadingGames = useMemo(() => {
+    return sortedLibrary.filter(
+      (game) =>
+        game.download &&
+        !game.executablePath &&
+        (game.download.queued || game.download.status === "active" || game.download.status === "paused")
+    );
+  }, [sortedLibrary]);
 
   return (
     <aside
@@ -524,175 +531,153 @@ export function Sidebar() {
       }}
     >
       <div className="sidebar__container">
+        <div className="sidebar__brand">
+          <HydraIcon className="sidebar__brand-icon" />
+          <h1 className="sidebar__brand-name">HYDRA</h1>
+        </div>
         <div className="sidebar__content">
-          <section className="sidebar__section">
-            <div className="sidebar__section-header">
-              <button
-                type="button"
-                className="sidebar__section-toggle"
-                onClick={() =>
-                  setIsCollectionsCollapsed(!isCollectionsCollapsed)
-                }
-                aria-label={
-                  isCollectionsCollapsed
-                    ? t("expand_collections")
-                    : t("collapse_collections")
-                }
-              >
-                <ChevronRightIcon
-                  size={14}
-                  className={cn("sidebar__section-toggle-chevron", {
-                    "sidebar__section-toggle-chevron--expanded":
-                      !isCollectionsCollapsed,
-                  })}
-                />
-                <small className="sidebar__section-title">
-                  {t("collections")}
+
+          {/* ── Nav·Links rápidos ── */}
+          <nav className="sidebar__nav-links">
+            <button
+              type="button"
+              className="sidebar__nav-link"
+              onClick={() => navigate("/achievements")}
+            >
+              <TrophyIcon size={14} />
+              <span>Conquistas</span>
+              {totalAchievements > 0 && (
+                <small className="sidebar__nav-link-badge">
+                  {totalAchievements}
                 </small>
-              </button>
-              <button
-                type="button"
-                className="sidebar__add-button"
-                onClick={handleCreateCollectionButtonClick}
-                aria-label={t("create_collection")}
-                data-tooltip-id="create-collection-tooltip"
-                data-tooltip-content={t("create_collection_tooltip")}
-                data-tooltip-place="top"
+              )}
+            </button>
+            <button
+              type="button"
+              className="sidebar__nav-link"
+              onClick={() =>
+                userDetails
+                  ? navigate(`/profile/${userDetails.id}`)
+                  : window.electron.openAuthWindow(AuthPage.SignIn)
+              }
+            >
+              <PeopleIcon size={14} />
+              <span>Amigos</span>
+              {onlineFriendsCount > 0 && (
+                <small className="sidebar__nav-link-badge">
+                  {onlineFriendsCount > 99 ? "99+" : onlineFriendsCount}
+                </small>
+              )}
+            </button>
+            <button
+              type="button"
+              className="sidebar__nav-link"
+              onClick={() =>
+                hasActiveSubscription
+                  ? navigate("/settings")
+                  : window.electron.openExternal(
+                      "https://checkout.hydralauncher.gg"
+                    )
+              }
+            >
+              <CloudIcon size={14} />
+              <span>Hydra Cloud</span>
+            </button>
+            <button
+              type="button"
+              className="sidebar__nav-link"
+              onClick={() =>
+                window.electron.openExternal("https://hydrathemes.shop")
+              }
+            >
+              <PaintbrushIcon size={14} />
+              <span>Loja de Temas</span>
+            </button>
+            <button
+              type="button"
+              className="sidebar__nav-link"
+              onClick={() =>
+                window.electron.openExternal("https://library.hydra.wiki/sources")
+              }
+            >
+              <BookIcon size={14} />
+              <span>Fontes</span>
+            </button>
+          </nav>
+
+          <div className="sidebar__divider" />
+
+          {/* ── Toggle Favoritos / Instalados ── */}
+          <div className="sidebar__game-toggle">
+            <button
+              type="button"
+              className="sidebar__game-toggle-btn"
+              onClick={() => setShowInstalledGames(!showInstalledGames)}
+            >
+              <div 
+                key={showInstalledGames ? "installed" : "favorites"}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                <PlusIcon size={16} />
-              </button>
-            </div>
-
-            {!isCollectionsCollapsed && (
-              <ul className="sidebar__menu">
-                {sidebarCollections.map((collection) => {
-                  const isFavoritesCollection =
-                    collection.id === FAVORITES_COLLECTION_ID;
-
-                  return (
-                    <li
-                      key={collection.id}
-                      className={cn("sidebar__menu-item", {
-                        "sidebar__menu-item--active":
-                          selectedCollectionId === collection.id,
-                      })}
-                    >
-                      <button
-                        type="button"
-                        className="sidebar__menu-item-button"
-                        onClick={() =>
-                          handleSidebarCollectionClick(collection.id)
-                        }
-                        onContextMenu={
-                          isFavoritesCollection
-                            ? undefined
-                            : (event) =>
-                                handleOpenCollectionContextMenu(
-                                  event,
-                                  collection
-                                )
-                        }
+                <div className="sidebar__game-toggle-text">
+                  {(showInstalledGames
+                    ? t("installed", { defaultValue: "Instalados" })
+                    : t("favorites", { defaultValue: "Favoritos" })
+                  )
+                    .split("")
+                    .map((char, index) => (
+                      <span
+                        key={index}
+                        className="sidebar__game-toggle-letter"
+                        style={{ animationDelay: `${index * 25}ms` }}
                       >
-                        {isFavoritesCollection ? (
-                          <HeartIcon
-                            className="sidebar__collection-icon"
-                            size={16}
-                          />
-                        ) : (
-                          <FileDirectoryIcon
-                            className="sidebar__collection-icon"
-                            size={16}
-                          />
-                        )}
-                        <span className="sidebar__menu-item-button-label">
-                          {collection.name}
-                        </span>
-                        <span className="sidebar__collection-count">
-                          {collection.gamesCount}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-
-          <section className="sidebar__section">
-            <div className="sidebar__section-header">
-              <button
-                type="button"
-                className="sidebar__section-toggle"
-                onClick={() => setIsGamesCollapsed(!isGamesCollapsed)}
-                aria-label={
-                  isGamesCollapsed ? t("expand_games") : t("collapse_games")
-                }
-              >
-                <ChevronRightIcon
-                  size={14}
-                  className={cn("sidebar__section-toggle-chevron", {
-                    "sidebar__section-toggle-chevron--expanded":
-                      !isGamesCollapsed,
-                  })}
-                />
-                <small className="sidebar__section-title">{t("games")}</small>
-              </button>
-              <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}
-              >
-                <button
-                  type="button"
-                  className="sidebar__add-button"
-                  onClick={handleAddGameButtonClick}
-                  data-tooltip-id="add-custom-game-tooltip"
-                  data-tooltip-content={t("add_custom_game_tooltip")}
-                  data-tooltip-place="top"
-                >
-                  <PlusIcon size={16} />
-                </button>
-                <button
-                  type="button"
-                  className={cn("sidebar__play-button", {
-                    "sidebar__play-button--active": showPlayableOnly,
-                  })}
-                  onClick={handlePlayButtonClick}
-                  data-tooltip-id="show-playable-only-tooltip"
-                  data-tooltip-content={t("show_playable_only_tooltip")}
-                  data-tooltip-place="top"
-                >
-                  <PlayIcon size={16} />
-                </button>
-              </div>
-            </div>
-
-            {!isGamesCollapsed && (
-              <>
-                <TextField
-                  ref={filterRef}
-                  placeholder={t("filter")}
-                  onChange={handleFilter}
-                  theme="dark"
-                />
-
-                <ul className="sidebar__menu">
-                  {filteredLibrary
-                    .filter((game) => !showPlayableOnly || isGamePlayable(game))
-                    .map((game) => (
-                      <SidebarGameItem
-                        key={game.id}
-                        game={game}
-                        handleSidebarGameClick={handleSidebarGameClick}
-                        getGameTitle={getGameTitle}
-                      />
+                        {char === " " ? "\u00A0" : char}
+                      </span>
                     ))}
-                </ul>
-              </>
-            )}
-          </section>
+                </div>
+                <div
+                  className={cn("sidebar__game-toggle-icon", {
+                    "sidebar__game-toggle-icon--installed": showInstalledGames,
+                  })}
+                >
+                  <ArrowRightLeftIcon size={12} />
+                </div>
+              </div>
+              <span className="sidebar__game-toggle-count">
+                {showInstalledGames ? installedGames.length : favoriteGames.length}
+              </span>
+            </button>
+
+            <div key={showInstalledGames ? "installed" : "favorites"} className="sidebar__favorites-list">
+              {(showInstalledGames ? installedGames : favoriteGames).length === 0 ? (
+                <p className="sidebar__menu-empty">
+                  {showInstalledGames
+                    ? t("no_installed_games", { defaultValue: "Nenhum jogo instalado" })
+                    : t("no_favorites", { defaultValue: "Nenhum jogo favorito" })}
+                </p>
+              ) : (
+                (showInstalledGames ? installedGames : favoriteGames).map((game) => (
+                  <SidebarFavoriteCard
+                    key={game.id}
+                    game={game}
+                    onClick={handleSidebarGameClick}
+                  />
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="sidebar__bottom-buttons">
+        <button
+          type="button"
+          className="sidebar__add-game-button"
+          onClick={handleAddGameButtonClick}
+        >
+          <PlusIcon size={14} />
+          <span>{t("add_custom_game_tooltip", { defaultValue: "Adicionar jogo" })}</span>
+        </button>
+
         {hasActiveSubscription && (
           <button
             type="button"
