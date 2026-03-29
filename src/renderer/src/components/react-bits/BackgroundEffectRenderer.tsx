@@ -19,7 +19,9 @@ export function BackgroundEffectRenderer() {
 
   useEffect(() => {
     const handleUpdate = () => {
-      setEffect(localStorage.getItem("hydra_background_effect") || "floatinglines");
+      setEffect(
+        localStorage.getItem("hydra_background_effect") || "floatinglines"
+      );
       try {
         const confStr = localStorage.getItem("hydra_background_config");
         if (confStr) {

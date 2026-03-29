@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  PlayIcon,
-  DownloadIcon,
-  ArrowRightIcon,
-} from "@primer/octicons-react";
+import { PlayIcon, DownloadIcon, ArrowRightIcon } from "@primer/octicons-react";
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { Button } from "@renderer/components";
-import { useLibrary } from "@renderer/hooks/use-library";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
 import "./home.scss";
@@ -79,13 +74,9 @@ function cleanPublisher(raw: string): string {
 
 const UUID_RE = /^[0-9a-f-]{36}$/i;
 
-export function GameInfo({
-  game,
-  isBgLight = false,
-}: Readonly<GameInfoProps>) {
+export function GameInfo({ game, isBgLight = false }: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
-  const { library } = useLibrary();
   const [details, setDetails] = useState<ShopDetailsWithAssets | null>(
     detailsCache.get(game.objectId) ?? null
   );

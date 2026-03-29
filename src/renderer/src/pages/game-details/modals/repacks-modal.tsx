@@ -1,6 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import {
   PlusCircleIcon,
   ChevronDownIcon,
@@ -77,7 +76,6 @@ export function RepacksModal({
   const { t } = useTranslation("game_details");
 
   const { formatDate } = useDate();
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const userPreferences = useAppSelector(
     (state) => state.userPreferences.value
@@ -323,7 +321,9 @@ export function RepacksModal({
               <Button
                 type="button"
                 theme="primary"
-                onClick={() => window.electron.openExternal("https://hydralinks.cloud")}
+                onClick={() =>
+                  window.electron.openExternal("https://hydralinks.cloud")
+                }
               >
                 <PlusCircleIcon />
                 Adicionar fonte

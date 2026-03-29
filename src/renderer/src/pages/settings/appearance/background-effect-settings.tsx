@@ -138,7 +138,8 @@ export function BackgroundEffectSettings() {
   const [config, setConfig] = useState<any>({});
 
   useEffect(() => {
-    const ef = localStorage.getItem("hydra_background_effect") || "floatinglines";
+    const ef =
+      localStorage.getItem("hydra_background_effect") || "floatinglines";
     setEffect(ef);
     try {
       const confStr = localStorage.getItem("hydra_background_config");

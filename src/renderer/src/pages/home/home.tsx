@@ -21,7 +21,11 @@ import cn from "classnames";
 import { GameInfo } from "./game-info";
 import { FolderInfo } from "./folder-info";
 import { HeroCarousel } from "./hero-carousel";
-import { ContextMenu, type ContextMenuItemData, ConfirmationModal } from "@renderer/components";
+import {
+  ContextMenu,
+  type ContextMenuItemData,
+  ConfirmationModal,
+} from "@renderer/components";
 import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
 import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";
 import { CreateFolderModal } from "./create-folder-modal";
@@ -669,10 +673,7 @@ export default function Home() {
 
           <div className="home__bottom-segment">
             {selectedGame && (
-              <GameInfo
-                game={selectedGame}
-                isBgLight={isBgLight}
-              />
+              <GameInfo game={selectedGame} isBgLight={isBgLight} />
             )}
             {selectedFolder && (
               <FolderInfo
@@ -733,7 +734,9 @@ export default function Home() {
         <ConfirmationModal
           visible={!!folderToDelete}
           title={t("excluir_pasta", { defaultValue: "Excluir pasta" })}
-          descriptionText={t("confirmar_exclusao_pasta", { defaultValue: "Tem certeza de que deseja excluir esta pasta?" })}
+          descriptionText={t("confirmar_exclusao_pasta", {
+            defaultValue: "Tem certeza de que deseja excluir esta pasta?",
+          })}
           confirmButtonLabel={t("excluir", { defaultValue: "Excluir" })}
           cancelButtonLabel={t("cancelar", { defaultValue: "Cancelar" })}
           onConfirm={() => {
