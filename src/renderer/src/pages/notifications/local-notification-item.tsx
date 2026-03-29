@@ -65,15 +65,26 @@ export function LocalNotificationItem({
     }
   };
 
+  const getTypeClass = () => {
+    switch (notification.type) {
+      case "DOWNLOAD_COMPLETE":
+      case "EXTRACTION_COMPLETE": return "notification-item--download";
+      case "UPDATE_AVAILABLE":
+      case "SCAN_GAMES_COMPLETE": return "notification-item--update";
+      case "ACHIEVEMENT_UNLOCKED": return "notification-item--badge";
+      default: return "";
+    }
+  };
+
   return (
     <button
       type="button"
-      className={cn("notification-item", {
+      className={cn("notification-item", getTypeClass(), {
         "notification-item--unread": !notification.isRead,
       })}
       onClick={handleClick}
     >
-      <div className="notification-item__picture">
+      <div className="notification-item__icon-wrap">
         {notification.pictureUrl ? (
           <img src={notification.pictureUrl} alt="" />
         ) : (
@@ -87,7 +98,7 @@ export function LocalNotificationItem({
           {notification.description}
         </span>
         <span className="notification-item__time">
-          <ClockIcon size={12} />
+          <ClockIcon size={11} />
           {formatDistance(new Date(notification.createdAt), new Date())}
         </span>
       </div>
@@ -97,8 +108,9 @@ export function LocalNotificationItem({
         className="notification-item__dismiss"
         onClick={handleDismiss}
         title={t("dismiss")}
+        aria-label={t("dismiss")}
       >
-        <XIcon size={16} />
+        <XIcon size={12} />
       </button>
     </button>
   );

@@ -2,9 +2,7 @@ import {
   useEffect,
   useMemo,
   useState,
-  useCallback,
-  lazy,
-  Suspense,
+  useCallback
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -38,10 +36,6 @@ import { ViewOptions, ViewMode } from "./view-options";
 import { FilterOptions, SortOption } from "./filter-options";
 import { LibraryCatalogueView } from "./library-catalogue-view";
 import "./library.scss";
-
-const PixelBlast = lazy(
-  () => import("@renderer/components/PixelBlast/PixelBlast")
-);
 
 const FAVORITES_COLLECTION_ID = "__favorites__";
 const SORT_OPTIONS: SortOption[] = [
@@ -501,24 +495,7 @@ export default function Library() {
 
   return (
     <section className="library__page">
-      <div className="library__bg-effect">
-        <Suspense fallback={null}>
-          <PixelBlast
-            variant="square"
-            pixelSize={3}
-            color="#07e874ff"
-            patternScale={3.5}
-            patternDensity={1.6}
-            enableRipples
-            rippleSpeed={0.3}
-            rippleThickness={0.07}
-            rippleIntensityScale={1.2}
-            speed={0.4}
-            transparent
-            edgeFade={0.4}
-          />
-        </Suspense>
-      </div>
+
       {hasGames && (
         <div className="library__filter-bar">
           <div className="library__controls-row">

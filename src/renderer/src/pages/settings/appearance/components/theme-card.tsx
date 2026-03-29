@@ -7,7 +7,11 @@ import { useNavigate } from "react-router-dom";
 import "./theme-card.scss";
 import { useState } from "react";
 import { DeleteThemeModal } from "../modals/delete-theme-modal";
-import { injectCustomCss, removeCustomCss, generateUUID } from "@renderer/helpers";
+import {
+  injectCustomCss,
+  removeCustomCss,
+  generateUUID,
+} from "@renderer/helpers";
 import { THEME_WEB_STORE_URL } from "@renderer/constants";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { useUserDetails } from "@renderer/hooks";

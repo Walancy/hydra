@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { changeLanguage } from "i18next";
 import { orderBy } from "lodash-es";
@@ -12,6 +12,8 @@ import {
 import { settingsContext } from "@renderer/context";
 import { useAppSelector } from "@renderer/hooks";
 import languageResources from "@locales";
+import { UnmuteIcon } from "@primer/octicons-react";
+import "./settings-general.scss";
 
 interface LanguageOption {
   option: string;
@@ -30,6 +32,8 @@ export function SettingsContextGeneral() {
   const [defaultDownloadsPath, setDefaultDownloadsPath] = useState("");
   const [showRunAtStartup, setShowRunAtStartup] = useState(false);
 
+  const volumeUpdateTimeoutRef = useRef<NodeJS.Timeout>();
+
   const [form, setForm] = useState({
     downloadsPath: "",
     language: "",
@@ -38,6 +42,8 @@ export function SettingsContextGeneral() {
     startMinimized: false,
     hideToTrayOnGameStart: false,
     enableAutoInstall: false,
+    backgroundMusicEnabled: false,
+    backgroundMusicVolume: 15,
   });
 
   useEffect(() => {
@@ -82,8 +88,21 @@ export function SettingsContextGeneral() {
       startMinimized: userPreferences.startMinimized ?? false,
       hideToTrayOnGameStart: userPreferences.hideToTrayOnGameStart ?? false,
       enableAutoInstall: userPreferences.enableAutoInstall ?? false,
+      backgroundMusicEnabled: userPreferences.backgroundMusicEnabled ?? false,
+      backgroundMusicVolume: Math.round(
+        (userPreferences.backgroundMusicVolume ?? 0.15) * 100
+      ),
     });
   }, [userPreferences, defaultDownloadsPath]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (volumeUpdateTimeoutRef.current) {
+        clearTimeout(volumeUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (values: Partial<typeof form>) => {
     setForm((prev) => ({ ...prev, ...values }));
@@ -97,6 +116,21 @@ export function SettingsContextGeneral() {
     handleChange({ language: value });
     changeLanguage(value);
   };
+
+  const handleMusicVolumeChange = useCallback(
+    (newVolume: number) => {
+      setForm((prev) => ({ ...prev, backgroundMusicVolume: newVolume }));
+
+      if (volumeUpdateTimeoutRef.current) {
+        clearTimeout(volumeUpdateTimeoutRef.current);
+      }
+
+      volumeUpdateTimeoutRef.current = setTimeout(() => {
+        updateUserPreferences({ backgroundMusicVolume: newVolume / 100 });
+      }, 300);
+    },
+    [updateUserPreferences]
+  );
 
   const handleChooseDownloadsPath = async () => {
     const { filePaths } = await window.electron.showOpenDialog({
@@ -207,6 +241,57 @@ export function SettingsContextGeneral() {
           />
         </div>
       )}
+
+      <div className="settings-context-panel__group">
+        <h3>{t("audio", { defaultValue: "Áudio" })}</h3>
+
+        <CheckboxField
+          label={t("background_music_enabled", {
+            defaultValue: "Habilitar Musica de Fundo",
+          })}
+          checked={form.backgroundMusicEnabled}
+          onChange={() =>
+            handleChange({
+              backgroundMusicEnabled: !form.backgroundMusicEnabled,
+            })
+          }
+        />
+
+        {form.backgroundMusicEnabled && (
+          <div className="settings-general__volume-control">
+            <label htmlFor="music-volume">
+              {t("background_music_volume", {
+                defaultValue: "Volume da M\u00fasica",
+              })}
+            </label>
+            <div className="settings-general__volume-slider-wrapper">
+              <UnmuteIcon size={16} className="settings-general__volume-icon" />
+              <input
+                id="music-volume"
+                type="range"
+                min="0"
+                max="100"
+                value={form.backgroundMusicVolume}
+                onChange={(e) => {
+                  const volumePercent = parseInt(e.target.value, 10);
+                  if (!isNaN(volumePercent)) {
+                    handleMusicVolumeChange(volumePercent);
+                  }
+                }}
+                className="settings-general__volume-slider"
+                style={
+                  {
+                    "--volume-percent": `${form.backgroundMusicVolume}%`,
+                  } as React.CSSProperties
+                }
+              />
+              <span className="settings-general__volume-value">
+                {form.backgroundMusicVolume}%
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -60,6 +60,8 @@ export function SettingsGeneral() {
     language: "",
     customStyles: window.localStorage.getItem("customStyles") || "",
     useNativeHttpDownloader: true,
+    backgroundMusicEnabled: false,
+    backgroundMusicVolume: 15,
   });
 
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
@@ -140,6 +142,10 @@ export function SettingsGeneral() {
         language: language ?? "en",
         useNativeHttpDownloader:
           userPreferences.useNativeHttpDownloader ?? true,
+        backgroundMusicEnabled: userPreferences.backgroundMusicEnabled ?? false,
+        backgroundMusicVolume: Math.round(
+          (userPreferences.backgroundMusicVolume ?? 0.15) * 100
+        ),
       }));
     }
   }, [userPreferences, defaultDownloadsPath]);
@@ -183,6 +189,21 @@ export function SettingsGeneral() {
 
       volumeUpdateTimeoutRef.current = setTimeout(() => {
         updateUserPreferences({ achievementSoundVolume: newVolume / 100 });
+      }, 300);
+    },
+    [updateUserPreferences]
+  );
+
+  const handleMusicVolumeChange = useCallback(
+    (newVolume: number) => {
+      setForm((prev) => ({ ...prev, backgroundMusicVolume: newVolume }));
+
+      if (volumeUpdateTimeoutRef.current) {
+        clearTimeout(volumeUpdateTimeoutRef.current);
+      }
+
+      volumeUpdateTimeoutRef.current = setTimeout(() => {
+        updateUserPreferences({ backgroundMusicVolume: newVolume / 100 });
       }, 300);
     },
     [updateUserPreferences]
@@ -396,6 +417,57 @@ export function SettingsGeneral() {
             />
             <span className="settings-general__volume-value">
               {form.achievementSoundVolume}%
+            </span>
+          </div>
+        </div>
+      )}
+
+      <h2 className="settings-general__section-title">
+        {t("audio", { defaultValue: "Áudio" })}
+      </h2>
+
+      <CheckboxField
+        label={t("background_music_enabled", {
+          defaultValue: "Habilitar Musica de Fundo",
+        })}
+        checked={form.backgroundMusicEnabled}
+        onChange={() =>
+          handleChange({
+            backgroundMusicEnabled: !form.backgroundMusicEnabled,
+          })
+        }
+      />
+
+      {form.backgroundMusicEnabled && (
+        <div className="settings-general__volume-control">
+          <label htmlFor="music-volume">
+            {t("background_music_volume", {
+              defaultValue: "Volume da M\u00fasica",
+            })}
+          </label>
+          <div className="settings-general__volume-slider-wrapper">
+            <UnmuteIcon size={16} className="settings-general__volume-icon" />
+            <input
+              id="music-volume"
+              type="range"
+              min="0"
+              max="100"
+              value={form.backgroundMusicVolume}
+              onChange={(e) => {
+                const volumePercent = parseInt(e.target.value, 10);
+                if (!isNaN(volumePercent)) {
+                  handleMusicVolumeChange(volumePercent);
+                }
+              }}
+              className="settings-general__volume-slider"
+              style={
+                {
+                  "--volume-percent": `${form.backgroundMusicVolume}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span className="settings-general__volume-value">
+              {form.backgroundMusicVolume}%
             </span>
           </div>
         </div>

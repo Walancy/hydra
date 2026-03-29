@@ -145,6 +145,8 @@ export interface UserPreferences {
   defaultProtonPath?: string | null;
   autoRunMangohud?: boolean;
   autoRunGamemode?: boolean;
+  backgroundMusicEnabled?: boolean;
+  backgroundMusicVolume?: number;
 }
 
 export interface ScreenState {

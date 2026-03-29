@@ -14,6 +14,7 @@ export interface SelectProps
   theme?: "primary" | "dark";
   label?: string;
   value?: string;
+  disabled?: boolean;
   options?: { key: string; value: string; label: string }[];
   onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
@@ -21,6 +22,7 @@ export interface SelectProps
 export function SelectField({
   value,
   label,
+  disabled,
   options = [{ key: "-", value: value?.toString() || "-", label: "-" }],
   theme = "primary",
   onChange,
@@ -106,10 +108,13 @@ export function SelectField({
         aria-controls={`${id}-listbox`}
         tabIndex={0}
         className={cn("select-field", `select-field--${theme}`, {
-          "select-field--open": isOpen,
+          "select-field--open": !disabled && isOpen,
+          "select-field--disabled": disabled,
         })}
-        onClick={() => setIsOpen((prev) => !prev)}
-        onKeyDown={handleKeyDown}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (!disabled) handleKeyDown(e);
+        }}
       >
         <span className="select-field__value">{selectedOption?.label}</span>
         <ChevronDownIcon

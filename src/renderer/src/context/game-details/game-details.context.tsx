@@ -126,13 +126,18 @@ export function GameDetailsContextProvider({
 
         setShopDetails(result);
 
-        if (
-          result?.content_descriptors.ids.includes(
-            SteamContentDescriptor.AdultOnlySexualContent
-          ) &&
-          !userPreferences?.disableNsfwAlert
-        ) {
-          setHasNSFWContentBlocked(true);
+        try {
+          if (
+            Array.isArray(result?.content_descriptors?.ids) &&
+            result?.content_descriptors?.ids.includes(
+              SteamContentDescriptor.AdultOnlySexualContent
+            ) &&
+            !userPreferences?.disableNsfwAlert
+          ) {
+            setHasNSFWContentBlocked(true);
+          }
+        } catch (e) {
+          console.error("NSFW detection failed:", e);
         }
 
         if (result?.assets) {

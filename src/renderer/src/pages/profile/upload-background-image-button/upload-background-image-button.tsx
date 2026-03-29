@@ -1,6 +1,6 @@
 import { TrashIcon, UploadIcon } from "@primer/octicons-react";
 import { MoreVertical } from "lucide-react";
-import { Button, ConfirmationModal } from "@renderer/components";
+import { ConfirmationModal } from "@renderer/components";
 import { createPortal } from "react-dom";
 import { useContext, useEffect, useRef, useState } from "react";
 import { userProfileContext } from "@renderer/context";
@@ -127,19 +127,17 @@ export function UploadBackgroundImageButton() {
   // If no banner exists, show the original upload button
   if (!hasBanner) {
     return (
-      <div className="upload-background-image-button__wrapper">
-        <Button
-          theme="outline"
-          className="upload-background-image-button"
-          onClick={handleReplaceBanner}
-          disabled={isUploadingBackgroundImage}
-        >
-          <UploadIcon />
-          {isUploadingBackgroundImage
-            ? t("uploading_banner")
-            : t("upload_banner")}
-        </Button>
-      </div>
+      <button
+        type="button"
+        className="profile-hero__transparent-action-btn"
+        onClick={handleReplaceBanner}
+        disabled={isUploadingBackgroundImage}
+      >
+        <UploadIcon />
+        {isUploadingBackgroundImage
+          ? t("uploading_banner")
+          : t("upload_banner")}
+      </button>
     );
   }
 
@@ -190,17 +188,16 @@ export function UploadBackgroundImageButton() {
 
   return (
     <>
-      <div ref={buttonRef} className="upload-background-image-button__wrapper">
-        <Button
-          theme="outline"
-          className="upload-background-image-button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          disabled={isUploadingBackgroundImage}
-        >
-          {t("change_banner")}
-          <MoreVertical size={16} />
-        </Button>
-      </div>
+      <button
+        type="button"
+        ref={buttonRef as unknown as React.RefObject<HTMLButtonElement>}
+        className="profile-hero__transparent-action-btn"
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        disabled={isUploadingBackgroundImage}
+      >
+        {t("change_banner", { defaultValue: "Capa" })}
+        <MoreVertical size={16} />
+      </button>
       {createPortal(menuContent, document.body)}
       <ConfirmationModal
         visible={showRemoveBannerModal}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { PlusIcon, CheckIcon, DashIcon } from "@primer/octicons-react";
+import { PlusIcon, CheckIcon, DashIcon, PlayIcon, InfoIcon } from "@primer/octicons-react";
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { Button } from "@renderer/components";
@@ -14,6 +14,7 @@ interface GameInfoProps {
   game: ShopAssets;
   showAddButton?: boolean;
   showRemoveButton?: boolean;
+  isBgLight?: boolean;
 }
 
 const detailsCache = new Map<string, ShopDetailsWithAssets>();
@@ -80,6 +81,7 @@ export function GameInfo({
   game,
   showAddButton = false,
   showRemoveButton = false,
+  isBgLight = false,
 }: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
@@ -164,26 +166,41 @@ export function GameInfo({
       {sourceNames.length > 0 && (
         <div className="home__source-tags">
           {sourceNames.map((name) => (
-            <span key={name} className="home__source-tag">
+            <span key={name} className={`home__source-tag ${isBgLight ? "home__source-tag--dark" : ""}`}>
               {name}
             </span>
           ))}
         </div>
       )}
       <div className="home__actions">
-        <Button
-          className="home__view-button"
-          theme="primary"
-          onClick={() => navigate(buildGameDetailsPath(game))}
-        >
-          {t("see_more")}
-        </Button>
+        {(game as any).executablePath ? (
+          <Button
+            className="home__play-button"
+            theme={isBgLight ? "dark" : "primary"}
+            onClick={() => window.electron.openGame(game.shop, game.objectId, (game as any).executablePath as string)}
+          >
+            <PlayIcon size={16} />
+            {t("play", { defaultValue: "Jogar" })}
+          </Button>
+        ) : (
+          <Button
+            className="home__view-button"
+            theme={isBgLight ? "dark" : "primary"}
+            onClick={() => navigate(buildGameDetailsPath(game))}
+          >
+            {t("see_more", { defaultValue: "Ver mais" })}
+          </Button>
+        )}
         {showRemoveButton && isInLibrary && (
           <Button
             className="home__remove-button"
-            theme="outline"
-            disabled={isRemoving}
+            theme={isBgLight ? "dark" : "outline"}
+            disabled={isRemoving && !(game as any).executablePath}
             onClick={async () => {
+              if ((game as any).executablePath) {
+                navigate(buildGameDetailsPath(game));
+                return;
+              }
               if (isRemoving) return;
               setIsRemoving(true);
               try {
@@ -196,14 +213,19 @@ export function GameInfo({
                 setIsRemoving(false);
               }
             }}
+            title={
+              (game as any).executablePath 
+                ? t("see_more", { defaultValue: "Ver mais" }) 
+                : t("remove", { defaultValue: "Remover" })
+            }
           >
-            <DashIcon size={16} />
+            {(game as any).executablePath ? <InfoIcon size={16} /> : <DashIcon size={16} />}
           </Button>
         )}
         {showAddButton && (
           <Button
             className="home__add-button"
-            theme="outline"
+            theme={isBgLight ? "dark" : "outline"}
             disabled={isInLibrary || isAdding}
             onClick={async () => {
               if (isInLibrary || isAdding) return;

@@ -15,6 +15,7 @@ import {
   useLibrary,
   useToast,
   useUserDetails,
+  useBackgroundMusic,
 } from "@renderer/hooks";
 import { useDownloadOptionsListener } from "@renderer/hooks/use-download-options-listener";
 
@@ -44,6 +45,8 @@ import {
 import { levelDBService } from "./services/leveldb.service";
 import type { UserPreferences } from "@types";
 import cn from "classnames";
+import { BackgroundEffectRenderer } from "./components/react-bits/BackgroundEffectRenderer";
+import "react-loading-skeleton/dist/skeleton.css";
 import "./app.scss";
 
 export interface AppProps {
@@ -80,12 +83,8 @@ export function App() {
 
   const workwondersRef = useRef<WorkWonders | null>(null);
 
-  const {
-    hasActiveSubscription,
-    fetchUserDetails,
-    updateUserDetails,
-    clearUserDetails,
-  } = useUserDetails();
+  const { fetchUserDetails, updateUserDetails, clearUserDetails } =
+    useUserDetails();
 
   const { hideHydraCloudModal, isHydraCloudModalVisible, hydraCloudFeature } =
     useSubscription();
@@ -106,6 +105,14 @@ export function App() {
   const [showArchiveDeletionModal, setShowArchiveDeletionModal] =
     useState(false);
   const [archivePaths, setArchivePaths] = useState<string[]>([]);
+
+  const userPreferences = useAppSelector(
+    (state) => state.userPreferences.value
+  );
+  const musicEnabled = userPreferences?.backgroundMusicEnabled ?? false;
+  const musicVolume = userPreferences?.backgroundMusicVolume ?? 0.15;
+
+  useBackgroundMusic(musicEnabled, musicVolume);
 
   useEffect(() => {
     Promise.all([
@@ -421,11 +428,6 @@ export function App() {
               </button>
             </div>
           )}
-          <h4>
-            {hasActiveSubscription && (
-              <span className="title-bar__cloud-text"> Cloud</span>
-            )}
-          </h4>
         </div>
       )}
 
@@ -464,6 +466,7 @@ export function App() {
       />
 
       <main>
+        <BackgroundEffectRenderer />
         <div
           className={cn("sidebar-wrapper", {
             "sidebar-wrapper--force-open": isSidebarForceOpen,

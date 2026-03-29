@@ -3,9 +3,7 @@ import {
   SettingsContextConsumer,
   SettingsContextProvider,
 } from "@renderer/context";
-import { SettingsAccount } from "./settings-account";
-import { useUserDetails } from "@renderer/hooks";
-import { lazy, Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import "./settings.scss";
 import {
   BellIcon,
@@ -13,7 +11,6 @@ import {
   DownloadIcon,
   GearIcon,
   PlayIcon,
-  ShieldCheckIcon,
 } from "@primer/octicons-react";
 import { Wrench } from "lucide-react";
 import { SettingsContextGeneral } from "./settings-context-general";
@@ -25,14 +22,9 @@ import { SettingsContextCompatibility } from "./settings-context-compatibility";
 import { SettingsAppearance } from "./appearance/settings-appearance";
 import { PaintbrushIcon } from "@primer/octicons-react";
 
-const PixelBlast = lazy(
-  () => import("@renderer/components/PixelBlast/PixelBlast")
-);
 
 export default function Settings() {
   const { t } = useTranslation("settings");
-
-  const { userDetails } = useUserDetails();
 
   const categories = useMemo(
     () => [
@@ -73,17 +65,8 @@ export default function Settings() {
         label: t("compatibility", { defaultValue: "Compatibility" }),
         icon: <Wrench size={16} />,
       },
-      ...(userDetails
-        ? [
-            {
-              id: "account_privacy" as const,
-              label: `${t("account")} & ${t("privacy")}`,
-              icon: <ShieldCheckIcon size={16} />,
-            },
-          ]
-        : []),
     ],
-    [t, userDetails]
+    [t]
   );
 
   return (
@@ -124,29 +107,12 @@ export default function Settings() {
               return <SettingsContextCompatibility />;
             }
 
-            return <SettingsAccount />;
+            return null;
           };
 
           return (
             <>
-              <div className="settings__bg-effect">
-                <Suspense fallback={null}>
-                  <PixelBlast
-                    variant="square"
-                    pixelSize={3}
-                    color="#6366f1"
-                    patternScale={3.5}
-                    patternDensity={1.6}
-                    enableRipples
-                    rippleSpeed={0.3}
-                    rippleThickness={0.07}
-                    rippleIntensityScale={1.2}
-                    speed={0.4}
-                    transparent
-                    edgeFade={0.4}
-                  />
-                </Suspense>
-              </div>
+
 
               <section className="settings__container">
                 <div className="settings__content">

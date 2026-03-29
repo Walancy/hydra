@@ -21,14 +21,21 @@ import {
 import "./header.scss";
 import { AutoUpdateSubHeader } from "./auto-update-sub-header";
 import { ScanGamesModal } from "./scan-games-modal";
-import { setFilters, setLibrarySearchQuery } from "@renderer/features";
+import {
+  setFilters,
+  setLibrarySearchQuery,
+  triggerCloseFolder,
+} from "@renderer/features";
 import cn from "classnames";
 import { SearchDropdown } from "@renderer/components";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { GameShop } from "@types";
 import { routes as navRoutes } from "../sidebar/routes";
 import { Avatar } from "../avatar/avatar";
+import { AnimatedBorder } from "../animated-border/animated-border";
+import { GradualBlur } from "../ui/gradual-blur";
 import { AuthPage } from "@shared";
+import { NotificationsSidebar } from "../notifications-sidebar/notifications-sidebar";
 
 export function Header() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,10 +45,37 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [notifSidebarOpen, setNotifSidebarOpen] = useState(false);
 
-  const { draggingDisabled } = useAppSelector((state) => state.window);
+  const [avatarDecorOptions, setAvatarDecorOptions] = useState({
+    border: localStorage.getItem("hydra_avatar_border") || "none",
+    speed: Number(localStorage.getItem("hydra_avatar_beam_speed")) || 6,
+    color: localStorage.getItem("hydra_avatar_beam_color") || "#ef4444",
+    length: Number(localStorage.getItem("hydra_avatar_beam_length")) || 25,
+    chaos: Number(localStorage.getItem("hydra_avatar_beam_chaos")) || 0.12,
+  });
+
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      setAvatarDecorOptions({
+        border: localStorage.getItem("hydra_avatar_border") || "none",
+        speed: Number(localStorage.getItem("hydra_avatar_beam_speed")) || 6,
+        color: localStorage.getItem("hydra_avatar_beam_color") || "#ef4444",
+        length: Number(localStorage.getItem("hydra_avatar_beam_length")) || 25,
+        chaos: Number(localStorage.getItem("hydra_avatar_beam_chaos")) || 0.12,
+      });
+    };
+    window.addEventListener("avatar_style_update", handleAvatarUpdate);
+    return () =>
+      window.removeEventListener("avatar_style_update", handleAvatarUpdate);
+  }, []);
+
+  const { draggingDisabled, openedFolderName } = useAppSelector(
+    (state) => state.window
+  );
 
   const { userDetails } = useUserDetails();
+  const { hasActiveSubscription } = useUserDetails();
 
   const handleProfileClick = () => {
     if (!userDetails) {
@@ -59,8 +93,11 @@ export function Header() {
     (state) => state.library.searchQuery
   );
 
+  const isHomePage = location.pathname === "/";
+  const isSearchPage = location.pathname.startsWith("/search");
   const isOnLibraryPage = location.pathname.startsWith("/library");
   const isOnCataloguePage = location.pathname.startsWith("/catalogue");
+  const isGamePage = location.pathname.startsWith("/game");
 
   const searchValue = isOnLibraryPage
     ? librarySearchValue
@@ -301,6 +338,25 @@ export function Header() {
 
   return (
     <>
+      {!(isHomePage || isGamePage) && (
+        <GradualBlur
+          position="top"
+          height="130px"
+          strength={2}
+          divCount={8}
+          curve="linear"
+          exponential
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            zIndex: 9,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
       <header
         className={cn("header", {
           "header--dragging-disabled": draggingDisabled,
@@ -405,7 +461,7 @@ export function Header() {
           <button
             type="button"
             className="header__action-button"
-            onClick={() => navigate("/notifications")}
+            onClick={() => setNotifSidebarOpen((o) => !o)}
             title={t("notifications", { ns: "sidebar" })}
           >
             <BellIcon size={16} />
@@ -416,14 +472,37 @@ export function Header() {
             className="header__profile-button"
             onClick={handleProfileClick}
           >
-            <Avatar
-              size={28}
-              src={userDetails?.profileImageUrl}
-              alt={userDetails?.displayName}
-            />
-            <span className="header__profile-label">
-              {userDetails?.displayName || t("sign_in", { ns: "sidebar" })}
-            </span>
+            <AnimatedBorder
+              borderWidth={1}
+              containerSize={28}
+              styleName={avatarDecorOptions.border as any}
+              beamSpeed={avatarDecorOptions.speed}
+              beamColor={avatarDecorOptions.color}
+              beamLength={avatarDecorOptions.length}
+              beamChaos={avatarDecorOptions.chaos}
+            >
+              <Avatar
+                size={28}
+                src={userDetails?.profileImageUrl}
+                alt={userDetails?.displayName}
+              />
+            </AnimatedBorder>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 2,
+                paddingLeft: 4,
+              }}
+            >
+              <span className="header__profile-label" style={{ lineHeight: 1 }}>
+                {userDetails?.displayName || t("sign_in", { ns: "sidebar" })}
+              </span>
+              {hasActiveSubscription && (
+                <span className="header__profile-cloud-badge">CLOUD</span>
+              )}
+            </div>
           </button>
         </section>
       </header>
@@ -463,6 +542,11 @@ export function Header() {
         scanResult={scanResult}
         onStartScan={handleStartScan}
         onClearResult={handleClearScanResult}
+      />
+
+      <NotificationsSidebar
+        open={notifSidebarOpen}
+        onClose={() => setNotifSidebarOpen(false)}
       />
     </>
   );

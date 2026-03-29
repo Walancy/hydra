@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { useAppSelector, useDownload, useLibrary } from "@renderer/hooks";
 
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BinaryNotFoundModal } from "../shared-modals/binary-not-found-modal";
 import "./downloads.scss";
 import { DeleteGameModal } from "./delete-game-modal";
@@ -11,9 +11,6 @@ import type { GameShop, LibraryGame, SeedingStatus } from "@types";
 import { orderBy } from "lodash-es";
 import { ArrowDownIcon } from "@primer/octicons-react";
 
-const PixelBlast = lazy(
-  () => import("@renderer/components/PixelBlast/PixelBlast")
-);
 
 export default function Downloads() {
   const { library, updateLibrary } = useLibrary();
@@ -143,24 +140,7 @@ export default function Downloads() {
 
   return (
     <>
-      <div className="downloads__bg-effect">
-        <Suspense fallback={null}>
-          <PixelBlast
-            variant="square"
-            pixelSize={3}
-            color="#07e874ff"
-            patternScale={3.5}
-            patternDensity={1.6}
-            enableRipples
-            rippleSpeed={0.3}
-            rippleThickness={0.07}
-            rippleIntensityScale={1.2}
-            speed={0.4}
-            transparent
-            edgeFade={0.4}
-          />
-        </Suspense>
-      </div>
+
 
       <BinaryNotFoundModal
         visible={showBinaryNotFoundModal}

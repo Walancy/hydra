@@ -38,7 +38,7 @@ import { FeaturedCarousel } from "./featured-carousel";
 import { CatalogueSection } from "./catalogue-section";
 import { CategoryExplorer } from "./category-explorer";
 import { TopSellers } from "./top-sellers";
-import PixelBlast from "@renderer/components/PixelBlast/PixelBlast";
+
 
 const ProtonCompatibilitySection = lazy(async () => {
   const mod = await import("./proton-compatibility-section");
@@ -451,22 +451,7 @@ export default function Catalogue() {
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>
-      <div className="catalogue__bg-effect">
-        <PixelBlast
-          variant="square"
-          pixelSize={3}
-          color="#07e874ff"
-          patternScale={3.5}
-          patternDensity={1.6}
-          enableRipples
-          rippleSpeed={0.3}
-          rippleThickness={0.07}
-          rippleIntensityScale={1.2}
-          speed={0.4}
-          transparent
-          edgeFade={0.4}
-        />
-      </div>
+
 
       {/* Sticky filter bar centered */}
       <div className="catalogue__filter-bar">

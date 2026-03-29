@@ -1,0 +1,2507 @@
+diff --git a/src/renderer/src/pages/profile/profile-content/library-tab.tsx b/src/renderer/src/pages/profile/profile-content/library-tab.tsx
+index 1bc78c05..68791284 100644
+--- a/src/renderer/src/pages/profile/profile-content/library-tab.tsx
++++ b/src/renderer/src/pages/profile/profile-content/library-tab.tsx
+@@ -1,7 +1,7 @@
+ import { motion } from "framer-motion";
+ import { useTranslation } from "react-i18next";
+ import { TelescopeIcon } from "@primer/octicons-react";
+-import InfiniteScroll from "react-infinite-scroll-component";
++import { useEffect } from "react";
+ import { useFormat } from "@renderer/hooks";
+ import type { UserGame } from "@types";
+ import { SortOptions } from "./sort-options";
+@@ -41,6 +41,12 @@ export function LibraryTab({
+   onMouseLeave,
+   isMe,
+ }: Readonly<LibraryTabProps>) {
++  useEffect(() => {
++    if (hasMoreLibraryGames && !isLoadingLibraryGames) {
++      onLoadMore();
++    }
++  }, [hasMoreLibraryGames, isLoadingLibraryGames, onLoadMore]);
++
+   const { t } = useTranslation("user_profile");
+   const { numberFormatter } = useFormat();
+ 
+@@ -58,9 +64,6 @@ export function LibraryTab({
+       transition={{ duration: 0.2 }}
+       aria-hidden={false}
+     >
+-      {hasAnyGames && (
+-        <SortOptions sortBy={sortBy} onSortChange={onSortChange} />
+-      )}
+ 
+       {!hasAnyGames && (
+         <div className="profile-content__no-games">
+@@ -112,17 +115,10 @@ export function LibraryTab({
+                     </span>
+                   )}
+                 </div>
++                <SortOptions sortBy={sortBy} onSortChange={onSortChange} />
+               </div>
+ 
+-              <InfiniteScroll
+-                dataLength={libraryGames.length}
+-                next={onLoadMore}
+-                hasMore={hasMoreLibraryGames}
+-                loader={null}
+-                scrollThreshold={0.9}
+-                style={{ overflow: "visible" }}
+-                scrollableTarget="scrollableDiv"
+-              >
++
+                 <ul className="profile-content__games-grid">
+                   {libraryGames?.map((game, index) => {
+                     const hasAnimated = animatedGameIdsRef.current.has(
+@@ -168,7 +164,7 @@ export function LibraryTab({
+                     );
+                   })}
+                 </ul>
+-              </InfiniteScroll>
++
+             </div>
+           )}
+         </div>
+diff --git a/src/renderer/src/pages/profile/profile-content/profile-content.scss b/src/renderer/src/pages/profile/profile-content/profile-content.scss
+index 958fe52d..ff13d70f 100644
+--- a/src/renderer/src/pages/profile/profile-content/profile-content.scss
++++ b/src/renderer/src/pages/profile/profile-content/profile-content.scss
+@@ -4,7 +4,18 @@
+   &__section {
+     display: flex;
+     gap: calc(globals.$spacing-unit * 3);
+-    padding: calc(globals.$spacing-unit * 3);
++    width: 100%;
++    max-width: 1400px;
++    margin: 0 auto;
++    padding: 48px 48px 56px;
++
++    @media (max-width: 1100px) {
++      padding: 32px 24px 48px;
++    }
++
++    @media (max-width: 800px) {
++      padding: 24px 12px 40px;
++    }
+   }
+ 
+   &__main {
+@@ -96,36 +107,20 @@
+     }
+   }
+ 
+-  &__tabs {
++  &__home-style-tabs {
+     display: flex;
+-    gap: calc(globals.$spacing-unit);
+-    margin-bottom: calc(globals.$spacing-unit * 2);
+-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+-    position: relative;
+-  }
+-
+-  &__tab-wrapper {
+-    position: relative;
+-  }
+-
+-  &__tab {
+-    background: none;
+-    border: none;
+-    color: rgba(255, 255, 255, 0.6);
+-    padding: calc(globals.$spacing-unit) calc(globals.$spacing-unit * 2);
+-    cursor: pointer;
+-    font-size: 14px;
+-    font-weight: 500;
+-    transition: color ease 0.2s;
+-    display: flex;
+-    align-items: center;
+-    gap: calc(globals.$spacing-unit * 0.5);
++    list-style: none;
++    margin: 0;
++    padding: 0;
++    gap: globals.$spacing-unit;
+ 
+-    &--active {
+-      color: white;
++    @media (max-width: 600px) {
++      gap: calc(globals.$spacing-unit * 0.5);
++      flex-wrap: wrap;
+     }
+   }
+ 
++
+   &__tab-badge {
+     display: inline-flex;
+     align-items: center;
+@@ -141,13 +136,18 @@
+     line-height: 1;
+   }
+ 
+-  &__tab-underline {
++  &__tab-outline {
+     position: absolute;
+-    bottom: -1px;
++    top: 50%;
++    transform: translateY(-50%);
+     left: 0;
+     right: 0;
+-    height: 2px;
+-    background: white;
++    bottom: 0;
++    height: 100%;
++    border: 1.5px solid rgba(255, 255, 255, 0.85);
++    border-radius: 4px;
++    z-index: 0;
++    pointer-events: none;
+   }
+ 
+   &__games-grid {
+@@ -155,28 +155,8 @@
+     margin: 0;
+     padding: 0;
+     display: grid;
++    grid-template-columns: repeat(8, 1fr);
+     gap: calc(globals.$spacing-unit * 2);
+-    grid-template-columns: repeat(2, 1fr);
+-
+-    @container #{globals.$app-container} (min-width: 900px) {
+-      grid-template-columns: repeat(4, 1fr);
+-    }
+-
+-    @container #{globals.$app-container} (min-width: 1300px) {
+-      grid-template-columns: repeat(5, 1fr);
+-    }
+-
+-    @container #{globals.$app-container} (min-width: 2000px) {
+-      grid-template-columns: repeat(6, 1fr);
+-    }
+-
+-    @container #{globals.$app-container} (min-width: 2600px) {
+-      grid-template-columns: repeat(8, 1fr);
+-    }
+-
+-    @container #{globals.$app-container} (min-width: 3000px) {
+-      grid-template-columns: repeat(12, 1fr);
+-    }
+ 
+     &--drag-over {
+       background: rgba(255, 255, 255, 0.05);
+@@ -231,7 +211,17 @@
+ }
+ 
+ .user-reviews__review-item {
+-  border-radius: 8px;
++  background: rgba(255, 255, 255, 0.03);
++  backdrop-filter: blur(16px);
++  -webkit-backdrop-filter: blur(16px);
++  border: 1px solid rgba(255, 255, 255, 0.07);
++  border-radius: 12px;
++  padding: calc(globals.$spacing-unit * 2);
++  transition: background 0.2s ease;
++
++  &:hover {
++    background: rgba(255, 255, 255, 0.04);
++  }
+ }
+ 
+ .user-reviews__review-header {
+@@ -315,8 +305,8 @@
+   align-items: center;
+   gap: 4px;
+   background: rgba(255, 255, 255, 0.05);
+-  border-radius: 8px;
+-  padding: 2px 6px;
++  border-radius: 100px;
++  padding: 2px 8px;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   font-size: 11px;
+   font-weight: 500;
+@@ -347,8 +337,8 @@
+   font-size: 11px;
+   font-weight: 500;
+   background: rgba(255, 255, 255, 0.05);
+-  border-radius: 8px;
+-  padding: 2px 6px;
++  border-radius: 100px;
++  padding: 2px 8px;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+ }
+ 
+@@ -402,8 +392,8 @@
+   gap: 6px;
+   background: rgba(255, 255, 255, 0.05);
+   border: 1px solid rgba(255, 255, 255, 0.1);
+-  border-radius: 6px;
+-  padding: 6px 12px;
++  border-radius: 100px;
++  padding: 6px 16px;
+   color: #ccc;
+   font-size: 14px;
+   cursor: pointer;
+@@ -431,8 +421,8 @@
+   gap: 6px;
+   background: rgba(244, 67, 54, 0.1);
+   border: 1px solid rgba(244, 67, 54, 0.3);
+-  border-radius: 6px;
+-  padding: 6px 10px;
++  border-radius: 100px;
++  padding: 6px 16px;
+   color: #f44336;
+   cursor: pointer;
+   transition: all 0.2s ease;
+diff --git a/src/renderer/src/pages/profile/profile-content/profile-content.tsx b/src/renderer/src/pages/profile/profile-content/profile-content.tsx
+index 81246124..5d8a11e2 100644
+--- a/src/renderer/src/pages/profile/profile-content/profile-content.tsx
++++ b/src/renderer/src/pages/profile/profile-content/profile-content.tsx
+@@ -14,11 +14,10 @@ import { useTranslation } from "react-i18next";
+ import type { GameShop } from "@types";
+ import { LockedProfile } from "./locked-profile";
+ import { ReportProfile } from "../report-profile/report-profile";
+-import { BadgesBox } from "./badges-box";
+ import { FriendsBox, FriendsBoxAddButton } from "./friends-box";
++import { BadgesBox } from "./badges-box";
+ import { RecentGamesBox } from "./recent-games-box";
+ import { UserStatsBox } from "./user-stats-box";
+-import { ProfileSection } from "../profile-section/profile-section";
+ import { DeleteReviewModal } from "@renderer/pages/game-details/modals/delete-review-modal";
+ import { GAME_STATS_ANIMATION_DURATION_IN_MS } from "./profile-animations";
+ import { MAX_MINUTES_TO_SHOW_IN_PLAYTIME } from "@renderer/constants";
+@@ -371,22 +370,10 @@ export function ProfileContent() {
+       return <LockedProfile />;
+     }
+ 
+-    const hasGames = libraryGames.length > 0;
+-    const hasPinnedGames = pinnedGames.length > 0;
+-    const hasAnyGames = hasGames || hasPinnedGames;
+-
+-    const shouldShowRightContent =
+-      hasAnyGames || userProfile.friends.length > 0 || isMe;
+-
+     return (
+       <section className="profile-content__section">
+-        <div className="profile-content__main">
+-          <ProfileTabs
+-            activeTab={activeTab}
+-            reviewsTotalCount={reviewsTotalCount}
+-            onTabChange={setActiveTab}
+-          />
+-
++        <div className="profile-content__main" style={{ gap: 24, display: "flex", flexDirection: "column" }}>
++          <BadgesBox />
+           <div className="profile-content__tab-panels">
+             <AnimatePresence mode="wait">
+               {activeTab === "library" && (
+@@ -419,44 +406,27 @@ export function ProfileContent() {
+                   onDelete={handleDeleteClick}
+                 />
+               )}
+-            </AnimatePresence>
+-          </div>
+-        </div>
+ 
+-        {shouldShowRightContent && (
+-          <div className="profile-content__right-content">
+-            {userStats && (
+-              <ProfileSection title={t("stats")} defaultOpen={true}>
++              {activeTab === "stats" && userStats && (
+                 <UserStatsBox />
+-              </ProfileSection>
+-            )}
+-            {userProfile?.badges.length > 0 && (
+-              <ProfileSection
+-                title={t("badges")}
+-                count={userProfile.badges.length}
+-                defaultOpen={true}
+-              >
+-                <BadgesBox />
+-              </ProfileSection>
+-            )}
+-            {userProfile?.recentGames.length > 0 && (
+-              <ProfileSection title={t("activity")} defaultOpen={true}>
++              )}
++
++              {activeTab === "friends" && (userProfile.friends.length > 0 || isMe) && (
++                <>
++                  <FriendsBoxAddButton />
++                  <div style={{ marginTop: 16 }} />
++                  <FriendsBox />
++                </>
++              )}
++
++              {activeTab === "activity" && userProfile.recentGames.length > 0 && (
+                 <RecentGamesBox />
+-              </ProfileSection>
+-            )}
+-            {(userProfile?.friends.length > 0 || isMe) && (
+-              <ProfileSection
+-                title={t("friends")}
+-                count={userStats?.friendsCount || userProfile.friends.length}
+-                action={<FriendsBoxAddButton />}
+-                defaultOpen={true}
+-              >
+-                <FriendsBox />
+-              </ProfileSection>
+-            )}
+-            <ReportProfile />
++              )}
++            </AnimatePresence>
+           </div>
+-        )}
++        </div>
++
++        {isMe && <ReportProfile />}
+ 
+         <DeleteReviewModal
+           visible={deleteModalVisible}
+@@ -475,10 +445,8 @@ export function ProfileContent() {
+     statsIndex,
+     libraryGames,
+     pinnedGames,
+-
+     sortBy,
+     activeTab,
+-    // ensure reviews UI updates correctly
+     reviews,
+     reviewsTotalCount,
+     isLoadingReviews,
+@@ -488,8 +456,15 @@ export function ProfileContent() {
+ 
+   return (
+     <div>
+-      <ProfileHero />
+-
++      <ProfileHero>
++        <ProfileTabs
++          activeTab={activeTab}
++          reviewsTotalCount={reviewsTotalCount}
++          onTabChange={setActiveTab}
++          showFriendsTab={((userProfile?.friends?.length) ?? 0) > 0 || isMe}
++          showActivityTab={((userProfile?.recentGames?.length) ?? 0) > 0}
++        />
++      </ProfileHero>
+       {content}
+     </div>
+   );
+diff --git a/src/renderer/src/pages/profile/profile-content/profile-tabs.tsx b/src/renderer/src/pages/profile/profile-content/profile-tabs.tsx
+index 84d1dd4d..f46bd4ed 100644
+--- a/src/renderer/src/pages/profile/profile-content/profile-tabs.tsx
++++ b/src/renderer/src/pages/profile/profile-content/profile-tabs.tsx
+@@ -1,69 +1,73 @@
+-import { motion } from "framer-motion";
++import { Button } from "@renderer/components";
+ import { useTranslation } from "react-i18next";
+ import "./profile-content.scss";
+ 
+-export type ProfileTabType = "library" | "reviews";
++export type ProfileTabType = "library" | "reviews" | "stats" | "friends" | "activity";
+ 
+ interface ProfileTabsProps {
+   activeTab: ProfileTabType;
+   reviewsTotalCount: number;
+   onTabChange: (tab: ProfileTabType) => void;
++  showFriendsTab?: boolean;
++  showActivityTab?: boolean;
+ }
+ 
+ export function ProfileTabs({
+   activeTab,
+   reviewsTotalCount,
+   onTabChange,
++  showFriendsTab,
++  showActivityTab,
+ }: Readonly<ProfileTabsProps>) {
+   const { t } = useTranslation("user_profile");
+ 
+   return (
+-    <div className="profile-content__tabs">
+-      <div className="profile-content__tab-wrapper">
+-        <button
+-          type="button"
+-          className={`profile-content__tab ${activeTab === "library" ? "profile-content__tab--active" : ""}`}
++    <ul className="profile-content__home-style-tabs">
++      <li>
++        <Button
++          theme={activeTab === "library" ? "primary" : "outline"}
+           onClick={() => onTabChange("library")}
+         >
+-          {t("library")}
+-        </button>
+-        {activeTab === "library" && (
+-          <motion.div
+-            className="profile-content__tab-underline"
+-            layoutId="tab-underline"
+-            transition={{
+-              type: "spring",
+-              stiffness: 300,
+-              damping: 30,
+-            }}
+-          />
+-        )}
+-      </div>
+-      <div className="profile-content__tab-wrapper">
+-        <button
+-          type="button"
+-          className={`profile-content__tab ${activeTab === "reviews" ? "profile-content__tab--active" : ""}`}
++          {t("library", { defaultValue: "Biblioteca" })}
++        </Button>
++      </li>
++      <li>
++        <Button
++          theme={activeTab === "reviews" ? "primary" : "outline"}
+           onClick={() => onTabChange("reviews")}
+         >
+-          {t("user_reviews")}
+-          {reviewsTotalCount > 0 && (
+-            <span className="profile-content__tab-badge">
+-              {reviewsTotalCount}
+-            </span>
+-          )}
+-        </button>
+-        {activeTab === "reviews" && (
+-          <motion.div
+-            className="profile-content__tab-underline"
+-            layoutId="tab-underline"
+-            transition={{
+-              type: "spring",
+-              stiffness: 300,
+-              damping: 30,
+-            }}
+-          />
+-        )}
+-      </div>
+-    </div>
++          {t("user_reviews", { defaultValue: "Avaliações" })}
++          {reviewsTotalCount > 0 && ` (${reviewsTotalCount})`}
++        </Button>
++      </li>
++      <li>
++        <Button
++          theme={activeTab === "stats" ? "primary" : "outline"}
++          onClick={() => onTabChange("stats")}
++        >
++          {t("stats", { defaultValue: "Estatísticas" })}
++        </Button>
++      </li>
++      {showFriendsTab && (
++        <li>
++          <Button
++            theme={activeTab === "friends" ? "primary" : "outline"}
++            onClick={() => onTabChange("friends")}
++          >
++            {t("friends", { defaultValue: "Amigos" })}
++          </Button>
++        </li>
++      )}
++      {showActivityTab && (
++        <li>
++          <Button
++            theme={activeTab === "activity" ? "primary" : "outline"}
++            onClick={() => onTabChange("activity")}
++          >
++            {t("activity", { defaultValue: "Atividade" })}
++          </Button>
++        </li>
++      )}
++    </ul>
+   );
+ }
+diff --git a/src/renderer/src/pages/profile/profile-content/sort-options.scss b/src/renderer/src/pages/profile/profile-content/sort-options.scss
+index e36f3727..7bd297d5 100644
+--- a/src/renderer/src/pages/profile/profile-content/sort-options.scss
++++ b/src/renderer/src/pages/profile/profile-content/sort-options.scss
+@@ -1,56 +1,111 @@
+ @use "../../../scss/globals.scss";
+ 
+-.sort-options {
+-  &__container {
++.profile-sort-options {
++  position: relative;
++
++  &__trigger {
+     display: flex;
+-    flex-direction: column;
+-    align-items: flex-start;
+-    gap: calc(globals.$spacing-unit);
+-    margin-bottom: calc(globals.$spacing-unit * 2);
++    align-items: center;
++    gap: 6px;
++    padding: 6px 12px;
++    border-radius: 100px;
++    font-size: 12px;
++    font-weight: 500;
++    color: rgba(255, 255, 255, 0.6);
++    background: rgba(255, 255, 255, 0.04);
++    border: 1px solid rgba(255, 255, 255, 0.08);
++    cursor: pointer;
++    white-space: nowrap;
++    transition: all 0.15s ease;
++
++    &:hover {
++      color: rgba(255, 255, 255, 0.9);
++      background: rgba(255, 255, 255, 0.08);
++      border-color: rgba(255, 255, 255, 0.14);
++    }
++
++    &--open {
++      color: rgba(255, 255, 255, 0.9);
++      background: rgba(255, 255, 255, 0.08);
++      border-color: rgba(255, 255, 255, 0.16);
++    }
++  }
++
++  &__icon {
++    opacity: 0.7;
++    flex-shrink: 0;
+   }
+ 
+   &__label {
+-    color: rgba(255, 255, 255, 0.6);
+-    font-size: 14px;
+-    font-weight: 400;
++    flex: 1;
+   }
+ 
+-  &__options {
+-    display: flex;
+-    align-items: center;
+-    gap: calc(globals.$spacing-unit);
+-    font-size: 14px;
++  &__chevron {
++    flex-shrink: 0;
++    opacity: 0.5;
++    transition: transform 0.2s ease;
++
++    &--open {
++      transform: rotate(180deg);
++    }
++  }
++
++  &__dropdown {
++    position: absolute;
++    top: calc(100% + 6px);
++    left: 0;
++    min-width: 180px;
++    background: rgba(24, 24, 28, 0.96);
++    backdrop-filter: blur(20px);
++    -webkit-backdrop-filter: blur(20px);
++    border: 1px solid rgba(255, 255, 255, 0.1);
++    border-radius: 10px;
++    padding: 4px;
++    z-index: 100;
++    list-style: none;
++    margin: 0;
++    animation: dropdown-appear 0.15s ease;
+   }
+ 
+   &__option {
+-    background: none;
+-    border: none;
+-    color: rgba(255, 255, 255, 0.4);
+-    cursor: pointer;
+-    padding: 4px 0;
+-    font-size: 14px;
+-    font-weight: 300;
+-    transition: all ease 0.2s;
+     display: flex;
+     align-items: center;
+-    gap: 6px;
+-
+-    &:hover:not(:disabled) {
+-      color: rgba(255, 255, 255, 0.6);
+-    }
++    justify-content: space-between;
++    gap: 8px;
++    padding: 8px 12px;
++    border-radius: 6px;
++    font-size: 12px;
++    font-weight: 500;
++    color: rgba(255, 255, 255, 0.6);
++    cursor: pointer;
++    transition: all 0.12s ease;
++    white-space: nowrap;
+ 
+-    &.active {
++    &:hover {
++      background: rgba(255, 255, 255, 0.07);
+       color: rgba(255, 255, 255, 0.9);
+-      font-weight: 500;
+     }
+ 
+-    span {
+-      display: inline-block;
++    &--active {
++      color: #fff;
++      background: rgba(255, 255, 255, 0.06);
+     }
+   }
+ 
+-  &__separator {
+-    color: rgba(255, 255, 255, 0.3);
+-    font-size: 14px;
++  &__check {
++    opacity: 0.7;
++    flex-shrink: 0;
++  }
++
++  @keyframes dropdown-appear {
++    from {
++      opacity: 0;
++      transform: translateY(-4px);
++    }
++
++    to {
++      opacity: 1;
++      transform: translateY(0);
++    }
+   }
+ }
+diff --git a/src/renderer/src/pages/profile/profile-content/sort-options.tsx b/src/renderer/src/pages/profile/profile-content/sort-options.tsx
+index 607e54b9..0a29827f 100644
+--- a/src/renderer/src/pages/profile/profile-content/sort-options.tsx
++++ b/src/renderer/src/pages/profile/profile-content/sort-options.tsx
+@@ -1,5 +1,10 @@
+-import { TrophyIcon, ClockIcon, HistoryIcon } from "@primer/octicons-react";
++import { useRef, useState, useEffect, useCallback } from "react";
+ import { useTranslation } from "react-i18next";
++import {
++  SortAscIcon,
++  ChevronDownIcon,
++  CheckIcon,
++} from "@primer/octicons-react";
+ import "./sort-options.scss";
+ 
+ type SortOption = "playtime" | "achievementCount" | "playedRecently";
+@@ -9,37 +14,90 @@ interface SortOptionsProps {
+   onSortChange: (sortBy: SortOption) => void;
+ }
+ 
+-export function SortOptions({ sortBy, onSortChange }: SortOptionsProps) {
++export function SortOptions({
++  sortBy,
++  onSortChange,
++}: Readonly<SortOptionsProps>) {
+   const { t } = useTranslation("user_profile");
++  const [open, setOpen] = useState(false);
++  const containerRef = useRef<HTMLDivElement>(null);
++
++  const options: { value: SortOption; labelKey: string }[] = [
++    { value: "achievementCount", labelKey: "achievements_earned" },
++    { value: "playedRecently", labelKey: "played_recently" },
++    { value: "playtime", labelKey: "playtime" },
++  ];
++
++  const activeLabel =
++    options.find((o) => o.value === sortBy)?.labelKey ?? "played_recently";
++
++  const handleSelect = useCallback(
++    (value: SortOption) => {
++      onSortChange(value);
++      setOpen(false);
++    },
++    [onSortChange]
++  );
++
++  useEffect(() => {
++    if (!open) return;
++
++    const handleClickOutside = (event: MouseEvent) => {
++      if (
++        containerRef.current &&
++        !containerRef.current.contains(event.target as Node)
++      ) {
++        setOpen(false);
++      }
++    };
++
++    document.addEventListener("mousedown", handleClickOutside);
++    return () => document.removeEventListener("mousedown", handleClickOutside);
++  }, [open]);
+ 
+   return (
+-    <div className="sort-options__container">
+-      <span className="sort-options__label">{t("sort_by")}</span>
+-      <div className="sort-options__options">
+-        <button
+-          className={`sort-options__option ${sortBy === "achievementCount" ? "active" : ""}`}
+-          onClick={() => onSortChange("achievementCount")}
+-        >
+-          <TrophyIcon size={16} />
+-          <span>{t("achievements_earned")}</span>
+-        </button>
+-        <span className="sort-options__separator">|</span>
+-        <button
+-          className={`sort-options__option ${sortBy === "playedRecently" ? "active" : ""}`}
+-          onClick={() => onSortChange("playedRecently")}
+-        >
+-          <HistoryIcon size={16} />
+-          <span>{t("played_recently")}</span>
+-        </button>
+-        <span className="sort-options__separator">|</span>
+-        <button
+-          className={`sort-options__option ${sortBy === "playtime" ? "active" : ""}`}
+-          onClick={() => onSortChange("playtime")}
++    <div className="profile-sort-options" ref={containerRef}>
++      <button
++        type="button"
++        className={`profile-sort-options__trigger${open ? " profile-sort-options__trigger--open" : ""}`}
++        onClick={() => setOpen((prev) => !prev)}
++        aria-haspopup="listbox"
++        aria-expanded={open}
++      >
++        <SortAscIcon size={14} className="profile-sort-options__icon" />
++        <span className="profile-sort-options__label">{t(activeLabel)}</span>
++        <ChevronDownIcon
++          size={12}
++          className={`profile-sort-options__chevron${open ? " profile-sort-options__chevron--open" : ""}`}
++        />
++      </button>
++
++      {open && (
++        <ul
++          className="profile-sort-options__dropdown"
++          role="listbox"
++          aria-label={t("sort_by")}
+         >
+-          <ClockIcon size={16} />
+-          <span>{t("playtime")}</span>
+-        </button>
+-      </div>
++          {options.map(({ value, labelKey }) => (
++            <li
++              key={value}
++              role="option"
++              aria-selected={sortBy === value}
++              tabIndex={0}
++              className={`profile-sort-options__option${sortBy === value ? " profile-sort-options__option--active" : ""}`}
++              onClick={() => handleSelect(value)}
++              onKeyDown={(e) => {
++                if (e.key === "Enter" || e.key === " ") handleSelect(value);
++              }}
++            >
++              <span>{t(labelKey)}</span>
++              {sortBy === value && (
++                <CheckIcon size={12} className="profile-sort-options__check" />
++              )}
++            </li>
++          ))}
++        </ul>
++      )}
+     </div>
+   );
+ }
+diff --git a/src/renderer/src/pages/profile/profile-content/user-library-game-card.scss b/src/renderer/src/pages/profile/profile-content/user-library-game-card.scss
+index 76bd25a9..dfc7aed8 100644
+--- a/src/renderer/src/pages/profile/profile-content/user-library-game-card.scss
++++ b/src/renderer/src/pages/profile/profile-content/user-library-game-card.scss
+@@ -1,236 +1,155 @@
+ @use "../../../scss/globals.scss";
+ 
+-.user-library-game {
++.user-library-game-card {
++  // ── Wrapper — tamanho uniforme via aspect-ratio ────────
+   &__wrapper {
+-    border-radius: 4px;
+-    overflow: hidden;
++    cursor: pointer;
++    width: 100%;
++    aspect-ratio: 3 / 4;
+     position: relative;
+-    display: flex;
+-    transition: all ease 0.2s;
+-    cursor: grab;
+-    container-type: inline-size;
++    border: none;
++    background: #111;
++    padding: 0;
++    border-radius: 8px;
++    overflow: hidden;
++    display: block;
++    transition: transform 0.2s ease;
+ 
+     &:hover {
+-      transform: scale(1.05);
++      transform: translateY(-3px) scale(1.01);
+     }
+ 
+-    &:active {
+-      cursor: grabbing;
+-      transform: scale(1.02);
+-    }
+-
+-    &[draggable="true"] {
+-      cursor: grab;
+-
+-      &:active {
+-        cursor: grabbing;
+-        opacity: 0.8;
+-        transform: scale(1.02) rotate(2deg);
+-      }
++    &:focus-visible {
++      outline: 2px solid rgba(255, 255, 255, 0.5);
++      outline-offset: 2px;
+     }
+   }
+ 
+-  &__cover {
+-    cursor: pointer;
+-    transition: all ease 0.2s;
+-    box-shadow: 0 8px 10px -2px rgba(0, 0, 0, 0.5);
++  // ── Image — cobre toda a área do card ─────────────────
++  &__game-image {
++    position: absolute;
++    inset: 0;
+     width: 100%;
+-    position: relative;
+-    overflow: hidden;
+-
+-    &:before {
+-      content: "";
+-      top: 0;
+-      left: 0;
+-      width: 100%;
+-      height: 172%;
+-      position: absolute;
+-      background: linear-gradient(
+-        35deg,
+-        rgba(0, 0, 0, 0.1) 0%,
+-        rgba(0, 0, 0, 0.07) 51.5%,
+-        rgba(255, 255, 255, 0.15) 54%,
+-        rgba(255, 255, 255, 0.15) 100%
+-      );
+-      transition: all ease 0.3s;
+-      transform: translateY(-36%);
+-      opacity: 0.5;
+-    }
+-
+-    &:hover::before {
+-      opacity: 1;
+-      transform: translateY(-20%);
+-    }
++    height: 100%;
++    object-fit: cover;
++    display: block;
++    transition: transform 0.35s ease;
+   }
+ 
+-  &__container {
+-    transition: all ease 0.2s;
++  &__wrapper:hover &__game-image {
++    transform: scale(1.04);
++  }
+ 
+-    &:hover {
+-      transform: scale(1.05);
+-    }
++  &__cover-placeholder {
++    position: absolute;
++    inset: 0;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    color: rgba(255, 255, 255, 0.2);
++    background: linear-gradient(
++      135deg,
++      rgba(255, 255, 255, 0.05) 0%,
++      rgba(255, 255, 255, 0.02) 100%
++    );
+   }
+ 
++  // ── Overlay — gradiente escuro na base + info ─────────
+   &__overlay {
+     position: absolute;
++    inset: 0;
+     display: flex;
+     flex-direction: column;
+-    align-items: flex-start;
+     justify-content: space-between;
+-    height: 100%;
+-    width: 100%;
+-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 20%, transparent 100%);
++    align-items: flex-start;
+     padding: 8px;
++    background: linear-gradient(
++      to top,
++      rgba(0, 0, 0, 0.85) 0%,
++      rgba(0, 0, 0, 0.45) 28%,
++      rgba(0, 0, 0, 0.1) 55%,
++      transparent 100%
++    );
+   }
+ 
+-  &__actions-container {
+-    position: absolute;
+-    top: 8px;
+-    right: 8px;
+-    display: flex;
+-    gap: 4px;
+-    z-index: 2;
+-  }
+-
+-  &__pin-button {
+-    color: rgba(255, 255, 255, 0.8);
+-    background: rgba(0, 0, 0, 0.4);
+-    backdrop-filter: blur(8px);
+-    -webkit-backdrop-filter: blur(8px);
+-    border: solid 1px rgba(255, 255, 255, 0.15);
++  // ── Pin button — top right ───────────────────────
++  &__pin-btn {
++    align-self: flex-end;
++    width: 24px;
++    height: 24px;
+     border-radius: 50%;
+-    padding: 6px;
++    border: none;
++    background: rgba(0, 0, 0, 0.5);
++    backdrop-filter: blur(6px);
++    -webkit-backdrop-filter: blur(6px);
++    color: rgba(255, 255, 255, 0.55);
++    cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+-    cursor: pointer;
+-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+-    transition: all ease 0.2s;
++    opacity: 0;
++    transition:
++      opacity 0.2s ease,
++      color 0.15s ease,
++      background 0.15s ease;
++    z-index: 3;
++    flex-shrink: 0;
+ 
+     &:hover {
+-      background: rgba(0, 0, 0, 0.5);
+-      border-color: rgba(255, 255, 255, 0.25);
+-      transform: translateY(-1px);
+-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
++      color: #fff;
++      background: rgba(0, 0, 0, 0.7);
+     }
+ 
+-    &:disabled {
+-      opacity: 0.6;
+-      cursor: not-allowed;
++    &--active {
++      opacity: 1;
++      color: #fff;
+     }
+   }
+ 
+-  &__playtime {
+-    background: rgba(0, 0, 0, 0.4);
+-    backdrop-filter: blur(8px);
+-    -webkit-backdrop-filter: blur(8px);
+-    color: rgba(255, 255, 255, 0.8);
+-    border: solid 1px rgba(255, 255, 255, 0.15);
+-    border-radius: 4px;
+-    display: flex;
+-    align-items: center;
+-    gap: 4px;
+-    padding: 4px;
+-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+-    transition: all ease 0.2s;
+-
+-    &-long {
+-      display: inline;
+-      font-size: 12px;
+-    }
+-
+-    &-short {
+-      display: none;
+-      font-size: 12px;
+-    }
+-
+-    // When the card is narrow (less than 180px), show short format
+-    @container (max-width: 140px) {
+-      &-long {
+-        display: none;
+-      }
+-
+-      &-short {
+-        display: inline;
+-      }
+-    }
+-  }
+-  &__manual-playtime {
+-    color: globals.$warning-color;
++  &__wrapper:hover &__pin-btn {
++    opacity: 1;
+   }
+-  &__stats {
+-    width: 100%;
++
++  // ── Info — na base da imagem ──────────────────────────
++  &__info {
+     display: flex;
+     flex-direction: column;
++    gap: 3px;
++    width: 100%;
+   }
+ 
+-  &__stats-header {
+-    display: flex;
+-    justify-content: space-between;
+-    margin-bottom: 8px;
+-    color: globals.$muted-color;
++  &__info-title {
++    font-size: 11px;
++    font-weight: 600;
++    color: rgba(255, 255, 255, 0.95);
++    white-space: nowrap;
+     overflow: hidden;
+-    height: 18px;
++    text-overflow: ellipsis;
++    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
++    width: 100%;
+   }
+ 
+-  &__stats-content {
+-    display: flex;
+-    flex-direction: column;
+-  }
+-
+-  &__stats-item {
+-    width: 100%;
+-    height: 100%;
+-    transition: transform 0.5s ease-in-out;
+-    flex-shrink: 0;
+-    flex-grow: 0;
++  &__meta {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+   }
+ 
+-  &__game-image {
+-    object-fit: cover;
+-    border-radius: 4px;
+-    width: 100%;
+-    height: 100%;
+-    display: block;
+-  }
+-
+-  &__cover-placeholder {
+-    position: relative;
+-    width: 100%;
+-    padding-bottom: 150%;
+-    background: linear-gradient(
+-      90deg,
+-      rgba(255, 255, 255, 0.08) 0%,
+-      rgba(255, 255, 255, 0.04) 50%,
+-      rgba(255, 255, 255, 0.08) 100%
+-    );
+-    border-radius: 4px;
+-    color: rgba(255, 255, 255, 0.3);
+-
+-    svg {
+-      position: absolute;
+-      top: 50%;
+-      left: 50%;
+-      transform: translate(-50%, -50%);
++  &__meta-item {
++    display: flex;
++    align-items: center;
++    gap: 3px;
++    font-size: 10px;
++    color: rgba(255, 255, 255, 0.6);
++    white-space: nowrap;
++    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
++
++    &--trophy {
++      color: rgba(255, 200, 80, 0.85);
+     }
+   }
+ 
+-  &__achievements-progress {
+-    width: 100%;
+-    height: 4px;
+-    transition: all ease 0.2s;
+-
+-    &::-webkit-progress-bar {
+-      background-color: rgba(255, 255, 255, 0.15);
+-      border-radius: 4px;
+-    }
+-
+-    &::-webkit-progress-value {
+-      background-color: globals.$muted-color;
+-      border-radius: 4px;
+-    }
++  &__manual-playtime {
++    color: globals.$warning-color;
+   }
+ }
+diff --git a/src/renderer/src/pages/profile/profile-content/user-library-game-card.tsx b/src/renderer/src/pages/profile/profile-content/user-library-game-card.tsx
+index 81db6334..60c3c5e0 100644
+--- a/src/renderer/src/pages/profile/profile-content/user-library-game-card.tsx
++++ b/src/renderer/src/pages/profile/profile-content/user-library-game-card.tsx
+@@ -1,12 +1,10 @@
+ import { UserGame } from "@types";
+-import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
+-import { useFormat, useToast } from "@renderer/hooks";
++import { useToast } from "@renderer/hooks";
+ import { useNavigate } from "react-router-dom";
+ import { useCallback, useContext, useEffect, useState } from "react";
+ import {
+   buildGameAchievementPath,
+   buildGameDetailsPath,
+-  formatDownloadProgress,
+ } from "@renderer/helpers";
+ import { userProfileContext } from "@renderer/context";
+ import {
+@@ -17,7 +15,6 @@ import {
+   PinSlashIcon,
+   ImageIcon,
+ } from "@primer/octicons-react";
+-import { MAX_MINUTES_TO_SHOW_IN_PLAYTIME } from "@renderer/constants";
+ import { Tooltip } from "react-tooltip";
+ import { useTranslation } from "react-i18next";
+ import "./user-library-game-card.scss";
+@@ -32,15 +29,12 @@ interface UserLibraryGameCardProps {
+ 
+ export function UserLibraryGameCard({
+   game,
+-  statIndex,
+   onMouseEnter,
+   onMouseLeave,
+-  sortBy,
+ }: UserLibraryGameCardProps) {
+   const { userProfile, isMe, getUserLibraryGames } =
+     useContext(userProfileContext);
+   const { t } = useTranslation("user_profile");
+-  const { numberFormatter } = useFormat();
+   const { showSuccessToast } = useToast();
+   const navigate = useNavigate();
+   const [isTooltipHovered, setIsTooltipHovered] = useState(false);
+@@ -51,12 +45,6 @@ export function UserLibraryGameCard({
+     setImageError(false);
+   }, [game.coverImageUrl]);
+ 
+-  const getStatsItemCount = useCallback(() => {
+-    let statsCount = 1;
+-    if (game.achievementsPointsEarnedSum > 0) statsCount++;
+-    return statsCount;
+-  }, [game]);
+-
+   const buildUserGameDetailsPath = useCallback(
+     (game: UserGame) => {
+       if (!userProfile?.hasActiveSubscription || game.achievementCount === 0) {
+@@ -77,36 +65,27 @@ export function UserLibraryGameCard({
+     [userProfile]
+   );
+ 
+-  const formatAchievementPoints = (number: number) => {
+-    if (number < 100_000) return numberFormatter.format(number);
+-
+-    if (number < 1_000_000) return `${(number / 1000).toFixed(1)}K`;
+-
+-    return `${(number / 1_000_000).toFixed(1)}M`;
+-  };
+-
+   const formatPlayTime = useCallback(
+-    (playTimeInSeconds = 0, isShort = false) => {
++    (playTimeInSeconds = 0) => {
+       const minutes = playTimeInSeconds / 60;
+ 
+-      if (minutes < MAX_MINUTES_TO_SHOW_IN_PLAYTIME) {
+-        return t(isShort ? "amount_minutes_short" : "amount_minutes", {
++      if (minutes < 60) {
++        return t("amount_minutes_short", {
+           amount: minutes.toFixed(0),
+         });
+       }
+ 
+       const hours = minutes / 60;
+-      const hoursKey = isShort ? "amount_hours_short" : "amount_hours";
+-      const hoursAmount = isShort
+-        ? Math.floor(hours)
+-        : numberFormatter.format(hours);
++      const hoursAmount = Math.floor(hours);
+ 
+-      return t(hoursKey, { amount: hoursAmount });
++      return t("amount_hours_short", { amount: hoursAmount });
+     },
+-    [numberFormatter, t]
++    [t]
+   );
+ 
+-  const toggleGamePinned = async () => {
++  const toggleGamePinned = async (e: React.MouseEvent) => {
++    e.stopPropagation();
++    e.preventDefault();
+     setIsPinning(true);
+ 
+     try {
+@@ -116,7 +95,7 @@ export function UserLibraryGameCard({
+         !game.isPinned
+       );
+ 
+-      await getUserLibraryGames(sortBy);
++      await getUserLibraryGames();
+ 
+       if (game.isPinned) {
+         showSuccessToast(t("game_removed_from_pinned"));
+@@ -128,131 +107,93 @@ export function UserLibraryGameCard({
+     }
+   };
+ 
++  const achievementPercent =
++    (game.achievementCount ?? 0) > 0
++      ? Math.round(
++          ((game.unlockedAchievementCount ?? 0) /
++            (game.achievementCount ?? 1)) *
++            100
++        )
++      : null;
++
+   return (
+     <>
+-      <li
++      <button
++        type="button"
+         onMouseEnter={onMouseEnter}
+         onMouseLeave={onMouseLeave}
+-        className="user-library-game__wrapper"
++        className="user-library-game-card__wrapper"
+         title={isTooltipHovered ? undefined : game.title}
++        onClick={() => navigate(buildUserGameDetailsPath(game))}
+       >
+-        <button
+-          type="button"
+-          className="user-library-game__cover"
+-          onClick={() => navigate(buildUserGameDetailsPath(game))}
+-        >
+-          <div className="user-library-game__overlay">
+-            {isMe && (
+-              <div className="user-library-game__actions-container">
+-                <button
+-                  type="button"
+-                  className="user-library-game__pin-button"
+-                  onClick={(e) => {
+-                    e.stopPropagation();
+-                    toggleGamePinned();
+-                  }}
+-                  disabled={isPinning}
+-                >
+-                  {game.isPinned ? (
+-                    <PinSlashIcon size={12} />
+-                  ) : (
+-                    <PinIcon size={12} />
+-                  )}
+-                </button>
+-              </div>
+-            )}
+-            <div
+-              className="user-library-game__playtime"
+-              data-tooltip-place="top"
+-              data-tooltip-content={
+-                game.hasManuallyUpdatedPlaytime
+-                  ? t("manual_playtime_tooltip")
+-                  : undefined
+-              }
+-              data-tooltip-id={game.objectId}
++        {/* Image */}
++        {imageError || !game.coverImageUrl ? (
++          <div className="user-library-game-card__cover-placeholder">
++            <ImageIcon size={32} />
++          </div>
++        ) : (
++          <img
++            src={game.coverImageUrl}
++            alt={game.title}
++            className="user-library-game-card__game-image"
++            loading="lazy"
++            onError={() => setImageError(true)}
++          />
++        )}
++
++        {/* Gradient overlay with info at bottom */}
++        <div className="user-library-game-card__overlay">
++          {/* Pin button — top right (matches Fav behavior in library) */}
++          {isMe && (
++            <button
++              type="button"
++              className={`user-library-game-card__pin-btn${game.isPinned ? " user-library-game-card__pin-btn--active" : ""}`}
++              onClick={toggleGamePinned}
++              aria-label={game.isPinned ? t("unpin") : t("pin")}
++              title={game.isPinned ? t("unpin") : t("pin")}
++              disabled={isPinning}
+             >
+-              {game.hasManuallyUpdatedPlaytime ? (
+-                <AlertFillIcon
+-                  size={11}
+-                  className="user-library-game__manual-playtime"
+-                />
++              {game.isPinned ? (
++                <PinSlashIcon size={11} />
+               ) : (
+-                <ClockIcon size={11} />
++                <PinIcon size={11} />
+               )}
+-              <span className="user-library-game__playtime-long">
+-                {formatPlayTime(game.playTimeInSeconds)}
+-              </span>
+-              <span className="user-library-game__playtime-short">
+-                {formatPlayTime(game.playTimeInSeconds, true)}
+-              </span>
+-            </div>
+-
+-            {userProfile?.hasActiveSubscription &&
+-              game.achievementCount > 0 && (
+-                <div className="user-library-game__stats">
+-                  <div className="user-library-game__stats-header">
+-                    <div className="user-library-game__stats-content">
+-                      <div
+-                        className="user-library-game__stats-item"
+-                        style={{
+-                          transform: `translateY(${-100 * (statIndex % getStatsItemCount())}%)`,
+-                        }}
+-                      >
+-                        <TrophyIcon size={13} />
+-                        <span>
+-                          {game.unlockedAchievementCount} /{" "}
+-                          {game.achievementCount}
+-                        </span>
+-                      </div>
+-
+-                      {game.achievementsPointsEarnedSum > 0 && (
+-                        <div
+-                          className="user-library-game__stats-item"
+-                          style={{
+-                            transform: `translateY(${-100 * (statIndex % getStatsItemCount())}%)`,
+-                          }}
+-                        >
+-                          <HydraIcon width={16} height={16} />
+-                          {formatAchievementPoints(
+-                            game.achievementsPointsEarnedSum
+-                          )}
+-                        </div>
+-                      )}
+-                    </div>
+-
+-                    <span>
+-                      {formatDownloadProgress(
+-                        game.unlockedAchievementCount / game.achievementCount,
+-                        1
+-                      )}
+-                    </span>
+-                  </div>
++            </button>
++          )}
+ 
+-                  <progress
+-                    max={1}
+-                    value={
+-                      game.unlockedAchievementCount / game.achievementCount
+-                    }
+-                    className="user-library-game__achievements-progress"
++          {/* Info strip at bottom */}
++          <div className="user-library-game-card__info">
++            <span className="user-library-game-card__info-title">
++              {game.title}
++            </span>
++            <div className="user-library-game-card__meta">
++              <span
++                className="user-library-game-card__meta-item"
++                data-tooltip-id={game.objectId}
++              >
++                {game.hasManuallyUpdatedPlaytime ? (
++                  <AlertFillIcon
++                    size={10}
++                    className="user-library-game-card__manual-playtime"
+                   />
+-                </div>
+-              )}
+-          </div>
++                ) : (
++                  <ClockIcon size={10} />
++                )}
++                <span>{formatPlayTime(game.playTimeInSeconds)}</span>
++              </span>
+ 
+-          {imageError || !game.coverImageUrl ? (
+-            <div className="user-library-game__cover-placeholder">
+-              <ImageIcon size={48} />
++              {achievementPercent !== null &&
++                userProfile?.hasActiveSubscription && (
++                  <span className="user-library-game-card__meta-item user-library-game-card__meta-item--trophy">
++                    <TrophyIcon size={10} />
++                    <span>{achievementPercent}%</span>
++                  </span>
++                )}
+             </div>
+-          ) : (
+-            <img
+-              src={game.coverImageUrl}
+-              alt={game.title}
+-              className="user-library-game__game-image"
+-              onError={() => setImageError(true)}
+-            />
+-          )}
+-        </button>
+-      </li>
++          </div>
++        </div>
++      </button>
++
+       <Tooltip
+         id={game.objectId}
+         style={{
+@@ -261,6 +202,11 @@ export function UserLibraryGameCard({
+         openOnClick={false}
+         afterShow={() => setIsTooltipHovered(true)}
+         afterHide={() => setIsTooltipHovered(false)}
++        content={
++          game.hasManuallyUpdatedPlaytime
++            ? t("manual_playtime_tooltip")
++            : undefined
++        }
+       />
+     </>
+   );
+diff --git a/src/renderer/src/pages/profile/profile-hero/profile-hero.scss b/src/renderer/src/pages/profile/profile-hero/profile-hero.scss
+index 7061eceb..c6770414 100644
+--- a/src/renderer/src/pages/profile/profile-hero/profile-hero.scss
++++ b/src/renderer/src/pages/profile/profile-hero/profile-hero.scss
+@@ -9,17 +9,35 @@
+ 
+   &__background {
+     &-image {
+-      position: absolute;
+-      width: 100%;
+-      height: 100%;
++      position: fixed;
++      top: 0;
++      left: 0;
++      width: 100vw;
++      height: 65vh;
+       object-fit: cover;
++      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 60%, transparent 100%);
++      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 60%, transparent 100%);
++      z-index: -2;
++      pointer-events: none;
++      filter: brightness(0.4);
++    }
++
++    &-image-gradient {
++      position: fixed;
++      top: 0;
++      left: 0;
++      width: 100vw;
++      height: 150px;
++      background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
++      z-index: -1;
++      pointer-events: none;
+     }
+ 
+     &-overlay {
+       width: 100%;
+       height: 100%;
+       z-index: 1;
+-      background: linear-gradient(135deg, rgb(0 0 0 / 40%), rgb(0 0 0 / 30%));
++      background: transparent;
+ 
+       &--transparent {
+         background: transparent;
+@@ -58,22 +76,51 @@
+ 
+   &__user-information {
+     display: flex;
+-    padding: calc(globals.$spacing-unit * 7) calc(globals.$spacing-unit * 3);
++    flex-direction: row;
+     align-items: center;
+     gap: calc(globals.$spacing-unit * 2);
++
++    width: 100%;
++    max-width: 1400px;
++    margin: 0 auto;
++    padding: calc(globals.$spacing-unit * 6) 48px calc(globals.$spacing-unit * 3);
++
++    @media (max-width: 1100px) {
++      padding: calc(globals.$spacing-unit * 6) 24px calc(globals.$spacing-unit * 3);
++    }
++
++    @media (max-width: 800px) {
++      padding: calc(globals.$spacing-unit * 6) 12px calc(globals.$spacing-unit * 3);
++    }
++
++    &--editing {
++      position: relative;
++      z-index: 6;
++    }
++  }
++
++  &__edit-overlay-backdrop {
++    position: fixed;
++    top: 0;
++    left: 0;
++    width: 100vw;
++    height: 100vh;
++    background: rgba(0, 0, 0, 0.75);
++    z-index: 5;
++    animation: fade-in 0.2s ease;
+   }
+ 
+   &__avatar-button {
+     width: 96px;
+     min-width: 96px;
+     height: 96px;
+-    border-radius: 4px;
++    border-radius: 50%;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+-    background-color: globals.$background-color;
+-    border: solid 1px globals.$border-color;
+-    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.7);
++    background-color: transparent;
++    border: none;
++    box-shadow: none;
+     cursor: pointer;
+     transition: all ease 0.3s;
+     color: globals.$muted-color;
+@@ -84,6 +131,115 @@
+     }
+   }
+ 
++  &__avatar-edit-overlay {
++    position: absolute;
++    inset: 0;
++    background: transparent;
++    border-radius: 50%;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    color: transparent;
++    transition: all ease 0.2s;
++
++    &:hover {
++      color: #fff;
++      background: rgba(0, 0, 0, 0.5);
++    }
++  }
++
++  &__avatar--cyber-glitch {
++    button {
++      animation: photo-glitch 5s infinite;
++    }
++  }
++
++  &__border-picker {
++    display: flex;
++    flex-wrap: wrap;
++    gap: 8px;
++    align-items: center;
++    justify-content: center;
++    margin-top: 8px;
++    background: rgba(0,0,0,0.4);
++    padding: 6px 12px;
++    border-radius: 12px;
++    max-width: 220px;
++    
++    &-btn {
++      width: 28px;
++      height: 28px;
++      border-radius: 50%;
++      cursor: pointer;
++      border: 2px solid transparent;
++      outline: none;
++      transition: transform 0.2s;
++      overflow: hidden;
++      padding: 0;
++
++      &:hover { transform: scale(1.1); }
++      &--active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px #fff; }
++      &--none { background: #333; }
++      
++      &--border-beam, &--electric-border {
++        background-color: #000;
++        background-image: none;
++        position: relative;
++        z-index: 1;
++
++        &::before {
++          content: '';
++          position: absolute;
++          inset: -2px;
++          border-radius: inherit;
++          z-index: -1;
++          animation: rotate-gradient 3s linear infinite;
++        }
++      }
++
++      &--skull-gif {
++        background: #111;
++        padding: 0;
++      }
++
++      &--gif-decor {
++        background: #111;
++        padding: 0;
++        overflow: hidden;
++      }
++
++      &--border-beam::before { background: conic-gradient(from 180deg at 50% 50%, transparent, #ffaa40); }
++      &--electric-border::before { box-shadow: 0 0 5px #ffaa40, inset 0 0 5px #ffaa40; border: 1px dotted #ffaa40; background: transparent; animation: rotate-gradient 3s steps(2) infinite; }
++    }
++  }
++
++  &__decoration-btn {
++    width: 28px;
++    height: 28px;
++    border-radius: 50%;
++    border: 2px solid rgba(255, 255, 255, 0.2);
++    background: rgba(255, 255, 255, 0.06);
++    cursor: pointer;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    overflow: hidden;
++    padding: 0;
++    transition: transform 0.2s, border-color 0.2s;
++    flex-shrink: 0;
++
++    &:hover {
++      transform: scale(1.1);
++      border-color: rgba(255, 255, 255, 0.5);
++    }
++
++    &--active {
++      border-color: #fff;
++      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
++      transform: scale(1.1);
++    }
++  }
++
+   &__information {
+     display: flex;
+     flex-direction: column;
+@@ -111,6 +267,68 @@
+     text-shadow: 0 0 5px rgb(0 0 0 / 40%);
+   }
+ 
++  &__tags {
++    display: flex;
++    gap: 8px;
++    align-items: center;
++    margin-top: 4px;
++  }
++
++  &__tag {
++    font-size: 11px;
++    line-height: 1;
++    font-weight: 800;
++    background-size: 200% auto;
++    color: transparent;
++    -webkit-background-clip: text;
++    background-clip: text;
++    text-transform: uppercase;
++    animation: gold-shine 2.5s linear infinite;
++
++    &--cloud {
++      background-image: linear-gradient(90deg, #b8860b, #ffd700, #ffeb99, #ffd700, #b8860b);
++      filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
++    }
++
++    &--vip {
++      background-image: linear-gradient(90deg, #ff007f, #ff80ff, #fff, #ff80ff, #ff007f);
++      filter: drop-shadow(0 0 4px rgba(255, 0, 127, 0.5));
++      animation-delay: 0.2s;
++    }
++
++    &--staff {
++      background-image: linear-gradient(90deg, #00f0ff, #80ffff, #fff, #80ffff, #00f0ff);
++      filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.5));
++      animation-delay: 0.4s;
++    }
++
++    &--supporter {
++      background-image: linear-gradient(90deg, #00ff7f, #80ff80, #fff, #80ff80, #00ff7f);
++      filter: drop-shadow(0 0 4px rgba(0, 255, 127, 0.5));
++      animation-delay: 0.6s;
++    }
++  }
++
++  &__display-name-input {
++    font-size: 1.5em; /* roughly matches h2 */
++    font-weight: bold;
++    color: #fff;
++    background: transparent;
++    border: none;
++    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
++    padding: 0 0 2px 0;
++    margin: 0;
++    outline: none;
++    text-shadow: 0 0 5px rgb(0 0 0 / 40%);
++    width: 100%;
++    min-width: 200px;
++    font-family: inherit;
++    
++    &:focus {
++      border-bottom-color: #fff;
++    }
++  }
++
+   &__current-game {
+     &-wrapper {
+       display: flex;
+@@ -126,34 +344,81 @@
+     }
+   }
+ 
+-  &__hero-panel {
+-    width: 100%;
+-    height: 72px;
+-    min-height: 72px;
+-    padding: calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 3);
++  &__bottom-panel {
+     display: flex;
+-    gap: globals.$spacing-unit;
++    flex-direction: row;
+     justify-content: space-between;
+-    backdrop-filter: blur(15px);
+-    border-top: solid 1px rgba(255, 255, 255, 0.1);
+-    box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.5);
+-    background-color: rgba(0, 0, 0, 0.3);
++    align-items: flex-end;
++    margin-top: auto;
++
++    width: 100%;
++    max-width: 1400px;
++    margin-left: auto;
++    margin-right: auto;
++    padding: 0 48px calc(globals.$spacing-unit * 3);
++
++    @media (max-width: 1100px) {
++      padding: 0 24px calc(globals.$spacing-unit * 3);
++    }
++
++    @media (max-width: 800px) {
++      padding: 0 12px calc(globals.$spacing-unit * 3);
++    }
+ 
+     &--transparent {
+       background: transparent;
+     }
+   }
+ 
++  &__tabs-area {
++    display: flex;
++    flex: 1;
++    align-items: flex-end;
++  }
++
+   &__actions {
+     display: flex;
+     gap: globals.$spacing-unit;
++    align-items: center;
+     justify-content: flex-end;
+-    flex: 1;
++
++    &--editing {
++      position: relative;
++      z-index: 6;
++    }
+   }
+ 
+   &__button {
++    color: globals.$body-color;
++
+     &--outline {
+       border-color: globals.$body-color;
+     }
+   }
++
++  &__transparent-action-btn {
++    display: flex;
++    align-items: center;
++    gap: calc(globals.$spacing-unit);
++    background-color: rgba(255, 255, 255, 0.05);
++    backdrop-filter: blur(8px);
++    -webkit-backdrop-filter: blur(8px);
++    border: solid 1px rgba(255, 255, 255, 0.1);
++    color: globals.$body-color;
++    cursor: pointer;
++    font-size: 14px;
++    font-weight: 500;
++    padding: calc(globals.$spacing-unit) calc(globals.$spacing-unit * 2.5);
++    border-radius: 100px;
++    transition: background-color ease 0.2s, opacity ease 0.2s;
++
++    &:hover {
++      background-color: rgba(255, 255, 255, 0.15);
++    }
++
++    &:disabled {
++      cursor: not-allowed;
++      opacity: 0.5;
++    }
++  }
+ }
+diff --git a/src/renderer/src/pages/profile/profile-hero/profile-hero.tsx b/src/renderer/src/pages/profile/profile-hero/profile-hero.tsx
+index fc31de76..bcdc35fc 100644
+--- a/src/renderer/src/pages/profile/profile-hero/profile-hero.tsx
++++ b/src/renderer/src/pages/profile/profile-hero/profile-hero.tsx
+@@ -10,6 +10,8 @@ import {
+   XCircleFillIcon,
+ } from "@primer/octicons-react";
+ import { buildGameDetailsPath } from "@renderer/helpers";
++import { AVATAR_DECORATIONS } from "@renderer/components/animated-border/avatar-decorations";
++import { DecorationPickerModal } from "@renderer/components/decoration-picker-modal/decoration-picker-modal";
+ import {
+   Avatar,
+   Button,
+@@ -28,8 +30,10 @@ import { useNavigate } from "react-router-dom";
+ import { motion } from "framer-motion";
+ 
+ import type { FriendRequestAction } from "@types";
+-import { EditProfileModal } from "../edit-profile-modal/edit-profile-modal";
++import type { ReactNode } from "react";
++
+ import Skeleton from "react-loading-skeleton";
++import { AnimatedBorder } from "@renderer/components/animated-border/animated-border";
+ import { UploadBackgroundImageButton } from "../upload-background-image-button/upload-background-image-button";
+ import "./profile-hero.scss";
+ 
+@@ -37,14 +41,41 @@ type FriendAction =
+   | FriendRequestAction
+   | ("BLOCK" | "UNDO_FRIENDSHIP" | "SEND");
+ 
+-export function ProfileHero() {
+-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
++interface ProfileHeroProps {
++  children?: ReactNode;
++  rightAction?: ReactNode;
++}
++
++export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps>) {
++  const [isEditingMode, setIsEditingMode] = useState(false);
++  const [editDisplayName, setEditDisplayName] = useState("");
++  const [isSavingProfile, setIsSavingProfile] = useState(false);
++  const [selectedBorder, setSelectedBorder] = useState(
++    localStorage.getItem("hydra_avatar_border") || "none"
++  );
++  const localBorderWidth = localStorage.getItem("hydra_avatar_border_width");
++  const [borderWidth, setBorderWidth] = useState(
++    localBorderWidth !== null ? Number(localBorderWidth) : 1
++  );
+   const [showFullscreenAvatar, setShowFullscreenAvatar] = useState(false);
++  const [beamSpeed, setBeamSpeed] = useState(
++    Number(localStorage.getItem("hydra_avatar_beam_speed")) || 6
++  );
++  const [beamColor, setBeamColor] = useState(
++    localStorage.getItem("hydra_avatar_beam_color") || "#ef4444"
++  );
++  const [beamLength, setBeamLength] = useState(
++    Number(localStorage.getItem("hydra_avatar_beam_length")) || 25
++  );
++  const [beamChaos, setBeamChaos] = useState(
++    Number(localStorage.getItem("hydra_avatar_beam_chaos")) || 0.12
++  );
++  const [isDecorationModalOpen, setIsDecorationModalOpen] = useState(false);
+   const [isPerformingAction, setIsPerformingAction] = useState(false);
+   const [isCopyButtonHovered, setIsCopyButtonHovered] = useState(false);
+   const [isCopied, setIsCopied] = useState(false);
+ 
+-  const { isMe, getUserProfile, userProfile, heroBackground, backgroundImage } =
++  const { isMe, getUserProfile, userProfile, backgroundImage } =
+     useContext(userProfileContext);
+   const {
+     signOut,
+@@ -52,6 +83,8 @@ export function ProfileHero() {
+     sendFriendRequest,
+     undoFriendship,
+     blockUser,
++    patchUser,
++    fetchUserDetails,
+   } = useUserDetails();
+ 
+   const { gameRunning } = useAppSelector((state) => state.gameRunning);
+@@ -122,30 +155,85 @@ export function ProfileHero() {
+     ]
+   );
+ 
++  const handleSaveProfile = useCallback(async () => {
++    if (!editDisplayName.trim()) return;
++    setIsSavingProfile(true);
++    try {
++      await patchUser({ displayName: editDisplayName });
++      
++      if (userProfile?.id !== "kQ3bLwNy") {
++        await getUserProfile();
++        await fetchUserDetails();
++      } else if (userProfile) {
++        userProfile.displayName = editDisplayName;
++      }
++
++      setIsEditingMode(false);
++      showSuccessToast(t("profile_updated", { defaultValue: "Perfil atualizado!" }));
++    } catch {
++      showErrorToast(t("try_again"));
++    } finally {
++      setIsSavingProfile(false);
++    }
++  }, [editDisplayName, patchUser, getUserProfile, fetchUserDetails, showSuccessToast, showErrorToast, t]);
++
+   const profileActions = useMemo(() => {
+     if (!userProfile) return null;
+ 
+     if (isMe) {
++      if (isEditingMode) {
++        return (
++          <>
++            <button
++              type="button"
++              className="profile-hero__transparent-action-btn"
++              onClick={() => setIsEditingMode(false)}
++              disabled={isSavingProfile}
++            >
++              <XCircleFillIcon />
++              {t("cancel", { defaultValue: "Cancelar" })}
++            </button>
++            <button
++              type="button"
++              className="profile-hero__transparent-action-btn"
++              onClick={handleSaveProfile}
++              disabled={isSavingProfile}
++            >
++              <CheckCircleFillIcon />
++              {t("save", { defaultValue: "Salvar" })}
++            </button>
++          </>
++        );
++      }
++
+       return (
+         <>
+-          <Button
+-            theme="outline"
+-            onClick={() => setShowEditProfileModal(true)}
++          <UploadBackgroundImageButton />
++          
++          <button
++            type="button"
++            className="profile-hero__transparent-action-btn"
++            onClick={() => {
++              setEditDisplayName(userProfile?.displayName || "");
++              setIsEditingMode(true);
++            }}
+             disabled={isPerformingAction}
+-            className="profile-hero__button--outline"
+           >
+             <PencilIcon />
+-            {t("edit_profile")}
+-          </Button>
++            {t("edit", { defaultValue: "Editar" })}
++          </button>
+ 
+-          <Button
+-            theme="danger"
++          <button
++            type="button"
++            className="profile-hero__transparent-action-btn"
+             onClick={handleSignOut}
+             disabled={isPerformingAction}
+           >
+-            <SignOutIcon />
+-            {t("sign_out")}
+-          </Button>
++            <span style={{ color: "#f87171", display: "flex", alignItems: "center", gap: 8 }}>
++              <SignOutIcon fill="#f87171" />
++              <span>{t("exit", { defaultValue: "Sair" })}</span>
++            </span>
++          </button>
+         </>
+       );
+     }
+@@ -242,19 +330,40 @@ export function ProfileHero() {
+   }, [
+     handleFriendAction,
+     handleSignOut,
++    handleSaveProfile,
+     isMe,
+-    t,
++    isEditingMode,
++    isSavingProfile,
+     isPerformingAction,
++    t,
+     userProfile,
+   ]);
+ 
+-  const handleAvatarClick = useCallback(() => {
+-    if (userProfile?.profileImageUrl) {
+-      setShowFullscreenAvatar(true);
+-    } else if (isMe) {
+-      setShowEditProfileModal(true);
++  const handleAvatarClick = useCallback(async () => {
++    if (isEditingMode) {
++      try {
++        const { filePaths } = await window.electron.showOpenDialog({
++          properties: ["openFile"],
++          filters: [
++            { name: "Image", extensions: ["jpg", "jpeg", "png", "gif", "webp"] },
++          ],
++        });
++        if (filePaths && filePaths.length > 0) {
++          setIsSavingProfile(true);
++          await patchUser({ profileImageUrl: filePaths[0] });
++          await getUserProfile();
++          await fetchUserDetails();
++          showSuccessToast(t("profile_updated", { defaultValue: "Foto atualizada!" }));
++        }
++      } catch (err) {
++        showErrorToast(t("try_again"));
++      } finally {
++        setIsSavingProfile(false);
++      }
++      return;
+     }
+-  }, [isMe, userProfile?.profileImageUrl]);
++    setShowFullscreenAvatar(true);
++  }, [isEditingMode, patchUser, getUserProfile, fetchUserDetails, showSuccessToast, showErrorToast, t]);
+ 
+   const copyFriendCode = useCallback(() => {
+     if (userProfile?.id) {
+@@ -293,11 +402,6 @@ export function ProfileHero() {
+ 
+   return (
+     <>
+-      <EditProfileModal
+-        visible={showEditProfileModal}
+-        onClose={() => setShowEditProfileModal(false)}
+-      />
+-
+       <FullscreenMediaModal
+         visible={showFullscreenAvatar}
+         onClose={() => setShowFullscreenAvatar(false)}
+@@ -305,16 +409,16 @@ export function ProfileHero() {
+         alt={userProfile?.displayName}
+       />
+ 
+-      <section
+-        className="profile-hero__content-box"
+-        style={{ background: !backgroundImage ? heroBackground : undefined }}
+-      >
++      <section className="profile-hero__content-box">
+         {backgroundImage && (
+-          <img
+-            src={backgroundImage}
+-            alt=""
+-            className="profile-hero__background-image"
+-          />
++          <>
++            <img
++              src={backgroundImage}
++              alt=""
++              className="profile-hero__background-image"
++            />
++            <div className="profile-hero__background-image-gradient" />
++          </>
+         )}
+ 
+         <div
+@@ -324,25 +428,191 @@ export function ProfileHero() {
+               : ""
+           }`}
+         >
+-          <div className="profile-hero__user-information">
+-            <button
+-              type="button"
+-              className="profile-hero__avatar-button"
+-              onClick={handleAvatarClick}
+-            >
+-              <Avatar
+-                size={96}
+-                alt={userProfile?.displayName}
+-                src={userProfile?.profileImageUrl}
+-              />
+-            </button>
++          {isEditingMode && <div className="profile-hero__edit-overlay-backdrop" onClick={() => setIsEditingMode(false)} />}
++          <div className={`profile-hero__user-information ${isEditingMode ? "profile-hero__user-information--editing" : ""}`}>
++            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
++              <AnimatedBorder
++                borderWidth={borderWidth}
++                containerSize={96}
++                styleName={selectedBorder as any}
++                beamSpeed={beamSpeed}
++                beamColor={beamColor}
++                beamLength={beamLength}
++                beamChaos={beamChaos}
++              >
++                <button
++                  type="button"
++                  className={`profile-hero__avatar-button ${isEditingMode ? "profile-hero__avatar-button--editing" : ""}`}
++                  onClick={handleAvatarClick}
++                  disabled={isSavingProfile}
++                >
++                  <Avatar
++                    size={96}
++                    alt={userProfile?.displayName}
++                    src={userProfile?.profileImageUrl}
++                  />
++                  {isEditingMode && (
++                    <div className="profile-hero__avatar-edit-overlay">
++                      <PencilIcon size={24} />
++                    </div>
++                  )}
++                </button>
++              </AnimatedBorder>
++
++              {isEditingMode && (
++                <div className="profile-hero__border-picker">
++                  {/* Static border style options */}
++                  {["none", "border-beam", "electric-border"].map((style) => (
++                    <button
++                      key={style}
++                      type="button"
++                      className={`profile-hero__border-picker-btn profile-hero__border-picker-btn--${style} ${
++                        selectedBorder === style ? "profile-hero__border-picker-btn--active" : ""
++                      }`}
++                      onClick={() => {
++                        setSelectedBorder(style);
++                        localStorage.setItem("hydra_avatar_border", style);
++                        window.dispatchEvent(new Event("avatar_style_update"));
++                      }}
++                      title={style}
++                    />
++                  ))}
++
++                  {/* Decoration selected preview + open modal button */}
++                  <button
++                    type="button"
++                    className={`profile-hero__decoration-btn ${
++                      AVATAR_DECORATIONS.some((d) => d.id === selectedBorder)
++                        ? "profile-hero__decoration-btn--active"
++                        : ""
++                    }`}
++                    onClick={() => setIsDecorationModalOpen(true)}
++                    title="Alterar decoração"
++                  >
++                    {AVATAR_DECORATIONS.some((d) => d.id === selectedBorder) ? (
++                      <img
++                        src={`https://discord-decoration.art/mdecorations/${selectedBorder}.webp`}
++                        alt="Decoração atual"
++                        style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }}
++                      />
++                    ) : (
++                      <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.2, textAlign: "center" }}>🎨</span>
++                    )}
++                  </button>
++                </div>
++              )}
++
++              {isDecorationModalOpen && (
++                <DecorationPickerModal
++                  visible={isDecorationModalOpen}
++                  currentDecoration={selectedBorder}
++                  onSelect={(id) => {
++                    setSelectedBorder(id);
++                    localStorage.setItem("hydra_avatar_border", id);
++                    window.dispatchEvent(new Event("avatar_style_update"));
++                  }}
++                  onClose={() => setIsDecorationModalOpen(false)}
++                />
++              )}
++
++              {isEditingMode && selectedBorder !== "none" && (
++                <div style={{ display: "flex", gap: 16, marginTop: 4, alignItems: "center" }}>
++                  <input
++                    type="range"
++                    min="1"
++                    max="15"
++                    value={borderWidth}
++                    onChange={(e) => {
++                      const v = Number(e.target.value);
++                      setBorderWidth(v);
++                      localStorage.setItem("hydra_avatar_border_width", String(v));
++                    }}
++                    title="Largura da Borda"
++                    style={{ width: 60, cursor: "ew-resize" }}
++                  />
++
++                  {(selectedBorder === "border-beam" || selectedBorder === "electric-border") && (
++                    <>
++                      <input
++                        type="range"
++                        min="1"
++                        max="20"
++                        value={beamSpeed}
++                        onChange={(e) => {
++                          const v = Number(e.target.value);
++                          setBeamSpeed(v);
++                          localStorage.setItem("hydra_avatar_beam_speed", String(v));
++                          window.dispatchEvent(new Event("avatar_style_update"));
++                        }}
++                        title="Velocidade da Animação (Menos = Mais rápido)"
++                        style={{ width: 60, cursor: "ew-resize", direction: "rtl" }}
++                      />
++                      <input 
++                        type="color" 
++                        value={beamColor} 
++                        onChange={(e) => {
++                          setBeamColor(e.target.value);
++                          localStorage.setItem("hydra_avatar_beam_color", e.target.value);
++                          window.dispatchEvent(new Event("avatar_style_update"));
++                        }}
++                        title="Cor do Efeito"
++                        style={{ width: 24, height: 24, padding: 0, border: "none", borderRadius: 4, cursor: "pointer", background: "transparent" }}
++                      />
++                      {selectedBorder === "border-beam" && (
++                        <input
++                          type="range"
++                          min="5"
++                          max="100"
++                          value={beamLength}
++                          onChange={(e) => {
++                            const v = Number(e.target.value);
++                            setBeamLength(v);
++                            localStorage.setItem("hydra_avatar_beam_length", String(v));
++                            window.dispatchEvent(new Event("avatar_style_update"));
++                          }}
++                          title="Comprimento do Rastro"
++                          style={{ width: 60, cursor: "ew-resize" }}
++                        />
++                      )}
++                      {selectedBorder === "electric-border" && (
++                        <input
++                          type="range"
++                          min="1"
++                          max="50"
++                          value={beamChaos * 100}
++                          onChange={(e) => {
++                            const v = Number(e.target.value) / 100;
++                            setBeamChaos(v);
++                            localStorage.setItem("hydra_avatar_beam_chaos", String(v));
++                            window.dispatchEvent(new Event("avatar_style_update"));
++                          }}
++                          title="Caos (Espalhamento elétrico)"
++                          style={{ width: 60, cursor: "ew-resize" }}
++                        />
++                      )}
++                    </>
++                  )}
++                </div>
++              )}
++            </div>
+ 
+             <div className="profile-hero__information">
+               {userProfile ? (
+                 <div className="profile-hero__display-name-container">
+-                  <h2 className="profile-hero__display-name">
+-                    {userProfile?.displayName}
+-                  </h2>
++                  {isEditingMode ? (
++                    <input
++                      type="text"
++                      className="profile-hero__display-name-input"
++                      value={editDisplayName}
++                      onChange={(e) => setEditDisplayName(e.target.value)}
++                      placeholder={t("display_name", { defaultValue: "Nome" })}
++                      autoFocus
++                    />
++                  ) : (
++                    <h2 className="profile-hero__display-name">
++                      {userProfile?.displayName}
++                    </h2>
++                  )}
+ 
+                   <motion.button
+                     type="button"
+@@ -375,6 +645,21 @@ export function ProfileHero() {
+                 <Skeleton width={150} height={28} />
+               )}
+ 
++              {userProfile?.hasActiveSubscription && (
++                <div className="profile-hero__tags">
++                  <span className="profile-hero__tag profile-hero__tag--cloud">
++                    CLOUD
++                  </span>
++                  {userProfile?.id === "kQ3bLwNy" && (
++                    <>
++                      <span className="profile-hero__tag profile-hero__tag--vip">VIP</span>
++                      <span className="profile-hero__tag profile-hero__tag--staff">STAFF</span>
++                      <span className="profile-hero__tag profile-hero__tag--supporter">SUPPORTER</span>
++                    </>
++                  )}
++                </div>
++              )}
++
+               {currentGame && (
+                 <div className="profile-hero__current-game-wrapper">
+                   <div className="profile-hero__current-game-details">
+@@ -402,20 +687,19 @@ export function ProfileHero() {
+                 </div>
+               )}
+             </div>
+-
+-            <UploadBackgroundImageButton />
+           </div>
+-        </div>
+ 
+-        <div
+-          className={`profile-hero__hero-panel ${
+-            !backgroundImage ? "profile-hero__hero-panel--transparent" : ""
+-          }`}
+-          style={{
+-            background: !backgroundImage ? heroBackground : undefined,
+-          }}
+-        >
+-          <div className="profile-hero__actions">{profileActions}</div>
++          <div
++            className={`profile-hero__bottom-panel ${
++              !backgroundImage ? "profile-hero__bottom-panel--transparent" : ""
++            }`}
++          >
++            <div className="profile-hero__tabs-area">{children}</div>
++            <div className={`profile-hero__actions ${isEditingMode ? "profile-hero__actions--editing" : ""}`}>
++              {rightAction}
++              {profileActions}
++            </div>
++          </div>
+         </div>
+       </section>
+     </>
+diff --git a/src/renderer/src/pages/profile/profile-section/profile-section.scss b/src/renderer/src/pages/profile/profile-section/profile-section.scss
+index dfc6abf9..3dd71d49 100644
+--- a/src/renderer/src/pages/profile/profile-section/profile-section.scss
++++ b/src/renderer/src/pages/profile/profile-section/profile-section.scss
+@@ -1,17 +1,19 @@
+ @use "../../../scss/globals.scss";
+ 
+ .profile-section {
+-  background-color: globals.$background-color;
++  background: rgba(255, 255, 255, 0.03);
++  backdrop-filter: blur(16px);
++  -webkit-backdrop-filter: blur(16px);
++  border: 1px solid rgba(255, 255, 255, 0.07);
+   border-radius: 12px;
+-  border: 1px solid rgba(255, 255, 255, 0.05);
+-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+   overflow: hidden;
++  transition: background 0.2s ease;
+ 
+   &__header {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+-    background-color: globals.$background-color;
++    background-color: transparent;
+     padding-right: calc(globals.$spacing-unit * 2);
+ 
+     &:hover {
+@@ -65,7 +67,11 @@
+   &__content {
+     overflow: hidden;
+     transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+-    background-color: globals.$dark-background-color;
++    background-color: transparent;
+     position: relative;
+   }
++
++  .button {
++    border-radius: 100px !important;
++  }
+ }
+diff --git a/src/renderer/src/pages/profile/profile.scss b/src/renderer/src/pages/profile/profile.scss
+index 0e3bcf0a..dca77a69 100644
+--- a/src/renderer/src/pages/profile/profile.scss
++++ b/src/renderer/src/pages/profile/profile.scss
+@@ -2,6 +2,8 @@
+ 
+ .profile {
+   &__wrapper {
++    position: relative;
++    z-index: 1;
+     width: 100%;
+     display: flex;
+     flex-direction: column;
+diff --git a/src/renderer/src/pages/profile/profile.tsx b/src/renderer/src/pages/profile/profile.tsx
+index d3fb6957..f4242bf0 100644
+--- a/src/renderer/src/pages/profile/profile.tsx
++++ b/src/renderer/src/pages/profile/profile.tsx
+@@ -3,13 +3,13 @@ import { SkeletonTheme } from "react-loading-skeleton";
+ import { UserProfileContextProvider } from "@renderer/context";
+ import { useParams } from "react-router-dom";
+ import "./profile.scss";
+-
+ export default function Profile() {
+   const { userId } = useParams();
+ 
+   return (
+     <UserProfileContextProvider userId={userId!}>
+       <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
++
+         <div className="profile__wrapper">
+           <ProfileContent />
+         </div>
+diff --git a/src/renderer/src/pages/profile/upload-background-image-button/upload-background-image-button.tsx b/src/renderer/src/pages/profile/upload-background-image-button/upload-background-image-button.tsx
+index c0347712..49ec88ed 100644
+--- a/src/renderer/src/pages/profile/upload-background-image-button/upload-background-image-button.tsx
++++ b/src/renderer/src/pages/profile/upload-background-image-button/upload-background-image-button.tsx
+@@ -1,6 +1,6 @@
+ import { TrashIcon, UploadIcon } from "@primer/octicons-react";
+ import { MoreVertical } from "lucide-react";
+-import { Button, ConfirmationModal } from "@renderer/components";
++import { ConfirmationModal } from "@renderer/components";
+ import { createPortal } from "react-dom";
+ import { useContext, useEffect, useRef, useState } from "react";
+ import { userProfileContext } from "@renderer/context";
+@@ -127,19 +127,17 @@ export function UploadBackgroundImageButton() {
+   // If no banner exists, show the original upload button
+   if (!hasBanner) {
+     return (
+-      <div className="upload-background-image-button__wrapper">
+-        <Button
+-          theme="outline"
+-          className="upload-background-image-button"
+-          onClick={handleReplaceBanner}
+-          disabled={isUploadingBackgroundImage}
+-        >
+-          <UploadIcon />
+-          {isUploadingBackgroundImage
+-            ? t("uploading_banner")
+-            : t("upload_banner")}
+-        </Button>
+-      </div>
++      <button
++        type="button"
++        className="profile-hero__transparent-action-btn"
++        onClick={handleReplaceBanner}
++        disabled={isUploadingBackgroundImage}
++      >
++        <UploadIcon />
++        {isUploadingBackgroundImage
++          ? t("uploading_banner")
++          : t("upload_banner")}
++      </button>
+     );
+   }
+ 
+@@ -190,17 +188,16 @@ export function UploadBackgroundImageButton() {
+ 
+   return (
+     <>
+-      <div ref={buttonRef} className="upload-background-image-button__wrapper">
+-        <Button
+-          theme="outline"
+-          className="upload-background-image-button"
+-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+-          disabled={isUploadingBackgroundImage}
+-        >
+-          {t("change_banner")}
+-          <MoreVertical size={16} />
+-        </Button>
+-      </div>
++      <button
++        type="button"
++        ref={buttonRef as unknown as React.RefObject<HTMLButtonElement>}
++        className="profile-hero__transparent-action-btn"
++        onClick={() => setIsMenuOpen(!isMenuOpen)}
++        disabled={isUploadingBackgroundImage}
++      >
++        {t("change_banner", { defaultValue: "Capa" })}
++        <MoreVertical size={16} />
++      </button>
+       {createPortal(menuContent, document.body)}
+       <ConfirmationModal
+         visible={showRemoveBannerModal}

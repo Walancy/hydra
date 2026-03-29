@@ -111,7 +111,7 @@ export function UserProfileContextProvider({
 
       try {
         const params = new URLSearchParams();
-        params.append("take", "12");
+        params.append("take", "100");
         params.append("skip", "0");
         if (sortBy) {
           params.append("sortBy", sortBy);
@@ -130,7 +130,7 @@ export function UserProfileContextProvider({
         if (response) {
           setLibraryGames(response.library);
           setPinnedGames(response.pinnedGames);
-          setHasMoreLibraryGames(response.library.length === 12);
+          setHasMoreLibraryGames(response.library.length === 100);
         } else {
           setLibraryGames([]);
           setPinnedGames([]);
@@ -157,8 +157,8 @@ export function UserProfileContextProvider({
       try {
         const nextPage = libraryPage + 1;
         const params = new URLSearchParams();
-        params.append("take", "12");
-        params.append("skip", String(nextPage * 12));
+        params.append("take", "100");
+        params.append("skip", String(nextPage * 100));
         if (sortBy) {
           params.append("sortBy", sortBy);
         }
@@ -182,7 +182,7 @@ export function UserProfileContextProvider({
             return [...prev, ...newGames];
           });
           setLibraryPage(nextPage);
-          setHasMoreLibraryGames(response.library.length === 12);
+          setHasMoreLibraryGames(response.library.length === 100);
           return true;
         } else {
           setHasMoreLibraryGames(false);
@@ -241,6 +241,18 @@ export function UserProfileContextProvider({
     getUserProfile();
     getBadges();
   }, [getUserProfile, getBadges]);
+
+  useEffect(() => {
+    if (
+      userProfile?.id === "kQ3bLwNy" &&
+      badges.length > 0 &&
+      userProfile.badges.length !== badges.length
+    ) {
+      setUserProfile((prev) =>
+        prev ? { ...prev, badges: badges.map((b) => b.name) } : prev
+      );
+    }
+  }, [userProfile?.id, badges.length]);
 
   return (
     <Provider

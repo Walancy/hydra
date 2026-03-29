@@ -176,33 +176,33 @@ export function NotificationItem({
       type="button"
       className={cn("notification-item", {
         "notification-item--unread":
-          !notification.isRead ||
-          notification.type === "FRIEND_REQUEST_RECEIVED",
+          !notification.isRead || notification.type === "FRIEND_REQUEST_RECEIVED",
+        "notification-item--friend-request":
+          notification.type === "FRIEND_REQUEST_RECEIVED" ||
+          notification.type === "FRIEND_REQUEST_ACCEPTED",
+        "notification-item--badge": isBadge,
+        "notification-item--review": isReview,
       })}
       onClick={handleClick}
     >
-      <div
-        className={cn("notification-item__picture", {
-          "notification-item__badge-picture": isBadge,
-          "notification-item__review-picture": isReview,
-        })}
-      >
+      {/* Colored icon */}
+      <div className="notification-item__icon-wrap">
         {getIcon()}
       </div>
 
+      {/* Text content */}
       <div className="notification-item__content">
         <span className="notification-item__title">{content.title}</span>
         <span className="notification-item__description">
           {content.description}
         </span>
         <span className="notification-item__time">
-          <ClockIcon size={12} />
+          <ClockIcon size={11} />
           {formatDistance(new Date(notification.createdAt), new Date())}
         </span>
-      </div>
 
-      {content.showActions &&
-        notification.type === "FRIEND_REQUEST_RECEIVED" && (
+        {/* Friend request inline actions */}
+        {content.showActions && notification.type === "FRIEND_REQUEST_RECEIVED" && (
           <div className="notification-item__actions">
             <Button theme="primary" onClick={handleAccept}>
               {t("accept")}
@@ -212,15 +212,18 @@ export function NotificationItem({
             </Button>
           </div>
         )}
+      </div>
 
+      {/* Dismiss */}
       {notification.type !== "FRIEND_REQUEST_RECEIVED" && (
         <button
           type="button"
           className="notification-item__dismiss"
           onClick={handleDismiss}
           title={t("dismiss")}
+          aria-label={t("dismiss")}
         >
-          <XIcon size={16} />
+          <XIcon size={12} />
         </button>
       )}
     </button>

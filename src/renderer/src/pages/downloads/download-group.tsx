@@ -1071,9 +1071,7 @@ export function DownloadGroup({
                           <CalendarIcon size={12} />
                         </span>
                         <span>
-                          {formatDateTime(
-                            new Date(game.download.timestamp)
-                          )}
+                          {formatDateTime(new Date(game.download.timestamp))}
                         </span>
                       </div>
                     ) : null}

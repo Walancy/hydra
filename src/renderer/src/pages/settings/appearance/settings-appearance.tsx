@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { THEME_WEB_STORE_URL } from "@renderer/constants";
 import { useTranslation } from "react-i18next";
+import { BackgroundEffectSettings } from "./background-effect-settings";
 
 interface SettingsAppearanceProps {
   appearance: {
@@ -17,7 +18,7 @@ interface SettingsAppearanceProps {
   };
 }
 
-type ThemeTab = "mine" | "installed";
+type ThemeTab = "mine" | "installed" | "effects";
 
 export function SettingsAppearance({
   appearance,
@@ -91,8 +92,7 @@ export function SettingsAppearance({
     theme.code.startsWith(THEME_WEB_STORE_URL);
 
   const sortedThemes = [...themes].sort(
-    (a, b) =>
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
   const myThemes = sortedThemes.filter((th) => !isInstalledTheme(th));
@@ -110,52 +110,65 @@ export function SettingsAppearance({
       label: t("installed_themes", { defaultValue: "Instalados" }),
       count: installedThemes.length,
     },
+    {
+      id: "effects",
+      label: "Fundos Animados",
+      count: 0,
+    },
   ];
 
   return (
-    <div className="settings-appearance">
-      <ThemeActions onListUpdated={loadThemes} themesCount={themes.length} />
+    <div className="settings-context-panel">
+      <div className="settings-context-panel__group settings-appearance">
+        <ThemeActions onListUpdated={loadThemes} themesCount={themes.length} />
 
-      <div className="settings-appearance__tabs">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`settings-appearance__tab ${activeTab === tab.id ? "settings-appearance__tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-            {tab.count > 0 && (
-              <span className="settings-appearance__tab-count">
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+        <div className="settings-appearance__tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`settings-appearance__tab ${activeTab === tab.id ? "settings-appearance__tab--active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className="settings-appearance__tab-count">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
-      <div className="settings-appearance__themes">
-        {!visibleThemes.length ? (
-          activeTab === "mine" ? (
-            <ThemePlaceholder onListUpdated={loadThemes} />
-          ) : (
-            <div className="settings-appearance__empty-state">
-              <p>
-                {t("no_installed_themes", {
-                  defaultValue:
-                    "Nenhum tema instalado. Visite a loja para instalar temas.",
-                })}
-              </p>
-            </div>
-          )
+        {activeTab === "effects" ? (
+          <div className="settings-appearance__effects-container">
+            <BackgroundEffectSettings />
+          </div>
         ) : (
-          visibleThemes.map((theme) => (
-            <ThemeCard
-              key={theme.id}
-              theme={theme}
-              onListUpdated={loadThemes}
-            />
-          ))
+          <div className="settings-appearance__themes">
+            {!visibleThemes.length ? (
+              activeTab === "mine" ? (
+                <ThemePlaceholder onListUpdated={loadThemes} />
+              ) : (
+                <div className="settings-appearance__empty-state">
+                  <p>
+                    {t("no_installed_themes", {
+                      defaultValue:
+                        "Nenhum tema instalado. Visite a loja para instalar temas.",
+                    })}
+                  </p>
+                </div>
+              )
+            ) : (
+              visibleThemes.map((theme) => (
+                <ThemeCard
+                  key={theme.id}
+                  theme={theme}
+                  onListUpdated={loadThemes}
+                />
+              ))
+            )}
+          </div>
         )}
       </div>
 

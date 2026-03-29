@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDominantColor } from "@renderer/hooks/useDominantColor";
+import {
+  useDominantColor,
+  useAppDispatch,
+  useAppSelector,
+} from "@renderer/hooks";
 import { useTranslation } from "react-i18next";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
@@ -15,7 +19,13 @@ import { buildGameDetailsPath } from "@renderer/helpers";
 import { CatalogueCategory } from "@shared";
 import cn from "classnames";
 import { GameInfo } from "./game-info";
+import { FolderInfo } from "./folder-info";
 import { HeroCarousel } from "./hero-carousel";
+import { ContextMenu, type ContextMenuItemData } from "@renderer/components";
+import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
+import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";
+import { CreateFolderModal } from "./create-folder-modal";
+import { setOpenedFolderName } from "@renderer/features";
 import "./home.scss";
 
 export default function Home() {
@@ -28,6 +38,68 @@ export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isMyGames, setIsMyGames] = useState(true);
   const sliderRef = useRef<HTMLDivElement>(null);
+  
+  const [isDraggingScroll, setIsDraggingScroll] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [hasDragged, setHasDragged] = useState(false);
+
+  const prevIndexRef = useRef(selectedIndex);
+  
+  const playBeep = useCallback(() => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
+      
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.002);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+      
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.04);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (prevIndexRef.current !== selectedIndex) {
+      if (!isLoading) playBeep();
+      prevIndexRef.current = selectedIndex;
+    }
+  }, [selectedIndex, isLoading, playBeep]);
+
+  const dispatch = useAppDispatch();
+  const { closeFolderTrigger } = useAppSelector((state) => state.window);
+
+  const {
+    groups,
+    createGroup,
+    addGameToGroup,
+    removeGameFromGroup,
+    deleteGroup,
+    renameGroup,
+    updateGroup,
+  } = useHomeGroups();
+  const [openedGroup, setOpenedGroup] = useState<HomeGroup | null>(null);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [folderToEdit, setFolderToEdit] = useState<HomeGroup | null>(null);
+
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    position: { x: number; y: number };
+    targetItem?: {
+      type: "game" | "folder";
+      id: string;
+      groupId?: string;
+    } | null;
+  } | null>(null);
 
   const [currentCatalogueCategory, setCurrentCatalogueCategory] = useState(
     CatalogueCategory.Hot
@@ -78,14 +150,27 @@ export default function Home() {
   const handleMyGamesClick = () => {
     setIsTransitioning(true);
     setIsMyGames(true);
+    setOpenedGroup(null);
     setSelectedIndex(0);
     requestAnimationFrame(() => setIsTransitioning(false));
   };
 
   const handleCatTabClick = (category: CatalogueCategory) => {
     setIsMyGames(false);
+    setOpenedGroup(null);
     handleCategoryClick(category);
   };
+
+  useEffect(() => {
+    dispatch(setOpenedFolderName(openedGroup?.name ?? null));
+  }, [openedGroup, dispatch]);
+
+  useEffect(() => {
+    if (closeFolderTrigger > 0) {
+      setOpenedGroup(null);
+      setSelectedIndex(0);
+    }
+  }, [closeFolderTrigger]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -94,7 +179,9 @@ export default function Home() {
 
   const categories = Object.values(CatalogueCategory);
 
-  const libraryAsGames = useMemo<ShopAssets[]>(
+  const libraryAsGames = useMemo<
+    (ShopAssets & { executablePath?: string | null })[]
+  >(
     () =>
       library
         .filter(
@@ -116,17 +203,82 @@ export default function Home() {
           logoPosition: null,
           coverImageUrl: null,
           downloadSources: [],
+          executablePath: g.executablePath,
         })),
     [library]
   );
 
+  const homeItems = useMemo(() => {
+    if (!isMyGames) {
+      return catalogue[currentCatalogueCategory].map((g) => ({
+        type: "game" as const,
+        data: g,
+        covers: [],
+      }));
+    }
+
+    if (openedGroup) {
+      const activeGroup = groups.find((g) => g.id === openedGroup.id);
+      if (!activeGroup) return [];
+
+      return libraryAsGames
+        .filter((g) => activeGroup.gameIds.includes(g.objectId))
+        .map((g) => ({ type: "game" as const, data: g, covers: [] }));
+    }
+
+    const FOLDERS = groups.map((g) => {
+      const covers = g.gameIds
+        .map(
+          (id) =>
+            libraryAsGames.find((lg) => lg.objectId === id)?.libraryImageUrl
+        )
+        .filter(Boolean) as string[];
+      // We will fill missing covers with null to render opaque boxes later if needed
+      return { type: "folder" as const, data: g, covers: covers.slice(0, 4) };
+    });
+
+    const installedGames = libraryAsGames.filter((g) => g.executablePath);
+    const sourceGames =
+      installedGames.length > 0 ? installedGames : libraryAsGames;
+
+    const unassignedGames = sourceGames
+      .filter(
+        (g) => !groups.some((group) => group.gameIds.includes(g.objectId))
+      )
+      .map((g) => ({ type: "game" as const, data: g, covers: [] }));
+
+    const combined: {
+      type: "game" | "folder" | "button_library" | "button_create_folder";
+      data: any;
+      covers: string[];
+    }[] = [...FOLDERS, ...unassignedGames].slice(0, 15);
+
+    combined.push({ type: "button_library", data: null as any, covers: [] });
+    combined.push({
+      type: "button_create_folder",
+      data: null as any,
+      covers: [],
+    });
+
+    return combined;
+  }, [
+    isMyGames,
+    libraryAsGames,
+    groups,
+    openedGroup,
+    catalogue,
+    currentCatalogueCategory,
+  ]);
+
   const showSkeleton = isLoading || isTransitioning;
-  const currentGames = isMyGames
-    ? libraryAsGames
-    : catalogue[currentCatalogueCategory];
-  const selectedGame = showSkeleton
+  const currentGames = homeItems;
+  const selectedItem = showSkeleton
     ? null
     : (currentGames[selectedIndex] ?? null);
+  const selectedGame =
+    selectedItem?.type === "game" ? (selectedItem.data as ShopAssets) : null;
+  const selectedFolder =
+    selectedItem?.type === "folder" ? (selectedItem.data as HomeGroup) : null;
 
   const backgroundSrc = useMemo(() => {
     if (!selectedGame) return undefined;
@@ -146,7 +298,8 @@ export default function Home() {
       : (selectedGame.libraryImageUrl ?? undefined);
   }, [selectedGame]);
 
-  const glowColor = useDominantColor(cardImageUrl);
+  const { color: glowColor } = useDominantColor(cardImageUrl);
+  const { isLight: isBgLight } = useDominantColor(backgroundSrc);
 
   const scrollToCard = useCallback((index: number) => {
     const slider = sliderRef.current;
@@ -188,9 +341,63 @@ export default function Home() {
     }
   }, [isLoading, currentGames.length, scrollToCard]);
 
+  const handleContextMenu = (
+    e: React.MouseEvent,
+    targetItem?: { type: "game" | "folder"; id: string; groupId?: string }
+  ) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      position: { x: e.clientX, y: e.clientY },
+      targetItem,
+    });
+  };
+
+  const getContextMenuItems = (): ContextMenuItemData[] => {
+    const items: ContextMenuItemData[] = [];
+
+    if (isMyGames && !openedGroup) {
+      items.push({
+        id: "create-group",
+        label: t("criar_grupo", { defaultValue: "Criar Grupo" }),
+        onClick: () => {
+          const name = window.prompt(
+            t("nome_do_grupo", { defaultValue: "Nome do grupo:" })
+          );
+          if (name?.trim()) createGroup(name);
+        },
+      });
+    }
+
+    if (isMyGames && contextMenu?.targetItem?.type === "folder") {
+      const targetId = contextMenu.targetItem.id;
+      items.push({
+        id: "delete-group",
+        label: t("excluir_grupo", { defaultValue: "Excluir Grupo" }),
+        danger: true,
+        onClick: () => deleteGroup(targetId),
+      });
+    }
+
+    if (isMyGames && openedGroup && contextMenu?.targetItem?.type === "game") {
+      const targetId = contextMenu.targetItem.id;
+      items.push({
+        id: "remove-from-group",
+        label: t("remover_do_grupo", { defaultValue: "Remover do Grupo" }),
+        danger: true,
+        onClick: () => removeGameFromGroup(openedGroup.id, targetId),
+      });
+    }
+
+    return items;
+  };
+
   return (
     <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
       <section className="home">
+        {selectedGame && (
+          <div className="home__solid-background" />
+        )}
         {backgroundSrc && (
           <img
             src={backgroundSrc}
@@ -202,74 +409,253 @@ export default function Home() {
         <div className="home__overlay" />
 
         <div className="home__content">
-          <ul className="home__tabs">
-            <li>
-              <Button
-                theme={isMyGames ? "primary" : "outline"}
-                onClick={handleMyGamesClick}
-              >
-                {t("my_games")}
-              </Button>
-            </li>
-            {categories.map((category) => (
-              <li key={category}>
+          {!openedGroup && (
+            <ul className="home__tabs">
+              <li>
                 <Button
                   theme={
-                    !isMyGames && category === currentCatalogueCategory
-                      ? "primary"
-                      : "outline"
+                    isMyGames ? (isBgLight ? "dark" : "primary") : "outline"
                   }
-                  onClick={() => handleCatTabClick(category)}
+                  onClick={handleMyGamesClick}
                 >
-                  {t(category)}
+                  {t("my_games")}
                 </Button>
               </li>
-            ))}
-          </ul>
+              {categories.map((category) => (
+                <li key={category}>
+                  <Button
+                    theme={
+                      !isMyGames && category === currentCatalogueCategory
+                        ? isBgLight
+                          ? "dark"
+                          : "primary"
+                        : "outline"
+                    }
+                    onClick={() => handleCatTabClick(category)}
+                  >
+                    {t(category)}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-          <div className="home__slider" ref={sliderRef}>
+          {openedGroup && (
+            <div className="home__folder-header">
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <Button
+                  theme={isBgLight ? "dark" : "primary"}
+                  title={t("add_game", { defaultValue: "Adicionar Jogo" })}
+                  className="home__folder-header-action-btn"
+                  onClick={() => {
+                    setSelectedIndex(currentGames.length);
+                    setFolderToEdit(openedGroup);
+                  }}
+                >
+                  <PlusCircleIcon size={16} />
+                </Button>
+                <Button
+                  theme={isBgLight ? "dark" : "primary"}
+                  title={t("excluir_pasta", { defaultValue: "Excluir pasta" })}
+                  className="home__folder-header-action-btn"
+                  onClick={() => {
+                    deleteGroup(openedGroup.id);
+                    setOpenedGroup(null);
+                  }}
+                >
+                  <TrashIcon size={16} />
+                </Button>
+              </div>
+              <input
+                className="home__folder-header-title-input"
+                value={openedGroup.name}
+                onChange={(e) => {
+                  const newName = e.target.value;
+                  setOpenedGroup({ ...openedGroup, name: newName });
+                  renameGroup(openedGroup.id, newName);
+                }}
+              />
+            </div>
+          )}
+
+          <div
+            className="home__slider"
+            ref={sliderRef}
+            onContextMenu={(e) => handleContextMenu(e)}
+            onMouseDown={(e) => {
+              setIsDraggingScroll(true);
+              setStartX(e.pageX - e.currentTarget.offsetLeft);
+              setScrollLeft(e.currentTarget.scrollLeft);
+              setHasDragged(false);
+            }}
+            onMouseLeave={() => setIsDraggingScroll(false)}
+            onMouseUp={() => setIsDraggingScroll(false)}
+            onMouseMove={(e) => {
+              if (!isDraggingScroll) return;
+              e.preventDefault();
+              const x = e.pageX - e.currentTarget.offsetLeft;
+              const walk = (x - startX) * 2;
+              if (Math.abs(walk) > 5) setHasDragged(true);
+              e.currentTarget.scrollLeft = scrollLeft - walk;
+            }}
+          >
             {showSkeleton
               ? Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="home__card">
                     <Skeleton className="home__card-skeleton" />
                   </div>
                 ))
-              : currentGames.map((game, index) => (
-                  <button
-                    key={game.objectId}
-                    type="button"
-                    className={cn("home__card", {
-                      "home__card--selected": index === selectedIndex,
-                    })}
-                    onClick={() => setSelectedIndex(index)}
-                    onDoubleClick={() => navigate(buildGameDetailsPath(game))}
-                    style={
-                      index === selectedIndex
-                        ? { boxShadow: `inset 0 0 0 2px ${glowColor}` }
-                        : undefined
-                    }
-                  >
-                    <img
-                      src={
-                        game.shop === "steam"
-                          ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-                          : (game.libraryImageUrl ?? undefined)
-                      }
-                      alt={game.title}
-                      className="home__card-image"
-                      loading="lazy"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        if (
-                          game.libraryImageUrl &&
-                          img.src !== game.libraryImageUrl
-                        ) {
-                          img.src = game.libraryImageUrl;
+              : currentGames.map((item, index) => {
+                  if (item.type === "button_library") {
+                    return (
+                      <button
+                        key="btn-lib"
+                        type="button"
+                        className={cn("home__card home__action-btn", {
+                          "home__card--selected": index === selectedIndex,
+                        })}
+                        onClick={() => {
+                          if (hasDragged) return;
+                          setSelectedIndex(index);
+                          navigate("/library");
+                        }}
+                      >
+                        <StackIcon size={32} />
+                        <span>
+                          {t("acessar_biblioteca", {
+                            defaultValue: "Acessar Biblioteca",
+                          })}
+                        </span>
+                      </button>
+                    );
+                  }
+                  if (item.type === "button_create_folder") {
+                    return (
+                      <button
+                        key="btn-folder"
+                        type="button"
+                        className={cn("home__card home__action-btn", {
+                          "home__card--selected": index === selectedIndex,
+                        })}
+                        onClick={() => {
+                          if (hasDragged) return;
+                          setSelectedIndex(index);
+                          setShowCreateFolderModal(true);
+                        }}
+                      >
+                        <PlusCircleIcon size={32} />
+                        <span>
+                          {t("criar_pasta", { defaultValue: "Criar Pasta" })}
+                        </span>
+                      </button>
+                    );
+                  }
+
+                  const isFolder = item.type === "folder";
+                  const game = !isFolder ? (item.data as ShopAssets) : null;
+                  const folder = isFolder ? (item.data as HomeGroup) : null;
+                  const itemId = isFolder ? folder!.id : game!.objectId;
+
+                  return (
+                    <button
+                      key={itemId}
+                      type="button"
+                      draggable={!isFolder && isMyGames}
+                      onDragStart={(e) => {
+                        if (!isFolder && isMyGames) {
+                          e.dataTransfer.setData(
+                            "application/x-game-id",
+                            game!.objectId
+                          );
                         }
                       }}
-                    />
-                  </button>
-                ))}
+                      onDragOver={(e) => {
+                        if (isFolder) e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        if (isFolder) {
+                          e.preventDefault();
+                          const droppedGameId = e.dataTransfer.getData(
+                            "application/x-game-id"
+                          );
+                          if (droppedGameId) {
+                            addGameToGroup(folder!.id, droppedGameId);
+                          }
+                        }
+                      }}
+                      onContextMenu={(e) => {
+                        e.stopPropagation();
+                        handleContextMenu(e, {
+                          type: isFolder ? "folder" : "game",
+                          id: itemId,
+                        });
+                      }}
+                      className={cn("home__card", {
+                        "home__card--selected": index === selectedIndex,
+                        "home__folder-card": isFolder,
+                      })}
+                      onClick={() => {
+                        if (hasDragged) return;
+                        setSelectedIndex(index);
+                      }}
+                      onDoubleClick={() => {
+                        if (isFolder) {
+                          setOpenedGroup(folder);
+                          setSelectedIndex(0);
+                        } else {
+                          navigate(buildGameDetailsPath(game!));
+                        }
+                      }}
+                      style={
+                        index === selectedIndex && !isFolder
+                          ? { boxShadow: `inset 0 0 0 2px ${glowColor}` }
+                          : undefined
+                      }
+                    >
+                      {isFolder ? (
+                        <div className="home__folder-grid">
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="home__folder-thumb-wrapper"
+                            >
+                              {item.covers[i] ? (
+                                <img
+                                  src={item.covers[i]}
+                                  alt=""
+                                  className="home__folder-thumb"
+                                />
+                              ) : (
+                                <div className="home__folder-thumb-empty" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <img
+                          src={
+                            game!.shop === "steam"
+                              ? `https://steamcdn-a.akamaihd.net/steam/apps/${game!.objectId}/library_600x900_2x.jpg`
+                              : (game!.libraryImageUrl ?? undefined)
+                          }
+                          alt={game!.title}
+                          className="home__card-image"
+                          loading="lazy"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            if (
+                              game!.libraryImageUrl &&
+                              img.src !== game!.libraryImageUrl
+                            ) {
+                              img.src = game!.libraryImageUrl;
+                            }
+                          }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+            
           </div>
 
           <div className="home__bottom-segment">
@@ -278,15 +664,61 @@ export default function Home() {
                 game={selectedGame}
                 showAddButton={!isMyGames}
                 showRemoveButton={isMyGames}
+                isBgLight={isBgLight}
               />
             )}
+            {selectedFolder && (
+              <FolderInfo
+                folder={selectedFolder}
+                libraryAsGames={libraryAsGames}
+                onOpenFolder={() => {
+                  setOpenedGroup(selectedFolder);
+                  setSelectedIndex(0);
+                }}
+                isBgLight={isBgLight}
+              />
+            )}
+            
+            {!selectedGame && !selectedFolder && <div />}
 
             {catalogue[CatalogueCategory.Hot]?.length > 0 && (
               <HeroCarousel games={catalogue[CatalogueCategory.Hot]} />
             )}
           </div>
         </div>
+
+        {contextMenu && (
+          <ContextMenu
+            items={getContextMenuItems()}
+            visible={contextMenu.visible && getContextMenuItems().length > 0}
+            position={contextMenu.position}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
       </section>
+
+      {(showCreateFolderModal || folderToEdit) && (
+        <CreateFolderModal
+          visible={showCreateFolderModal || !!folderToEdit}
+          onClose={() => {
+            setShowCreateFolderModal(false);
+            setFolderToEdit(null);
+          }}
+          initialName={folderToEdit ? folderToEdit.name : ""}
+          initialSelectedIds={folderToEdit ? folderToEdit.gameIds : []}
+          onCreate={(name, gameIds) => {
+            if (folderToEdit) {
+              updateGroup(folderToEdit.id, name, gameIds);
+              setOpenedGroup((prev) => prev ? { ...prev, name, gameIds } : null);
+            } else {
+              createGroup(name, gameIds);
+            }
+            setShowCreateFolderModal(false);
+            setFolderToEdit(null);
+          }}
+          games={libraryAsGames}
+        />
+      )}
     </SkeletonTheme>
   );
 }

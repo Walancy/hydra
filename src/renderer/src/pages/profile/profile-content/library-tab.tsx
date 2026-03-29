@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { TelescopeIcon } from "@primer/octicons-react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { useEffect } from "react";
 import { useFormat } from "@renderer/hooks";
 import type { UserGame } from "@types";
 import { SortOptions } from "./sort-options";
@@ -41,6 +41,12 @@ export function LibraryTab({
   onMouseLeave,
   isMe,
 }: Readonly<LibraryTabProps>) {
+  useEffect(() => {
+    if (hasMoreLibraryGames && !isLoadingLibraryGames) {
+      onLoadMore();
+    }
+  }, [hasMoreLibraryGames, isLoadingLibraryGames, onLoadMore]);
+
   const { t } = useTranslation("user_profile");
   const { numberFormatter } = useFormat();
 
@@ -58,9 +64,6 @@ export function LibraryTab({
       transition={{ duration: 0.2 }}
       aria-hidden={false}
     >
-      {hasAnyGames && (
-        <SortOptions sortBy={sortBy} onSortChange={onSortChange} />
-      )}
 
       {!hasAnyGames && (
         <div className="profile-content__no-games">
@@ -112,17 +115,10 @@ export function LibraryTab({
                     </span>
                   )}
                 </div>
+                <SortOptions sortBy={sortBy} onSortChange={onSortChange} />
               </div>
 
-              <InfiniteScroll
-                dataLength={libraryGames.length}
-                next={onLoadMore}
-                hasMore={hasMoreLibraryGames}
-                loader={null}
-                scrollThreshold={0.9}
-                style={{ overflow: "visible" }}
-                scrollableTarget="scrollableDiv"
-              >
+
                 <ul className="profile-content__games-grid">
                   {libraryGames?.map((game, index) => {
                     const hasAnimated = animatedGameIdsRef.current.has(
@@ -168,7 +164,7 @@ export function LibraryTab({
                     );
                   })}
                 </ul>
-              </InfiniteScroll>
+
             </div>
           )}
         </div>

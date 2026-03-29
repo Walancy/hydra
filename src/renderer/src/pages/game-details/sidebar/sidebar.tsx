@@ -100,7 +100,7 @@ const achievementsPlaceholder: UserAchievement[] = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ activeTab }: { activeTab: string }) {
   const shouldShowProtonFeatures = window.electron.platform === "linux";
   const [howLongToBeat, setHowLongToBeat] = useState<{
     isLoading: boolean;
@@ -161,20 +161,26 @@ export function Sidebar() {
       });
   }, [shouldShowProtonFeatures, objectId, shop]);
 
+  if (activeTab === "overview" || activeTab === "gallery" || activeTab === "reviews") return null;
+
   return (
-    <aside className="content-sidebar">
-      {shouldShowProtonFeatures && (
+    <div className="tab-content" style={{ width: '100%', maxWidth: '1400px', animation: 'fade-in 0.2s ease' }}>
+      {shouldShowProtonFeatures && activeTab === "protondb" && (
         <Suspense fallback={null}>
-          <ProtonDBSection
-            protonDBData={protonDB.data}
-            isLoading={protonDB.isLoading}
-            objectId={objectId ?? ""}
-          />
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ marginBottom: 16 }}>ProtonDB</h3>
+            <ProtonDBSection
+              protonDBData={protonDB.data}
+              isLoading={protonDB.isLoading}
+              objectId={objectId ?? ""}
+            />
+          </div>
         </Suspense>
       )}
 
-      {userDetails === null && (
-        <SidebarSection title={t("achievements")}>
+      {activeTab === "achievements" && userDetails === null && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>{t("achievements")}</h3>
           <div className="achievements-placeholder">
             <LockIcon size={36} />
             <h3>{t("sign_in_to_see_achievements")}</h3>
@@ -201,16 +207,17 @@ export function Sidebar() {
               </li>
             ))}
           </ul>
-        </SidebarSection>
+        </div>
       )}
 
-      {userDetails && achievements && achievements.length > 0 && (
-        <SidebarSection
-          title={t("achievements_count", {
-            unlockedCount: achievements.filter((a) => a.unlocked).length,
-            achievementsCount: achievements.length,
-          })}
-        >
+      {activeTab === "achievements" && userDetails && achievements && achievements.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>
+            {t("achievements_count", {
+              unlockedCount: achievements.filter((a) => a.unlocked).length,
+              achievementsCount: achievements.length,
+            })}
+          </h3>
           <ul className="list">
             {!hasActiveSubscription && (
               <button
@@ -222,7 +229,7 @@ export function Sidebar() {
               </button>
             )}
 
-            {achievements.slice(0, 4).map((achievement) => (
+            {achievements.map((achievement) => (
               <li key={achievement.displayName}>
                 <Link
                   to={buildGameAchievementPath({
@@ -250,22 +257,13 @@ export function Sidebar() {
                 </Link>
               </li>
             ))}
-
-            <Link
-              to={buildGameAchievementPath({
-                shop: shop,
-                objectId: objectId!,
-                title: gameTitle,
-              })}
-            >
-              {t("see_all_achievements")}
-            </Link>
           </ul>
-        </SidebarSection>
+        </div>
       )}
 
-      {stats && (
-        <SidebarSection title={t("stats")}>
+      {activeTab === "stats" && stats && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>{t("stats")}</h3>
           <div className="stats__section">
             <div className="stats__category">
               <p className="stats__category-title">
@@ -298,46 +296,60 @@ export function Sidebar() {
               />
             </div>
           </div>
-        </SidebarSection>
+        </div>
       )}
 
-      <HowLongToBeatSection
-        howLongToBeatData={howLongToBeat.data}
-        isLoading={howLongToBeat.isLoading}
-      />
-
-      <SidebarSection title={t("requirements")}>
-        <div className="requirement__button-container">
-          <Button
-            className="requirement__button"
-            onClick={() => setActiveRequirement("minimum")}
-            theme={activeRequirement === "minimum" ? "primary" : "outline"}
-          >
-            {t("minimum")}
-          </Button>
-
-          <Button
-            className="requirement__button"
-            onClick={() => setActiveRequirement("recommended")}
-            theme={activeRequirement === "recommended" ? "primary" : "outline"}
-          >
-            {t("recommended")}
-          </Button>
+      {activeTab === "howLongToBeat" && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>HowLongToBeat</h3>
+          <HowLongToBeatSection
+            howLongToBeatData={howLongToBeat.data}
+            isLoading={howLongToBeat.isLoading}
+          />
         </div>
+      )}
 
-        <div
-          className="requirement__details"
-          dangerouslySetInnerHTML={{
-            __html:
-              shopDetails?.pc_requirements?.[activeRequirement] ??
-              t(`no_${activeRequirement}_requirements`, {
-                gameTitle,
-              }),
-          }}
-        />
-      </SidebarSection>
+      {activeTab === "requirements" && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>{t("requirements")}</h3>
+          <div className="requirement__button-container" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <Button
+              className="requirement__button"
+              onClick={() => setActiveRequirement("minimum")}
+              theme={activeRequirement === "minimum" ? "primary" : "outline"}
+            >
+              {t("minimum")}
+            </Button>
 
-      <GameLanguageSection />
-    </aside>
+            <Button
+              className="requirement__button"
+              onClick={() => setActiveRequirement("recommended")}
+              theme={activeRequirement === "recommended" ? "primary" : "outline"}
+            >
+              {t("recommended")}
+            </Button>
+          </div>
+
+          <div
+            className="requirement__details"
+            style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}
+            dangerouslySetInnerHTML={{
+              __html:
+                shopDetails?.pc_requirements?.[activeRequirement] ??
+                t(`no_${activeRequirement}_requirements`, {
+                  gameTitle,
+                }),
+            }}
+          />
+        </div>
+      )}
+
+      {activeTab === "language" && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>{t("languages", { defaultValue: "Idioma" })}</h3>
+          <GameLanguageSection />
+        </div>
+      )}
+    </div>
   );
 }

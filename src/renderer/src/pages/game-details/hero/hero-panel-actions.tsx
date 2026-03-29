@@ -23,7 +23,7 @@ import { gameDetailsContext } from "@renderer/context";
 import "./hero-panel-actions.scss";
 import { useEffect } from "react";
 
-export function HeroPanelActions() {
+function useHeroPanelActions() {
   const [toggleLibraryGameDisabled, setToggleLibraryGameDisabled] =
     useState(false);
 
@@ -192,7 +192,7 @@ export function HeroPanelActions() {
 
   const removeGameFromLibraryButton = game ? (
     <Button
-      theme="outline"
+      theme="primary"
       disabled={toggleLibraryGameDisabled}
       onClick={async () => {
         setToggleLibraryGameDisabled(true);
@@ -204,7 +204,6 @@ export function HeroPanelActions() {
           setToggleLibraryGameDisabled(false);
         }
       }}
-      className="hero-panel-actions__action"
     >
       <DashIcon />
     </Button>
@@ -212,10 +211,9 @@ export function HeroPanelActions() {
 
   const addGameToLibraryButton = (
     <Button
-      theme="outline"
+      theme="primary"
       disabled={toggleLibraryGameDisabled}
       onClick={addGameToLibrary}
-      className="hero-panel-actions__action"
     >
       <PlusCircleIcon />
       {t("add_to_library")}
@@ -225,9 +223,9 @@ export function HeroPanelActions() {
   const showDownloadOptionsButton = (
     <Button
       onClick={() => setShowRepacksModal(true)}
-      theme="outline"
+      theme="primary"
       disabled={deleting}
-      className="hero-panel-actions__action"
+      style={{ minWidth: 200 }}
     >
       {t("open_download_options")}
     </Button>
@@ -238,9 +236,9 @@ export function HeroPanelActions() {
       return (
         <Button
           onClick={closeGame}
-          theme="outline"
+          theme="primary"
           disabled={deleting}
-          className="hero-panel-actions__action"
+          style={{ minWidth: 200 }}
         >
           {t("close")}
         </Button>
@@ -251,9 +249,9 @@ export function HeroPanelActions() {
       return (
         <Button
           onClick={openGame}
-          theme="outline"
+          theme="primary"
           disabled={deleting || isGameRunning}
-          className="hero-panel-actions__action"
+          style={{ minWidth: 200 }}
         >
           <PlayIcon />
           {t("play")}
@@ -264,9 +262,9 @@ export function HeroPanelActions() {
     return (
       <Button
         onClick={() => setShowRepacksModal(true)}
-        theme="outline"
+        theme="primary"
         disabled={isGameDownloading}
-        className={`hero-panel-actions__action ${repacks.length === 0 ? "hero-panel-actions__action--disabled" : ""}`}
+        style={{ minWidth: 200 }}
       >
         <DownloadIcon />
         {t("download")}
@@ -275,56 +273,75 @@ export function HeroPanelActions() {
   };
 
   if (repacks.length && !game) {
-    return (
-      <>
-        {addGameToLibraryButton}
-        {showDownloadOptionsButton}
-      </>
-    );
+    return {
+      primary: (
+        <>
+          {addGameToLibraryButton}
+          {showDownloadOptionsButton}
+        </>
+      ),
+      secondary: null
+    };
   }
 
   if (game) {
-    return (
-      <div className="hero-panel-actions__container">
-        {gameActionButton()}
-        <div className="hero-panel-actions__separator" />
-        <Button
-          onClick={toggleGameFavorite}
-          theme="outline"
-          disabled={deleting}
-          className="hero-panel-actions__action"
-        >
-          {game.favorite ? <HeartFillIcon /> : <HeartIcon />}
-        </Button>
-
-        {userDetails && game.shop !== "custom" && (
+    return {
+      primary: (
+        <>
+          {gameActionButton()}
           <Button
-            onClick={toggleGamePinned}
-            theme="outline"
+            onClick={toggleGameFavorite}
+            theme="primary"
             disabled={deleting}
-            className="hero-panel-actions__action"
           >
-            {game.isPinned ? <PinSlashIcon /> : <PinIcon />}
+            {game.favorite ? <HeartFillIcon /> : <HeartIcon />}
           </Button>
-        )}
+          {removeGameFromLibraryButton}
+        </>
+      ),
+      secondary: (
+        <>
+          {userDetails && game.shop !== "custom" && (
+            <Button
+              onClick={toggleGamePinned}
+              theme="primary"
+              disabled={deleting}
+            >
+              {game.isPinned ? <PinSlashIcon /> : <PinIcon />}
+            </Button>
+          )}
 
-        {removeGameFromLibraryButton}
-
-        <Button
-          onClick={() => {
-            setGameOptionsInitialCategory("general");
-            setShowGameOptionsModal(true);
-          }}
-          theme="outline"
-          disabled={deleting}
-          className="hero-panel-actions__action"
-        >
-          <GearIcon />
-          {t("options")}
-        </Button>
-      </div>
-    );
+          <Button
+            onClick={() => {
+              setGameOptionsInitialCategory("general");
+              setShowGameOptionsModal(true);
+            }}
+            theme="primary"
+            disabled={deleting}
+          >
+            <GearIcon />
+          </Button>
+        </>
+      )
+    };
   }
 
-  return addGameToLibraryButton;
+  return {
+    primary: addGameToLibraryButton,
+    secondary: null
+  };
+}
+
+export function HeroPanelPrimaryActions() {
+  const { primary } = useHeroPanelActions();
+  return (
+    <div className="hero-panel-actions__container">
+      {primary}
+    </div>
+  );
+}
+
+export function HeroPanelSecondaryActions() {
+  const { secondary } = useHeroPanelActions();
+  return <>{secondary}</>;
 }

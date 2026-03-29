@@ -8,17 +8,16 @@ import {
   useState,
 } from "react";
 import { ProfileHero } from "../profile-hero/profile-hero";
-import { useAppDispatch, useFormat, useUserDetails } from "@renderer/hooks";
+import { useAppDispatch, useFormat, useUserDetails, useDominantColor } from "@renderer/hooks";
 import { setHeaderTitle } from "@renderer/features";
 import { useTranslation } from "react-i18next";
 import type { GameShop } from "@types";
 import { LockedProfile } from "./locked-profile";
 import { ReportProfile } from "../report-profile/report-profile";
-import { BadgesBox } from "./badges-box";
 import { FriendsBox, FriendsBoxAddButton } from "./friends-box";
+
 import { RecentGamesBox } from "./recent-games-box";
 import { UserStatsBox } from "./user-stats-box";
-import { ProfileSection } from "../profile-section/profile-section";
 import { DeleteReviewModal } from "@renderer/pages/game-details/modals/delete-review-modal";
 import { GAME_STATS_ANIMATION_DURATION_IN_MS } from "./profile-animations";
 import { MAX_MINUTES_TO_SHOW_IN_PLAYTIME } from "@renderer/constants";
@@ -89,6 +88,7 @@ export function ProfileContent() {
     loadMoreLibraryGames,
     hasMoreLibraryGames,
     isLoadingLibraryGames,
+    backgroundImage,
   } = useContext(userProfileContext);
   const { userDetails } = useUserDetails();
   const [statsIndex, setStatsIndex] = useState(0);
@@ -101,8 +101,12 @@ export function ProfileContent() {
   // User reviews state
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [reviewsTotalCount, setReviewsTotalCount] = useState(0);
-  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [votingReviews, setVotingReviews] = useState<Set<string>>(new Set());
+
+  const { isLight } = useDominantColor(backgroundImage);
+  const isBgLight = isLight ?? false;
+
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
 
@@ -371,22 +375,9 @@ export function ProfileContent() {
       return <LockedProfile />;
     }
 
-    const hasGames = libraryGames.length > 0;
-    const hasPinnedGames = pinnedGames.length > 0;
-    const hasAnyGames = hasGames || hasPinnedGames;
-
-    const shouldShowRightContent =
-      hasAnyGames || userProfile.friends.length > 0 || isMe;
-
     return (
       <section className="profile-content__section">
-        <div className="profile-content__main">
-          <ProfileTabs
-            activeTab={activeTab}
-            reviewsTotalCount={reviewsTotalCount}
-            onTabChange={setActiveTab}
-          />
-
+        <div className="profile-content__main" style={{ gap: 24, display: "flex", flexDirection: "column" }}>
           <div className="profile-content__tab-panels">
             <AnimatePresence mode="wait">
               {activeTab === "library" && (
@@ -419,44 +410,27 @@ export function ProfileContent() {
                   onDelete={handleDeleteClick}
                 />
               )}
+
+              {activeTab === "stats" && userStats && (
+                <UserStatsBox />
+              )}
+
+              {activeTab === "friends" && (((userProfile.friends?.length) ?? 0) > 0 || isMe) && (
+                <>
+                  <FriendsBoxAddButton />
+                  <div style={{ marginTop: 16 }} />
+                  <FriendsBox />
+                </>
+              )}
+
+              {activeTab === "activity" && ((userProfile.recentGames?.length) ?? 0) > 0 && (
+                <RecentGamesBox />
+              )}
             </AnimatePresence>
           </div>
         </div>
 
-        {shouldShowRightContent && (
-          <div className="profile-content__right-content">
-            {userStats && (
-              <ProfileSection title={t("stats")} defaultOpen={true}>
-                <UserStatsBox />
-              </ProfileSection>
-            )}
-            {userProfile?.badges.length > 0 && (
-              <ProfileSection
-                title={t("badges")}
-                count={userProfile.badges.length}
-                defaultOpen={true}
-              >
-                <BadgesBox />
-              </ProfileSection>
-            )}
-            {userProfile?.recentGames.length > 0 && (
-              <ProfileSection title={t("activity")} defaultOpen={true}>
-                <RecentGamesBox />
-              </ProfileSection>
-            )}
-            {(userProfile?.friends.length > 0 || isMe) && (
-              <ProfileSection
-                title={t("friends")}
-                count={userStats?.friendsCount || userProfile.friends.length}
-                action={<FriendsBoxAddButton />}
-                defaultOpen={true}
-              >
-                <FriendsBox />
-              </ProfileSection>
-            )}
-            <ReportProfile />
-          </div>
-        )}
+        {isMe && <ReportProfile />}
 
         <DeleteReviewModal
           visible={deleteModalVisible}
@@ -475,10 +449,8 @@ export function ProfileContent() {
     statsIndex,
     libraryGames,
     pinnedGames,
-
     sortBy,
     activeTab,
-    // ensure reviews UI updates correctly
     reviews,
     reviewsTotalCount,
     isLoadingReviews,
@@ -488,8 +460,16 @@ export function ProfileContent() {
 
   return (
     <div>
-      <ProfileHero />
-
+      <ProfileHero>
+        <ProfileTabs
+          activeTab={activeTab}
+          reviewsTotalCount={reviewsTotalCount}
+          onTabChange={setActiveTab}
+          showFriendsTab={((userProfile?.friends?.length) ?? 0) > 0 || isMe}
+          showActivityTab={((userProfile?.recentGames?.length) ?? 0) > 0}
+          isBgLight={isBgLight}
+        />
+      </ProfileHero>
       {content}
     </div>
   );
