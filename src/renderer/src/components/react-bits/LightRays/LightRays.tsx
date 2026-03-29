@@ -406,6 +406,7 @@ void main() {
       window.addEventListener("mousemove", handleMouseMove);
       return () => window.removeEventListener("mousemove", handleMouseMove);
     }
+    return undefined;
   }, [followMouse]);
 
   return (

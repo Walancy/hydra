@@ -422,7 +422,7 @@ export function App() {
               <button
                 type="button"
                 className="title-bar__option"
-                onClick={() => window.electron.openDevTools()}
+                onClick={() => (window.electron as any).openDevTools()}
               >
                 DevTools
               </button>
