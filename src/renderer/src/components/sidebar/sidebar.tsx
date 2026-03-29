@@ -32,7 +32,6 @@ import cn from "classnames";
 import {
   CommentDiscussionIcon,
   PlusIcon,
-  ChevronRightIcon,
   PencilIcon,
   TrashIcon,
   TrophyIcon,
@@ -41,11 +40,10 @@ import {
   BookIcon,
 } from "@primer/octicons-react";
 import {
-  Plug as PlugIcon,
   Paintbrush as PaintbrushIcon,
   ArrowRightLeft as ArrowRightLeftIcon,
 } from "lucide-react";
-import { SidebarGameItem } from "./sidebar-game-item";
+
 import { SidebarAddingCustomGameModal } from "./sidebar-adding-custom-game-modal";
 import { SidebarFavoriteCard } from "./sidebar-favorite-card";
 import { setFriendRequestCount } from "@renderer/features/user-details-slice";
@@ -55,7 +53,6 @@ import { useDispatch } from "react-redux";
 const SIDEBAR_MIN_WIDTH = 260;
 const SIDEBAR_INITIAL_WIDTH = 300;
 const SIDEBAR_MAX_WIDTH = 500;
-const FAVORITES_COLLECTION_ID = "__favorites__";
 
 const initialSidebarWidth = window.localStorage.getItem("sidebarWidth");
 
@@ -78,8 +75,6 @@ export function Sidebar() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filteredLibrary, setFilteredLibrary] = useState<LibraryGame[]>([]);
-
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const stored = initialSidebarWidth
@@ -96,13 +91,10 @@ export function Sidebar() {
 
   const { hasActiveSubscription, userDetails } = useUserDetails();
 
-  const { lastPacket, progress } = useDownload();
+  const { lastPacket } = useDownload();
 
   const { showWarningToast, showSuccessToast, showErrorToast } = useToast();
 
-  const [isGamesCollapsed, setIsGamesCollapsed] = useState(true);
-  const [isInstalledCollapsed, setIsInstalledCollapsed] = useState(true);
-  const [isDownloadingCollapsed, setIsDownloadingCollapsed] = useState(true);
   const [showInstalledGames, setShowInstalledGames] = useState(false);
   const [showAddGameModal, setShowAddGameModal] = useState(false);
   const [onlineFriendsCount, setOnlineFriendsCount] = useState(0);
@@ -152,11 +144,8 @@ export function Sidebar() {
   const [showDeleteCollectionModal, setShowDeleteCollectionModal] =
     useState(false);
   const [isDeletingCollection, setIsDeletingCollection] = useState(false);
-  const {
-    collections,
-    hasLoaded: hasLoadedCollections,
-    loadCollections,
-  } = useGameCollections();
+  const { hasLoaded: hasLoadedCollections, loadCollections } =
+    useGameCollections();
 
   const selectedCollectionId = useMemo(() => {
     if (!location.pathname.startsWith("/library")) return null;
@@ -254,19 +243,7 @@ export function Sidebar() {
       sidebarRef.current?.clientWidth || SIDEBAR_INITIAL_WIDTH;
   };
 
-  const handleFilter: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setFilteredLibrary(
-      sortedLibrary.filter((game) =>
-        game.title
-          .toLowerCase()
-          .includes(event.target.value.toLocaleLowerCase())
-      )
-    );
-  };
-
   useEffect(() => {
-    setFilteredLibrary(sortedLibrary);
-
     if (filterRef.current) {
       filterRef.current.value = "";
     }
@@ -298,22 +275,6 @@ export function Sidebar() {
       window.onmousemove = null;
     };
   }, [isResizing]);
-
-  const getGameTitle = (game: LibraryGame) => {
-    if (lastPacket?.gameId === game.id) {
-      return t("downloading", {
-        title: game.title,
-        percentage: progress,
-      });
-    }
-
-    if (game.download?.queued) return t("queued", { title: game.title });
-
-    if (game.download?.status === "paused")
-      return t("paused", { title: game.title });
-
-    return game.title;
-  };
 
   const handleSidebarGameClick = (
     event: React.MouseEvent,
@@ -502,27 +463,12 @@ export function Sidebar() {
     t,
   ]);
 
-  const favoritesCount = useMemo(() => {
-    return sortedLibrary.filter((game) => game.favorite).length;
-  }, [sortedLibrary]);
-
   const favoriteGames = useMemo(() => {
     return sortedLibrary.filter((game) => game.favorite);
   }, [sortedLibrary]);
 
   const installedGames = useMemo(() => {
     return sortedLibrary.filter(isGamePlayable);
-  }, [sortedLibrary]);
-
-  const downloadingGames = useMemo(() => {
-    return sortedLibrary.filter(
-      (game) =>
-        game.download &&
-        !game.executablePath &&
-        (game.download.queued ||
-          game.download.status === "active" ||
-          game.download.status === "paused")
-    );
   }, [sortedLibrary]);
 
   return (

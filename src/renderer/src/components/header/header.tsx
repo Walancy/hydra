@@ -21,11 +21,7 @@ import {
 import "./header.scss";
 import { AutoUpdateSubHeader } from "./auto-update-sub-header";
 import { ScanGamesModal } from "./scan-games-modal";
-import {
-  setFilters,
-  setLibrarySearchQuery,
-  triggerCloseFolder,
-} from "@renderer/features";
+import { setFilters, setLibrarySearchQuery } from "@renderer/features";
 import cn from "classnames";
 import { SearchDropdown } from "@renderer/components";
 import { buildGameDetailsPath } from "@renderer/helpers";
@@ -70,9 +66,7 @@ export function Header() {
       window.removeEventListener("avatar_style_update", handleAvatarUpdate);
   }, []);
 
-  const { draggingDisabled, openedFolderName } = useAppSelector(
-    (state) => state.window
-  );
+  const { draggingDisabled } = useAppSelector((state) => state.window);
 
   const { userDetails } = useUserDetails();
   const { hasActiveSubscription } = useUserDetails();
@@ -94,7 +88,6 @@ export function Header() {
   );
 
   const isHomePage = location.pathname === "/";
-  const isSearchPage = location.pathname.startsWith("/search");
   const isOnLibraryPage = location.pathname.startsWith("/library");
   const isOnCataloguePage = location.pathname.startsWith("/catalogue");
   const isGamePage = location.pathname.startsWith("/game");

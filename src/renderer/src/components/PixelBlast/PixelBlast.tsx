@@ -131,7 +131,7 @@ const createLiquidEffect = (
     }
   `;
   return new Effect("LiquidEffect", fragment, {
-    // @ts-ignore
+    // @ts-expect-error postprocessing uniform types are outdated
     uniforms: new Map([
       ["uTexture", new THREE.Uniform(texture)],
       ["uStrength", new THREE.Uniform(opts?.strength ?? 0.025)],

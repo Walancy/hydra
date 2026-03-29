@@ -166,7 +166,6 @@ export default function ColorBends({
       alpha: true,
     });
     rendererRef.current = renderer;
-    // @ts-ignore
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setClearColor(0x000000, transparent ? 0 : 1);
@@ -186,7 +185,7 @@ export default function ColorBends({
 
     handleResize();
 
-    if ("ResizeObserver" in window) {
+    if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(handleResize);
       ro.observe(container);
       resizeObserverRef.current = ro;

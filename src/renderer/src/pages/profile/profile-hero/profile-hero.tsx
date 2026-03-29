@@ -466,6 +466,13 @@ export function ProfileHero({
             <div
               className="profile-hero__edit-overlay-backdrop"
               onClick={() => setIsEditingMode(false)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setIsEditingMode(false);
+                }
+              }}
             />
           )}
           <div
@@ -716,6 +723,7 @@ export function ProfileHero({
                         placeholder={t("display_name", {
                           defaultValue: "Nome",
                         })}
+                        /* eslint-disable-next-line jsx-a11y/no-autofocus */
                         autoFocus
                       />
                     ) : (

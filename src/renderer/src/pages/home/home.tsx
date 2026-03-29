@@ -72,7 +72,9 @@ export default function Home() {
 
       oscillator.start(audioCtx.currentTime);
       oscillator.stop(audioCtx.currentTime + 0.04);
-    } catch {}
+    } catch {
+      // Ignored
+    }
   }, []);
 
   useEffect(() => {
@@ -485,6 +487,7 @@ export default function Home() {
             </div>
           )}
 
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
           <div
             className="home__slider"
             ref={sliderRef}

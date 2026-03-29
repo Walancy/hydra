@@ -71,6 +71,7 @@ export function CreateFolderModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("nome_da_pasta", { defaultValue: "Nome da pasta" })}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
         />
 
