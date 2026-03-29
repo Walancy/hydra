@@ -6,7 +6,7 @@
   background-color: rgba(0, 0, 0, 0.45);
   position: fixed;
   inset: 0;
-  top: 95px;
+  top: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,7 +20,7 @@
   }
 
   &--windows {
-    top: calc(95px + 35px);
+    top: 35px;
   }
 }
 

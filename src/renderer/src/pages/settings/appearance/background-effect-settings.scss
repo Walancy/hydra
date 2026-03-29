@@ -26,23 +26,6 @@
   &__btn {
     flex: 0 0 auto;
     white-space: nowrap;
-    padding: 8px 16px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 14px;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    &--active {
-      background: rgba(82, 39, 255, 0.2);
-      border-color: #5227ff;
-    }
   }
 
   &__info {
@@ -124,19 +107,7 @@
       }
 
       .background-effect-settings__add-color {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px dashed rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.6);
-        padding: 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: #fff;
-        }
+        margin-top: 4px;
       }
     }
 

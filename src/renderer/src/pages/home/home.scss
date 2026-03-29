@@ -160,6 +160,42 @@
     }
   }
 
+  &__folder-games-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: calc(globals.$spacing-unit * 2);
+    width: 100%;
+    margin-top: calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 3);
+    
+    @media (max-width: 1400px) {
+      grid-template-columns: repeat(6, 1fr);
+    }
+    @media (max-width: 1100px) {
+      grid-template-columns: repeat(5, 1fr);
+      padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 2);
+    }
+    @media (max-width: 800px) {
+      grid-template-columns: repeat(4, 1fr);
+      padding: calc(globals.$spacing-unit * 0.5) calc(globals.$spacing-unit * 1.5);
+    }
+    @media (max-width: 600px) {
+      grid-template-columns: repeat(3, 1fr);
+      padding: calc(globals.$spacing-unit * 0.5) calc(globals.$spacing-unit * 1);
+      gap: globals.$spacing-unit;
+    }
+
+    .home__card {
+      width: 100% !important;
+      height: auto;
+      aspect-ratio: 2 / 3;
+
+      &--selected {
+        width: 100% !important;
+      }
+    }
+  }
+
   // ---- Card ----
   &__card {
     flex-shrink: 0;
@@ -379,7 +415,8 @@
     }
   }
 
-  &__view-button {
+  &__play-button,
+  &__install-button {
     min-width: 180px;
     padding: 0 32px;
 
@@ -404,8 +441,7 @@
     }
   }
 
-  &__add-button,
-  &__remove-button {
+  &__view-game-button {
     width: 40px;
     min-height: 40px;
     padding: 0;

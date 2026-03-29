@@ -21,7 +21,7 @@ import cn from "classnames";
 import { GameInfo } from "./game-info";
 import { FolderInfo } from "./folder-info";
 import { HeroCarousel } from "./hero-carousel";
-import { ContextMenu, type ContextMenuItemData } from "@renderer/components";
+import { ContextMenu, type ContextMenuItemData, ConfirmationModal } from "@renderer/components";
 import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
 import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";
 import { CreateFolderModal } from "./create-folder-modal";
@@ -43,6 +43,7 @@ export default function Home() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [hasDragged, setHasDragged] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
 
   const prevIndexRef = useRef(selectedIndex);
 
@@ -384,7 +385,9 @@ export default function Home() {
         id: "delete-group",
         label: t("excluir_grupo", { defaultValue: "Excluir Grupo" }),
         danger: true,
-        onClick: () => deleteGroup(targetId),
+        onClick: () => {
+          setFolderToDelete(targetId);
+        },
       });
     }
 
@@ -468,8 +471,7 @@ export default function Home() {
                   title={t("excluir_pasta", { defaultValue: "Excluir pasta" })}
                   className="home__folder-header-action-btn"
                   onClick={() => {
-                    deleteGroup(openedGroup.id);
-                    setOpenedGroup(null);
+                    setFolderToDelete(openedGroup.id);
                   }}
                 >
                   <TrashIcon size={16} />
@@ -489,10 +491,11 @@ export default function Home() {
 
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
           <div
-            className="home__slider"
+            className={openedGroup ? "home__folder-games-grid" : "home__slider"}
             ref={sliderRef}
             onContextMenu={(e) => handleContextMenu(e)}
             onMouseDown={(e) => {
+              if (openedGroup) return;
               setIsDraggingScroll(true);
               setStartX(e.pageX - e.currentTarget.offsetLeft);
               setScrollLeft(e.currentTarget.scrollLeft);
@@ -501,7 +504,7 @@ export default function Home() {
             onMouseLeave={() => setIsDraggingScroll(false)}
             onMouseUp={() => setIsDraggingScroll(false)}
             onMouseMove={(e) => {
-              if (!isDraggingScroll) return;
+              if (!isDraggingScroll || openedGroup) return;
               e.preventDefault();
               const x = e.pageX - e.currentTarget.offsetLeft;
               const walk = (x - startX) * 2;
@@ -668,8 +671,6 @@ export default function Home() {
             {selectedGame && (
               <GameInfo
                 game={selectedGame}
-                showAddButton={!isMyGames}
-                showRemoveButton={isMyGames}
                 isBgLight={isBgLight}
               />
             )}
@@ -725,6 +726,24 @@ export default function Home() {
             setFolderToEdit(null);
           }}
           games={libraryAsGames}
+        />
+      )}
+
+      {folderToDelete && (
+        <ConfirmationModal
+          visible={!!folderToDelete}
+          title={t("excluir_pasta", { defaultValue: "Excluir pasta" })}
+          descriptionText={t("confirmar_exclusao_pasta", { defaultValue: "Tem certeza de que deseja excluir esta pasta?" })}
+          confirmButtonLabel={t("excluir", { defaultValue: "Excluir" })}
+          cancelButtonLabel={t("cancelar", { defaultValue: "Cancelar" })}
+          onConfirm={() => {
+            deleteGroup(folderToDelete);
+            if (openedGroup?.id === folderToDelete) {
+              setOpenedGroup(null);
+            }
+            setFolderToDelete(null);
+          }}
+          onClose={() => setFolderToDelete(null)}
         />
       )}
     </SkeletonTheme>

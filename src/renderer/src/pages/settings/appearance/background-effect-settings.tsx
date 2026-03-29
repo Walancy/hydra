@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import "./background-effect-settings.scss";
 
 // Reusing Hydra select, input or standard HTML
-import { TextField } from "@renderer/components";
+import { TextField, Button } from "@renderer/components";
 
-const effectsInfo: Record<
+export const effectsInfo: Record<
   string,
   { label: string; defaults: any; info: string }
 > = {
@@ -40,7 +40,7 @@ const effectsInfo: Record<
   floatinglines: {
     label: "Floating Lines",
     defaults: {
-      linesGradient: ["#8a5cff", "#00ffd1"],
+      linesGradient: ["#a5cfaa", "#273f3b"],
       lineCount: 5,
       lineDistance: 5,
       bendRadius: 5,
@@ -138,13 +138,15 @@ export function BackgroundEffectSettings() {
   const [config, setConfig] = useState<any>({});
 
   useEffect(() => {
-    const ef = localStorage.getItem("hydra_background_effect") || "none";
+    const ef = localStorage.getItem("hydra_background_effect") || "floatinglines";
     setEffect(ef);
     try {
-      const conf = JSON.parse(
-        localStorage.getItem("hydra_background_config") || "{}"
-      );
-      setConfig(conf);
+      const confStr = localStorage.getItem("hydra_background_config");
+      if (confStr) {
+        setConfig(JSON.parse(confStr));
+      } else {
+        setConfig(effectsInfo["floatinglines"].defaults);
+      }
     } catch {
       setConfig({});
     }
@@ -181,14 +183,14 @@ export function BackgroundEffectSettings() {
     <div className="background-effect-settings">
       <div className="background-effect-settings__selectors">
         {Object.entries(effectsInfo).map(([key, info]) => (
-          <button
+          <Button
             key={key}
-            type="button"
-            className={`background-effect-settings__btn ${effect === key ? "background-effect-settings__btn--active" : ""}`}
+            theme={effect === key ? "primary" : "outline"}
+            className="background-effect-settings__btn"
             onClick={() => handleEffectChange(key)}
           >
             {info.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -286,15 +288,15 @@ export function BackgroundEffectSettings() {
                           </button>
                         </div>
                       ))}
-                      <button
-                        type="button"
+                      <Button
+                        theme="outline"
                         className="background-effect-settings__add-color"
                         onClick={() => {
                           handleConfigChange(key, [...valArray, "#ffffff"]);
                         }}
                       >
                         + Adicionar Cor
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );

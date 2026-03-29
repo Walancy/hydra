@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, TextField, Button } from "@renderer/components";
 import type { ShopAssets } from "@types";
+import { CheckCircleFillIcon } from "@primer/octicons-react";
 
 export interface CreateFolderModalProps {
   visible: boolean;
@@ -67,13 +68,15 @@ export function CreateFolderModal({
           width: "100%",
         }}
       >
-        <TextField
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("nome_da_pasta", { defaultValue: "Nome da pasta" })}
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
-        />
+        {!initialName && (
+          <TextField
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("nome_da_pasta", { defaultValue: "Nome da pasta" })}
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+          />
+        )}
 
         <div
           style={{
@@ -81,7 +84,7 @@ export function CreateFolderModal({
             overflowY: "auto",
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-            gap: 12,
+            gap: 16,
             paddingRight: 8,
           }}
         >
@@ -91,15 +94,17 @@ export function CreateFolderModal({
               onClick={() => toggleGame(game.objectId)}
               style={{
                 position: "relative",
+                display: "block",
+                width: "100%",
                 aspectRatio: "2/3",
                 borderRadius: 8,
                 overflow: "hidden",
                 border: selectedIds.includes(game.objectId)
                   ? "2px solid #5227ff"
                   : "2px solid transparent",
+                background: "rgba(255, 255, 255, 0.05)",
                 cursor: "pointer",
                 padding: 0,
-                background: "rgba(255, 255, 255, 0.05)",
               }}
             >
               <img
@@ -109,16 +114,27 @@ export function CreateFolderModal({
                     : (game.libraryImageUrl ?? undefined)
                 }
                 alt={game.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transition: "opacity 0.2s ease",
+                  opacity: selectedIds.includes(game.objectId) ? 0.35 : 1,
+                }}
               />
               {selectedIds.includes(game.objectId) && (
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
-                    backgroundColor: "rgba(82, 39, 255, 0.4)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
                   }}
-                />
+                >
+                  <CheckCircleFillIcon size={48} />
+                </div>
               )}
             </button>
           ))}

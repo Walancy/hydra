@@ -8,9 +8,10 @@ import Particles from "./Particles/Particles";
 import Beams from "./Beams/Beams";
 import PixelBlast from "../PixelBlast/PixelBlast";
 import { useLocation } from "react-router-dom";
+import { effectsInfo } from "../../pages/settings/appearance/background-effect-settings";
 
 export function BackgroundEffectRenderer() {
-  const [effect, setEffect] = useState<string>("none");
+  const [effect, setEffect] = useState<string>("floatinglines");
   const [config, setConfig] = useState<any>({});
   const location = useLocation();
 
@@ -18,14 +19,16 @@ export function BackgroundEffectRenderer() {
 
   useEffect(() => {
     const handleUpdate = () => {
-      setEffect(localStorage.getItem("hydra_background_effect") || "none");
+      setEffect(localStorage.getItem("hydra_background_effect") || "floatinglines");
       try {
-        const conf = JSON.parse(
-          localStorage.getItem("hydra_background_config") || "{}"
-        );
-        setConfig(conf);
+        const confStr = localStorage.getItem("hydra_background_config");
+        if (confStr) {
+          setConfig(JSON.parse(confStr));
+        } else {
+          setConfig(effectsInfo["floatinglines"].defaults);
+        }
       } catch (e) {
-        setConfig({});
+        setConfig(effectsInfo["floatinglines"].defaults);
       }
     };
 

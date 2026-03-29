@@ -308,17 +308,27 @@ export function RepacksModal({
               value={filterTerm}
               onChange={handleFilter}
             />
-            {downloadSources.length > 0 && (
+            <div style={{ display: "flex", gap: "8px" }}>
+              {downloadSources.length > 0 && (
+                <Button
+                  type="button"
+                  theme="outline"
+                  onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+                  className="repacks-modal__filter-toggle"
+                >
+                  {t("filter_by_source")}
+                  {isFilterDrawerOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                </Button>
+              )}
               <Button
                 type="button"
-                theme="outline"
-                onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
-                className="repacks-modal__filter-toggle"
+                theme="primary"
+                onClick={() => window.electron.openExternal("https://hydralinks.cloud")}
               >
-                {t("filter_by_source")}
-                {isFilterDrawerOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                <PlusCircleIcon />
+                Adicionar fonte
               </Button>
-            )}
+            </div>
           </div>
 
           <div
@@ -367,12 +377,11 @@ export function RepacksModal({
                     type="button"
                     theme="primary"
                     onClick={() => {
-                      onClose();
-                      navigate("/settings?tab=2");
+                      window.electron.openExternal("https://hydralinks.cloud");
                     }}
                   >
                     <PlusCircleIcon />
-                    {t("add_download_source", { ns: "settings" })}
+                    Instalar fontes
                   </Button>
                 </div>
               </div>

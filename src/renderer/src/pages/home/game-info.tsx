@@ -2,11 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
-  PlusIcon,
-  CheckIcon,
-  DashIcon,
   PlayIcon,
-  InfoIcon,
+  DownloadIcon,
+  ArrowRightIcon,
 } from "@primer/octicons-react";
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
@@ -18,8 +16,6 @@ import "./home.scss";
 
 interface GameInfoProps {
   game: ShopAssets;
-  showAddButton?: boolean;
-  showRemoveButton?: boolean;
   isBgLight?: boolean;
 }
 
@@ -85,18 +81,11 @@ const UUID_RE = /^[0-9a-f-]{36}$/i;
 
 export function GameInfo({
   game,
-  showAddButton = false,
-  showRemoveButton = false,
   isBgLight = false,
 }: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
-  const { library, updateLibrary } = useLibrary();
-  const isInLibrary = library.some(
-    (g) => g.objectId === game.objectId && g.shop === game.shop
-  );
-  const [isAdding, setIsAdding] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const { library } = useLibrary();
   const [details, setDetails] = useState<ShopDetailsWithAssets | null>(
     detailsCache.get(game.objectId) ?? null
   );
@@ -199,71 +188,38 @@ export function GameInfo({
           </Button>
         ) : (
           <Button
-            className="home__view-button"
+            className="home__install-button"
             theme={isBgLight ? "dark" : "primary"}
-            onClick={() => navigate(buildGameDetailsPath(game))}
-          >
-            {t("see_more", { defaultValue: "Ver mais" })}
-          </Button>
-        )}
-        {showRemoveButton && isInLibrary && (
-          <Button
-            className="home__remove-button"
-            theme={isBgLight ? "dark" : "outline"}
-            disabled={isRemoving && !(game as any).executablePath}
-            onClick={async () => {
-              if ((game as any).executablePath) {
-                navigate(buildGameDetailsPath(game));
-                return;
-              }
-              if (isRemoving) return;
-              setIsRemoving(true);
+            onClick={() => {
+              const path = buildGameDetailsPath({
+                ...game,
+                objectId: game.objectId,
+              });
+              navigate(path, { state: { openRepacks: true } });
               try {
-                await window.electron.removeGameFromLibrary(
-                  game.shop,
-                  game.objectId
+                window.dispatchEvent(
+                  new CustomEvent("hydra:openRepacks", {
+                    detail: { objectId: game.objectId },
+                  })
                 );
-                updateLibrary();
-              } finally {
-                setIsRemoving(false);
-              }
-            }}
-            title={
-              (game as any).executablePath
-                ? t("see_more", { defaultValue: "Ver mais" })
-                : t("remove", { defaultValue: "Remover" })
-            }
-          >
-            {(game as any).executablePath ? (
-              <InfoIcon size={16} />
-            ) : (
-              <DashIcon size={16} />
-            )}
-          </Button>
-        )}
-        {showAddButton && (
-          <Button
-            className="home__add-button"
-            theme={isBgLight ? "dark" : "outline"}
-            disabled={isInLibrary || isAdding}
-            onClick={async () => {
-              if (isInLibrary || isAdding) return;
-              setIsAdding(true);
-              try {
-                await window.electron.addGameToLibrary(
-                  game.shop,
-                  game.objectId,
-                  game.title
-                );
-                updateLibrary();
-              } finally {
-                setIsAdding(false);
+              } catch (e) {
+                // Ignore
               }
             }}
           >
-            {isInLibrary ? <CheckIcon size={16} /> : <PlusIcon size={16} />}
+            <DownloadIcon size={16} />
+            {t("install", { defaultValue: "Instalar" })}
           </Button>
         )}
+
+        <Button
+          className="home__view-game-button"
+          theme={isBgLight ? "dark" : "outline"}
+          title={t("see_more", { defaultValue: "Ver página" })}
+          onClick={() => navigate(buildGameDetailsPath(game))}
+        >
+          <ArrowRightIcon size={16} />
+        </Button>
       </div>
     </div>
   );
