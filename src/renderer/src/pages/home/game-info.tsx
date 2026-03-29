@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { PlusIcon, CheckIcon, DashIcon, PlayIcon, InfoIcon } from "@primer/octicons-react";
+import {
+  PlusIcon,
+  CheckIcon,
+  DashIcon,
+  PlayIcon,
+  InfoIcon,
+} from "@primer/octicons-react";
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { Button } from "@renderer/components";
@@ -166,7 +172,10 @@ export function GameInfo({
       {sourceNames.length > 0 && (
         <div className="home__source-tags">
           {sourceNames.map((name) => (
-            <span key={name} className={`home__source-tag ${isBgLight ? "home__source-tag--dark" : ""}`}>
+            <span
+              key={name}
+              className={`home__source-tag ${isBgLight ? "home__source-tag--dark" : ""}`}
+            >
               {name}
             </span>
           ))}
@@ -177,7 +186,13 @@ export function GameInfo({
           <Button
             className="home__play-button"
             theme={isBgLight ? "dark" : "primary"}
-            onClick={() => window.electron.openGame(game.shop, game.objectId, (game as any).executablePath as string)}
+            onClick={() =>
+              window.electron.openGame(
+                game.shop,
+                game.objectId,
+                (game as any).executablePath as string
+              )
+            }
           >
             <PlayIcon size={16} />
             {t("play", { defaultValue: "Jogar" })}
@@ -214,12 +229,16 @@ export function GameInfo({
               }
             }}
             title={
-              (game as any).executablePath 
-                ? t("see_more", { defaultValue: "Ver mais" }) 
+              (game as any).executablePath
+                ? t("see_more", { defaultValue: "Ver mais" })
                 : t("remove", { defaultValue: "Remover" })
             }
           >
-            {(game as any).executablePath ? <InfoIcon size={16} /> : <DashIcon size={16} />}
+            {(game as any).executablePath ? (
+              <InfoIcon size={16} />
+            ) : (
+              <DashIcon size={16} />
+            )}
           </Button>
         )}
         {showAddButton && (

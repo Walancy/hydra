@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 
-export function useDominantColor(imageUrl: string | undefined): { color: string; isLight: boolean } {
-  const [result, setResult] = useState({ color: "rgba(255, 255, 255, 0.3)", isLight: false });
+export function useDominantColor(imageUrl: string | undefined): {
+  color: string;
+  isLight: boolean;
+} {
+  const [result, setResult] = useState({
+    color: "rgba(255, 255, 255, 0.3)",
+    isLight: false,
+  });
 
   useEffect(() => {
     if (!imageUrl) {
-       setResult({ color: "rgba(255, 255, 255, 0.3)", isLight: false });
-       return;
+      setResult({ color: "rgba(255, 255, 255, 0.3)", isLight: false });
+      return;
     }
 
     const img = new Image();
@@ -42,7 +48,7 @@ export function useDominantColor(imageUrl: string | undefined): { color: string;
         r = Math.round(r / count);
         g = Math.round(g / count);
         b = Math.round(b / count);
-        const isLight = (r * 0.299 + g * 0.587 + b * 0.114) > 128;
+        const isLight = r * 0.299 + g * 0.587 + b * 0.114 > 128;
         setResult({ color: `rgba(${r}, ${g}, ${b}, 0.9)`, isLight });
       } else {
         setResult({ color: "rgba(255, 255, 255, 0.3)", isLight: false });

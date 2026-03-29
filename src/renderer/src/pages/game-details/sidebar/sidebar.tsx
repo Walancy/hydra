@@ -161,10 +161,22 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
       });
   }, [shouldShowProtonFeatures, objectId, shop]);
 
-  if (activeTab === "overview" || activeTab === "gallery" || activeTab === "reviews") return null;
+  if (
+    activeTab === "overview" ||
+    activeTab === "gallery" ||
+    activeTab === "reviews"
+  )
+    return null;
 
   return (
-    <div className="tab-content" style={{ width: '100%', maxWidth: '1400px', animation: 'fade-in 0.2s ease' }}>
+    <div
+      className="tab-content"
+      style={{
+        width: "100%",
+        maxWidth: "1400px",
+        animation: "fade-in 0.2s ease",
+      }}
+    >
       {shouldShowProtonFeatures && activeTab === "protondb" && (
         <Suspense fallback={null}>
           <div style={{ marginBottom: 24 }}>
@@ -210,56 +222,59 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
         </div>
       )}
 
-      {activeTab === "achievements" && userDetails && achievements && achievements.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>
-            {t("achievements_count", {
-              unlockedCount: achievements.filter((a) => a.unlocked).length,
-              achievementsCount: achievements.length,
-            })}
-          </h3>
-          <ul className="list">
-            {!hasActiveSubscription && (
-              <button
-                className="subscription-required-button"
-                onClick={() => showHydraCloudModal("achievements")}
-              >
-                <CloudOfflineIcon size={16} />
-                <span>{t("achievements_not_sync")}</span>
-              </button>
-            )}
-
-            {achievements.map((achievement) => (
-              <li key={achievement.displayName}>
-                <Link
-                  to={buildGameAchievementPath({
-                    shop: shop,
-                    objectId: objectId!,
-                    title: gameTitle,
-                  })}
-                  className="list__item"
-                  title={achievement.description}
+      {activeTab === "achievements" &&
+        userDetails &&
+        achievements &&
+        achievements.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ marginBottom: 16 }}>
+              {t("achievements_count", {
+                unlockedCount: achievements.filter((a) => a.unlocked).length,
+                achievementsCount: achievements.length,
+              })}
+            </h3>
+            <ul className="list">
+              {!hasActiveSubscription && (
+                <button
+                  className="subscription-required-button"
+                  onClick={() => showHydraCloudModal("achievements")}
                 >
-                  <img
-                    className={`list__item-image ${
-                      achievement.unlocked ? "" : "list__item-image--locked"
-                    }`}
-                    src={achievement.icon}
-                    alt={achievement.displayName}
-                  />
-                  <div>
-                    <p>{achievement.displayName}</p>
-                    <small>
-                      {achievement.unlockTime != null &&
-                        formatDateTime(achievement.unlockTime)}
-                    </small>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+                  <CloudOfflineIcon size={16} />
+                  <span>{t("achievements_not_sync")}</span>
+                </button>
+              )}
+
+              {achievements.map((achievement) => (
+                <li key={achievement.displayName}>
+                  <Link
+                    to={buildGameAchievementPath({
+                      shop: shop,
+                      objectId: objectId!,
+                      title: gameTitle,
+                    })}
+                    className="list__item"
+                    title={achievement.description}
+                  >
+                    <img
+                      className={`list__item-image ${
+                        achievement.unlocked ? "" : "list__item-image--locked"
+                      }`}
+                      src={achievement.icon}
+                      alt={achievement.displayName}
+                    />
+                    <div>
+                      <p>{achievement.displayName}</p>
+                      <small>
+                        {achievement.unlockTime != null &&
+                          formatDateTime(achievement.unlockTime)}
+                      </small>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
       {activeTab === "stats" && stats && (
         <div style={{ marginBottom: 24 }}>
@@ -312,7 +327,10 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
       {activeTab === "requirements" && (
         <div style={{ marginBottom: 24 }}>
           <h3 style={{ marginBottom: 16 }}>{t("requirements")}</h3>
-          <div className="requirement__button-container" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <div
+            className="requirement__button-container"
+            style={{ display: "flex", gap: 8, marginBottom: 16 }}
+          >
             <Button
               className="requirement__button"
               onClick={() => setActiveRequirement("minimum")}
@@ -324,7 +342,9 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
             <Button
               className="requirement__button"
               onClick={() => setActiveRequirement("recommended")}
-              theme={activeRequirement === "recommended" ? "primary" : "outline"}
+              theme={
+                activeRequirement === "recommended" ? "primary" : "outline"
+              }
             >
               {t("recommended")}
             </Button>
@@ -332,7 +352,7 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
 
           <div
             className="requirement__details"
-            style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}
+            style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}
             dangerouslySetInnerHTML={{
               __html:
                 shopDetails?.pc_requirements?.[activeRequirement] ??
@@ -346,7 +366,9 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
 
       {activeTab === "language" && (
         <div style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>{t("languages", { defaultValue: "Idioma" })}</h3>
+          <h3 style={{ marginBottom: 16 }}>
+            {t("languages", { defaultValue: "Idioma" })}
+          </h3>
           <GameLanguageSection />
         </div>
       )}

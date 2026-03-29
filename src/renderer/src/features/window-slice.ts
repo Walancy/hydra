@@ -34,4 +34,9 @@ export const windowSlice = createSlice({
   },
 });
 
-export const { toggleDraggingDisabled, setHeaderTitle, setOpenedFolderName, triggerCloseFolder } = windowSlice.actions;
+export const {
+  toggleDraggingDisabled,
+  setHeaderTitle,
+  setOpenedFolderName,
+  triggerCloseFolder,
+} = windowSlice.actions;

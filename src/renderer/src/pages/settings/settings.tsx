@@ -22,7 +22,6 @@ import { SettingsContextCompatibility } from "./settings-context-compatibility";
 import { SettingsAppearance } from "./appearance/settings-appearance";
 import { PaintbrushIcon } from "@primer/octicons-react";
 
-
 export default function Settings() {
   const { t } = useTranslation("settings");
 
@@ -112,8 +111,6 @@ export default function Settings() {
 
           return (
             <>
-
-
               <section className="settings__container">
                 <div className="settings__content">
                   <aside className="settings__sidebar">

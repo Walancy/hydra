@@ -12,41 +12,52 @@ export function useBackgroundMusic(enabled: boolean, volume: number) {
       audioRef1.current = new Audio(backgroundMusicPath);
       audioRef2.current = new Audio(backgroundMusicPath);
     }
-    
+
     const a1 = audioRef1.current as HTMLAudioElement;
     const a2 = audioRef2.current as HTMLAudioElement;
     const FADE_TIME = 3; // 3 segundos de transição
     let isFading = false;
 
-    const handleTimeUpdate = (activeAudio: HTMLAudioElement, nextAudio: HTMLAudioElement, activeIdx: 1 | 2) => {
+    const handleTimeUpdate = (
+      activeAudio: HTMLAudioElement,
+      nextAudio: HTMLAudioElement,
+      activeIdx: 1 | 2
+    ) => {
       if (!activeAudio.duration) return;
 
-      if (activeAudio.currentTime >= activeAudio.duration - FADE_TIME && !isFading && enabled) {
+      if (
+        activeAudio.currentTime >= activeAudio.duration - FADE_TIME &&
+        !isFading &&
+        enabled
+      ) {
         isFading = true;
         activeIndexRef.current = activeIdx === 1 ? 2 : 1;
-        
+
         nextAudio.currentTime = 0;
         nextAudio.volume = 0;
         nextAudio.play().catch(() => {});
-        
+
         const fadeSteps = 30;
         let step = 0;
-        
+
         if (faderRef.current) clearInterval(faderRef.current);
-        
-        faderRef.current = setInterval(() => {
-          step++;
-          const ratio = step / fadeSteps;
-          activeAudio.volume = Math.max(0, volume * (1 - ratio));
-          nextAudio.volume = Math.min(volume, volume * ratio);
-          
-          if (step >= fadeSteps) {
-            if (faderRef.current) clearInterval(faderRef.current);
-            activeAudio.pause();
-            activeAudio.currentTime = 0;
-            isFading = false;
-          }
-        }, (FADE_TIME * 1000) / fadeSteps);
+
+        faderRef.current = setInterval(
+          () => {
+            step++;
+            const ratio = step / fadeSteps;
+            activeAudio.volume = Math.max(0, volume * (1 - ratio));
+            nextAudio.volume = Math.min(volume, volume * ratio);
+
+            if (step >= fadeSteps) {
+              if (faderRef.current) clearInterval(faderRef.current);
+              activeAudio.pause();
+              activeAudio.currentTime = 0;
+              isFading = false;
+            }
+          },
+          (FADE_TIME * 1000) / fadeSteps
+        );
       }
     };
 
@@ -75,7 +86,7 @@ export function useBackgroundMusic(enabled: boolean, volume: number) {
       // Retomar a faixa ativa
       const activeAudio = activeIndexRef.current === 1 ? a1 : a2;
       const idleAudio = activeIndexRef.current === 1 ? a2 : a1;
-      
+
       activeAudio.volume = volume;
       if (activeAudio.paused && document.hasFocus()) {
         activeAudio.play().catch(console.warn);
@@ -87,10 +98,10 @@ export function useBackgroundMusic(enabled: boolean, volume: number) {
   useEffect(() => {
     const handleInteraction = () => {
       if (!enabled || !document.hasFocus()) return;
-      
+
       const activeAudio =
         activeIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
-        
+
       if (activeAudio?.paused) {
         activeAudio.play().catch(() => {});
       }

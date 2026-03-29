@@ -4,12 +4,10 @@ import { useAppSelector, useDownload } from "@renderer/hooks";
 
 import { HeroPanelPrimaryActions } from "./hero-panel-actions";
 
-
 import { gameDetailsContext } from "@renderer/context";
 import "./hero-panel.scss";
 
 export function HeroPanel() {
-
   const { game } = useContext(gameDetailsContext);
 
   const { lastPacket } = useDownload();
@@ -20,8 +18,6 @@ export function HeroPanel() {
     game?.download?.status === "active" && lastPacket?.gameId === game?.id;
 
   const isExtracting = extraction?.visibleId === game?.id;
-
-
 
   const showProgressBar =
     (game?.download?.status === "active" && game?.download?.progress < 1) ||

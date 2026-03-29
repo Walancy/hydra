@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  useCallback
-} from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   useLibrary,
@@ -495,7 +490,6 @@ export default function Library() {
 
   return (
     <section className="library__page">
-
       {hasGames && (
         <div className="library__filter-bar">
           <div className="library__controls-row">

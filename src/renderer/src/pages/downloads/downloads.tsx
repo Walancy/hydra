@@ -11,7 +11,6 @@ import type { GameShop, LibraryGame, SeedingStatus } from "@types";
 import { orderBy } from "lodash-es";
 import { ArrowDownIcon } from "@primer/octicons-react";
 
-
 export default function Downloads() {
   const { library, updateLibrary } = useLibrary();
   const extraction = useAppSelector((state) => state.download.extraction);
@@ -140,8 +139,6 @@ export default function Downloads() {
 
   return (
     <>
-
-
       <BinaryNotFoundModal
         visible={showBinaryNotFoundModal}
         onClose={() => setShowBinaryNotFoundModal(false)}

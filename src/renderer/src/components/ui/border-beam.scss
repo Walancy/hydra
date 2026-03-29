@@ -5,13 +5,17 @@
   pointer-events: none;
   border-radius: inherit;
   border: var(--border-width) solid transparent;
-  mask: linear-gradient(#000, #000) padding-box, linear-gradient(#000, #000);
-  -webkit-mask: linear-gradient(#000, #000) padding-box, linear-gradient(#000, #000);
+  mask:
+    linear-gradient(#000, #000) padding-box,
+    linear-gradient(#000, #000);
+  -webkit-mask:
+    linear-gradient(#000, #000) padding-box,
+    linear-gradient(#000, #000);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     aspect-ratio: 1;
     width: var(--size);

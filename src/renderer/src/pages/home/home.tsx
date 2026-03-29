@@ -38,31 +38,38 @@ export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isMyGames, setIsMyGames] = useState(true);
   const sliderRef = useRef<HTMLDivElement>(null);
-  
+
   const [isDraggingScroll, setIsDraggingScroll] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [hasDragged, setHasDragged] = useState(false);
 
   const prevIndexRef = useRef(selectedIndex);
-  
+
   const playBeep = useCallback(() => {
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtx = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-      
-      oscillator.type = 'sine';
+
+      oscillator.type = "sine";
       oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
-      
+      oscillator.frequency.exponentialRampToValueAtTime(
+        400,
+        audioCtx.currentTime + 0.04
+      );
+
       gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
       gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.002);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-      
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioCtx.currentTime + 0.04
+      );
+
       oscillator.start(audioCtx.currentTime);
       oscillator.stop(audioCtx.currentTime + 0.04);
     } catch {}
@@ -395,9 +402,7 @@ export default function Home() {
   return (
     <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">
       <section className="home">
-        {selectedGame && (
-          <div className="home__solid-background" />
-        )}
+        {selectedGame && <div className="home__solid-background" />}
         {backgroundSrc && (
           <img
             src={backgroundSrc}
@@ -442,7 +447,9 @@ export default function Home() {
 
           {openedGroup && (
             <div className="home__folder-header">
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
                 <Button
                   theme={isBgLight ? "dark" : "primary"}
                   title={t("add_game", { defaultValue: "Adicionar Jogo" })}
@@ -615,10 +622,7 @@ export default function Home() {
                       {isFolder ? (
                         <div className="home__folder-grid">
                           {Array.from({ length: 4 }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="home__folder-thumb-wrapper"
-                            >
+                            <div key={i} className="home__folder-thumb-wrapper">
                               {item.covers[i] ? (
                                 <img
                                   src={item.covers[i]}
@@ -655,7 +659,6 @@ export default function Home() {
                     </button>
                   );
                 })}
-            
           </div>
 
           <div className="home__bottom-segment">
@@ -678,7 +681,7 @@ export default function Home() {
                 isBgLight={isBgLight}
               />
             )}
-            
+
             {!selectedGame && !selectedFolder && <div />}
 
             {catalogue[CatalogueCategory.Hot]?.length > 0 && (
@@ -709,7 +712,9 @@ export default function Home() {
           onCreate={(name, gameIds) => {
             if (folderToEdit) {
               updateGroup(folderToEdit.id, name, gameIds);
-              setOpenedGroup((prev) => prev ? { ...prev, name, gameIds } : null);
+              setOpenedGroup((prev) =>
+                prev ? { ...prev, name, gameIds } : null
+              );
             } else {
               createGroup(name, gameIds);
             }

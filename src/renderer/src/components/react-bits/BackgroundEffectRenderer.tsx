@@ -20,7 +20,9 @@ export function BackgroundEffectRenderer() {
     const handleUpdate = () => {
       setEffect(localStorage.getItem("hydra_background_effect") || "none");
       try {
-        const conf = JSON.parse(localStorage.getItem("hydra_background_config") || "{}");
+        const conf = JSON.parse(
+          localStorage.getItem("hydra_background_config") || "{}"
+        );
         setConfig(conf);
       } catch (e) {
         setConfig({});
@@ -30,7 +32,8 @@ export function BackgroundEffectRenderer() {
     handleUpdate();
 
     window.addEventListener("background_effect_update", handleUpdate);
-    return () => window.removeEventListener("background_effect_update", handleUpdate);
+    return () =>
+      window.removeEventListener("background_effect_update", handleUpdate);
   }, []);
 
   if (effect === "none" || isHiddenRoute) return null;
@@ -68,17 +71,18 @@ export function BackgroundEffectRenderer() {
         height: "100vh",
         zIndex: -1,
         pointerEvents: "none",
-        overflow: "hidden"
+        overflow: "hidden",
       }}
     >
-      <ErrorBoundary fallback={null}>
-        {renderEffect()}
-      </ErrorBoundary>
+      <ErrorBoundary fallback={null}>{renderEffect()}</ErrorBoundary>
     </div>
   );
 }
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode, fallback: React.ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false };

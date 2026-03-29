@@ -4,42 +4,114 @@ import "./background-effect-settings.scss";
 // Reusing Hydra select, input or standard HTML
 import { TextField } from "@renderer/components";
 
-const effectsInfo : Record<string, { label: string, defaults: any, info: string }> = {
+const effectsInfo: Record<
+  string,
+  { label: string; defaults: any; info: string }
+> = {
   none: { label: "Nenhum", defaults: {}, info: "Sem fundo animado" },
   darkveil: {
     label: "Dark Veil",
-    defaults: { hueShift: 0, noiseIntensity: 0, scanlineIntensity: 0, speed: 0.5, scanlineFrequency: 0, warpAmount: 0 },
-    info: "Neblina etérea e fluida com ajustes de matiz e scanlines"
+    defaults: {
+      hueShift: 0,
+      noiseIntensity: 0,
+      scanlineIntensity: 0,
+      speed: 0.5,
+      scanlineFrequency: 0,
+      warpAmount: 0,
+    },
+    info: "Neblina etérea e fluida com ajustes de matiz e scanlines",
   },
   lightpillar: {
     label: "Light Pillar",
-    defaults: { topColor: "#5227FF", bottomColor: "#FF9FFC", intensity: 1, rotationSpeed: 0.3, glowAmount: 0.002, pillarWidth: 3, pillarHeight: 0.4, noiseIntensity: 0.5, pillarRotation: 25, interactive: false },
-    info: "Pilar de luz luminoso e expansível"
+    defaults: {
+      topColor: "#5227FF",
+      bottomColor: "#FF9FFC",
+      intensity: 1,
+      rotationSpeed: 0.3,
+      glowAmount: 0.002,
+      pillarWidth: 3,
+      pillarHeight: 0.4,
+      noiseIntensity: 0.5,
+      pillarRotation: 25,
+      interactive: false,
+    },
+    info: "Pilar de luz luminoso e expansível",
   },
   floatinglines: {
     label: "Floating Lines",
-    defaults: { linesGradient: ["#8a5cff", "#00ffd1"], lineCount: 5, lineDistance: 5, bendRadius: 5, bendStrength: -0.5, interactive: true, parallax: true },
-    info: "Linhas flutuantes responsivas ao mouse"
+    defaults: {
+      linesGradient: ["#8a5cff", "#00ffd1"],
+      lineCount: 5,
+      lineDistance: 5,
+      bendRadius: 5,
+      bendStrength: -0.5,
+      interactive: true,
+      parallax: true,
+    },
+    info: "Linhas flutuantes responsivas ao mouse",
   },
   lightrays: {
     label: "Light Rays",
-    defaults: { raysOrigin: "top-center", raysColor: "#ffffff", raysSpeed: 1, lightSpread: 0.5, rayLength: 3, followMouse: true, mouseInfluence: 0.1, noiseAmount: 0, distortion: 0, pulsating: false, fadeDistance: 1, saturation: 1 },
-    info: "Raios de luz volumétricos projetados na tela"
+    defaults: {
+      raysOrigin: "top-center",
+      raysColor: "#ffffff",
+      raysSpeed: 1,
+      lightSpread: 0.5,
+      rayLength: 3,
+      followMouse: true,
+      mouseInfluence: 0.1,
+      noiseAmount: 0,
+      distortion: 0,
+      pulsating: false,
+      fadeDistance: 1,
+      saturation: 1,
+    },
+    info: "Raios de luz volumétricos projetados na tela",
   },
   colorbends: {
     label: "Color Bends",
-    defaults: { colors: ["#ff5c7a", "#8a5cff", "#00ffd1"], rotation: 0, speed: 0.2, scale: 1, frequency: 1, warpStrength: 1, mouseInfluence: 1, parallax: 0.5, noise: 0.1, transparent: true, autoRotate: 0 },
-    info: "Distorções coloridas fluidas com estilo gradiente mesh"
+    defaults: {
+      colors: ["#ff5c7a", "#8a5cff", "#00ffd1"],
+      rotation: 0,
+      speed: 0.2,
+      scale: 1,
+      frequency: 1,
+      warpStrength: 1,
+      mouseInfluence: 1,
+      parallax: 0.5,
+      noise: 0.1,
+      transparent: true,
+      autoRotate: 0,
+    },
+    info: "Distorções coloridas fluidas com estilo gradiente mesh",
   },
   particles: {
     label: "Particles",
-    defaults: { particleColors: ["#ffffff", "#ff0000", "#00ff00"], particleCount: 200, particleSpread: 10, speed: 0.1, particleBaseSize: 100, moveParticlesOnHover: true, alphaParticles: false, disableRotation: false },
-    info: "Nuvem de partículas 3D espaciais"
+    defaults: {
+      particleColors: ["#ffffff", "#ff0000", "#00ff00"],
+      particleCount: 200,
+      particleSpread: 10,
+      speed: 0.1,
+      particleBaseSize: 100,
+      moveParticlesOnHover: true,
+      alphaParticles: false,
+      disableRotation: false,
+    },
+    info: "Nuvem de partículas 3D espaciais",
   },
   beams: {
     label: "Beams",
-    defaults: { beamWidth: 3, beamHeight: 30, beamNumber: 20, lightColor: "#ffffff", speed: 2, noiseIntensity: 1.75, scale: 0.2, rotation: 30 },
-    info: "Feixes de luz volumétricos 3D com ruído animado"
+    defaults: {
+      beamWidth: 3,
+      beamHeight: 30,
+      beamNumber: 20,
+      lightColor: "#ffffff",
+      speed: 2,
+      noiseIntensity: 1.75,
+      scale: 0.2,
+      rotation: 30,
+    },
+    info: "Feixes de luz volumétricos 3D com ruído animado",
   },
   pixelblast: {
     label: "Pixel Blast",
@@ -55,10 +127,10 @@ const effectsInfo : Record<string, { label: string, defaults: any, info: string 
       transparent: true,
       edgeFade: 0.4,
       enableRipples: true,
-      variant: "square"
+      variant: "square",
     },
-    info: "Partículas pixeladas interativas (estilo Matrix)"
-  }
+    info: "Partículas pixeladas interativas (estilo Matrix)",
+  },
 };
 
 export function BackgroundEffectSettings() {
@@ -69,7 +141,9 @@ export function BackgroundEffectSettings() {
     const ef = localStorage.getItem("hydra_background_effect") || "none";
     setEffect(ef);
     try {
-      const conf = JSON.parse(localStorage.getItem("hydra_background_config") || "{}");
+      const conf = JSON.parse(
+        localStorage.getItem("hydra_background_config") || "{}"
+      );
       setConfig(conf);
     } catch {
       setConfig({});
@@ -79,17 +153,17 @@ export function BackgroundEffectSettings() {
   const handleEffectChange = (newEffect: string) => {
     setEffect(newEffect);
     localStorage.setItem("hydra_background_effect", newEffect);
-    
+
     // Set default config if empty
     let conf = config;
     if (newEffect !== "none" && (!config || Object.keys(config).length === 0)) {
       conf = effectsInfo[newEffect].defaults;
       setConfig(conf);
     } else {
-       conf = effectsInfo[newEffect].defaults; // reset options to avoid breaking things with missing ones for now
-       setConfig(conf);
+      conf = effectsInfo[newEffect].defaults; // reset options to avoid breaking things with missing ones for now
+      setConfig(conf);
     }
-    
+
     localStorage.setItem("hydra_background_config", JSON.stringify(conf));
     window.dispatchEvent(new Event("background_effect_update"));
   };
@@ -131,7 +205,10 @@ export function BackgroundEffectSettings() {
 
             if (t === "boolean") {
               return (
-                <div key={key} className="background-effect-settings__prop background-effect-settings__prop--checkbox">
+                <div
+                  key={key}
+                  className="background-effect-settings__prop background-effect-settings__prop--checkbox"
+                >
                   <label>{key}</label>
                   <input
                     type="checkbox"
@@ -147,25 +224,35 @@ export function BackgroundEffectSettings() {
                   <input
                     type="range"
                     min={defaultValue === 0 ? -10 : 0}
-                    max={Math.max(defaultValue as number * 3, 100)}
-                    step={(defaultValue as number) % 1 !== 0 || defaultValue === 0 ? 0.05 : 1}
+                    max={Math.max((defaultValue as number) * 3, 100)}
+                    step={
+                      (defaultValue as number) % 1 !== 0 || defaultValue === 0
+                        ? 0.05
+                        : 1
+                    }
                     value={val}
-                    onChange={(e) => handleConfigChange(key, parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleConfigChange(key, parseFloat(e.target.value))
+                    }
                   />
                   <span>{val}</span>
                 </div>
               );
             } else if (Array.isArray(defaultValue)) {
               const valArray = val as string[];
-              const isColorArray = valArray.length > 0 && valArray[0].startsWith("#");
-              
+              const isColorArray =
+                valArray.length > 0 && valArray[0].startsWith("#");
+
               if (isColorArray) {
                 return (
                   <div key={key} className="background-effect-settings__prop">
                     <label>{key}</label>
                     <div className="background-effect-settings__color-array">
                       {valArray.map((color, index) => (
-                        <div key={index} className="background-effect-settings__color-input">
+                        <div
+                          key={index}
+                          className="background-effect-settings__color-input"
+                        >
                           <input
                             type="color"
                             value={color.substring(0, 7)}
@@ -183,12 +270,15 @@ export function BackgroundEffectSettings() {
                               handleConfigChange(key, newArr);
                             }}
                           />
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             className="background-effect-settings__remove-color"
                             onClick={() => {
-                              const newArr = valArray.filter((_, i) => i !== index);
-                              if (newArr.length > 0) handleConfigChange(key, newArr);
+                              const newArr = valArray.filter(
+                                (_, i) => i !== index
+                              );
+                              if (newArr.length > 0)
+                                handleConfigChange(key, newArr);
                             }}
                             title="Remover cor"
                           >
@@ -196,8 +286,8 @@ export function BackgroundEffectSettings() {
                           </button>
                         </div>
                       ))}
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="background-effect-settings__add-color"
                         onClick={() => {
                           handleConfigChange(key, [...valArray, "#ffffff"]);
@@ -218,7 +308,9 @@ export function BackgroundEffectSettings() {
                   <TextField
                     value={valStr}
                     onChange={(e) => {
-                      const arr = e.target.value.split(",").map((s) => s.trim());
+                      const arr = e.target.value
+                        .split(",")
+                        .map((s) => s.trim());
                       handleConfigChange(key, arr);
                     }}
                   />
@@ -231,14 +323,18 @@ export function BackgroundEffectSettings() {
                   <label>{key}</label>
                   {isColor ? (
                     <div className="background-effect-settings__color-input">
-                      <input 
-                        type="color" 
+                      <input
+                        type="color"
                         value={val.substring(0, 7)} // HTML color picker doesn't support 8 digit hex
-                        onChange={(e) => handleConfigChange(key, e.target.value)}
+                        onChange={(e) =>
+                          handleConfigChange(key, e.target.value)
+                        }
                       />
                       <TextField
                         value={val}
-                        onChange={(e) => handleConfigChange(key, e.target.value)}
+                        onChange={(e) =>
+                          handleConfigChange(key, e.target.value)
+                        }
                       />
                     </div>
                   ) : (

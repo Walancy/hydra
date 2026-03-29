@@ -32,12 +32,18 @@ interface ReviewItemProps {
 
 const getRatingText = (score: number, t: (key: string) => string): string => {
   switch (score) {
-    case 1: return t("rating_very_negative");
-    case 2: return t("rating_negative");
-    case 3: return t("rating_neutral");
-    case 4: return t("rating_positive");
-    case 5: return t("rating_very_positive");
-    default: return "";
+    case 1:
+      return t("rating_very_negative");
+    case 2:
+      return t("rating_negative");
+    case 3:
+      return t("rating_neutral");
+    case 4:
+      return t("rating_positive");
+    case 5:
+      return t("rating_very_positive");
+    default:
+      return "";
   }
 };
 
@@ -73,7 +79,9 @@ export function ReviewItem({
   const getLanguageName = (languageCode: string | null) => {
     if (!languageCode) return "";
     try {
-      const displayNames = new Intl.DisplayNames([i18n.language], { type: "language" });
+      const displayNames = new Intl.DisplayNames([i18n.language], {
+        type: "language",
+      });
       return displayNames.of(languageCode) || languageCode.toUpperCase();
     } catch {
       return languageCode.toUpperCase();
@@ -150,7 +158,9 @@ export function ReviewItem({
               <span>{review.score}/5</span>
             </div>
 
-            {Boolean(review.playTimeInSeconds && review.playTimeInSeconds > 0) && (
+            {Boolean(
+              review.playTimeInSeconds && review.playTimeInSeconds > 0
+            ) && (
               <div className="game-details__review-playtime">
                 <ClockIcon size={11} />
                 <span>{formatPlayTime(review.playTimeInSeconds || 0)}</span>
@@ -184,7 +194,9 @@ export function ReviewItem({
               <div
                 className="game-details__review-content"
                 style={{ opacity: 0.6, marginTop: "12px" }}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(review.reviewHtml) }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(review.reviewHtml),
+                }}
               />
             )}
           </>
@@ -198,8 +210,15 @@ export function ReviewItem({
             className={`game-details__vote-button game-details__vote-button--upvote ${review.hasUpvoted ? "game-details__vote-button--active" : ""}`}
             onClick={() => onVote(review.id, "upvote")}
             disabled={isVoting}
-            style={{ opacity: isVoting ? 0.5 : 1, cursor: isVoting ? "not-allowed" : "pointer" }}
-            animate={review.hasUpvoted ? { scale: [1, 1.2, 1], transition: { duration: 0.3 } } : {}}
+            style={{
+              opacity: isVoting ? 0.5 : 1,
+              cursor: isVoting ? "not-allowed" : "pointer",
+            }}
+            animate={
+              review.hasUpvoted
+                ? { scale: [1, 1.2, 1], transition: { duration: 0.3 } }
+                : {}
+            }
           >
             <ThumbsUp size={14} />
             <AnimatePresence mode="wait">
@@ -231,8 +250,15 @@ export function ReviewItem({
             className={`game-details__vote-button game-details__vote-button--downvote ${review.hasDownvoted ? "game-details__vote-button--active" : ""}`}
             onClick={() => onVote(review.id, "downvote")}
             disabled={isVoting}
-            style={{ opacity: isVoting ? 0.5 : 1, cursor: isVoting ? "not-allowed" : "pointer" }}
-            animate={review.hasDownvoted ? { scale: [1, 1.2, 1], transition: { duration: 0.3 } } : {}}
+            style={{
+              opacity: isVoting ? 0.5 : 1,
+              cursor: isVoting ? "not-allowed" : "pointer",
+            }}
+            animate={
+              review.hasDownvoted
+                ? { scale: [1, 1.2, 1], transition: { duration: 0.3 } }
+                : {}
+            }
           >
             <ThumbsDown size={14} />
             <AnimatePresence mode="wait">

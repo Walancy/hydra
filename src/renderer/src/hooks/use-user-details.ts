@@ -61,9 +61,9 @@ export function useUserDetails() {
       } catch (e) {
         response = { ...userDetails, ...values };
       }
-      
+
       if (userDetails?.id === "kQ3bLwNy") {
-         response = { ...response, ...values };
+        response = { ...response, ...values };
       }
       return updateUserDetails({
         ...response,
@@ -132,7 +132,7 @@ export function useUserDetails() {
 
   const hasActiveSubscription = useMemo(() => {
     if (userDetails?.id === "kQ3bLwNy") return true;
-    
+
     const expiresAt = new Date(userDetails?.subscription?.expiresAt ?? 0);
     return expiresAt > new Date();
   }, [userDetails]);

@@ -68,11 +68,15 @@ export function LocalNotificationItem({
   const getTypeClass = () => {
     switch (notification.type) {
       case "DOWNLOAD_COMPLETE":
-      case "EXTRACTION_COMPLETE": return "notification-item--download";
+      case "EXTRACTION_COMPLETE":
+        return "notification-item--download";
       case "UPDATE_AVAILABLE":
-      case "SCAN_GAMES_COMPLETE": return "notification-item--update";
-      case "ACHIEVEMENT_UNLOCKED": return "notification-item--badge";
-      default: return "";
+      case "SCAN_GAMES_COMPLETE":
+        return "notification-item--update";
+      case "ACHIEVEMENT_UNLOCKED":
+        return "notification-item--badge";
+      default:
+        return "";
     }
   };
 

@@ -176,7 +176,8 @@ export function NotificationItem({
       type="button"
       className={cn("notification-item", {
         "notification-item--unread":
-          !notification.isRead || notification.type === "FRIEND_REQUEST_RECEIVED",
+          !notification.isRead ||
+          notification.type === "FRIEND_REQUEST_RECEIVED",
         "notification-item--friend-request":
           notification.type === "FRIEND_REQUEST_RECEIVED" ||
           notification.type === "FRIEND_REQUEST_ACCEPTED",
@@ -186,9 +187,7 @@ export function NotificationItem({
       onClick={handleClick}
     >
       {/* Colored icon */}
-      <div className="notification-item__icon-wrap">
-        {getIcon()}
-      </div>
+      <div className="notification-item__icon-wrap">{getIcon()}</div>
 
       {/* Text content */}
       <div className="notification-item__content">
@@ -202,16 +201,17 @@ export function NotificationItem({
         </span>
 
         {/* Friend request inline actions */}
-        {content.showActions && notification.type === "FRIEND_REQUEST_RECEIVED" && (
-          <div className="notification-item__actions">
-            <Button theme="primary" onClick={handleAccept}>
-              {t("accept")}
-            </Button>
-            <Button theme="outline" onClick={handleRefuse}>
-              {t("refuse")}
-            </Button>
-          </div>
-        )}
+        {content.showActions &&
+          notification.type === "FRIEND_REQUEST_RECEIVED" && (
+            <div className="notification-item__actions">
+              <Button theme="primary" onClick={handleAccept}>
+                {t("accept")}
+              </Button>
+              <Button theme="outline" onClick={handleRefuse}>
+                {t("refuse")}
+              </Button>
+            </div>
+          )}
       </div>
 
       {/* Dismiss */}

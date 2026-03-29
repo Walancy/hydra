@@ -280,7 +280,7 @@ function useHeroPanelActions() {
           {showDownloadOptionsButton}
         </>
       ),
-      secondary: null
+      secondary: null,
     };
   }
 
@@ -322,23 +322,19 @@ function useHeroPanelActions() {
             <GearIcon />
           </Button>
         </>
-      )
+      ),
     };
   }
 
   return {
     primary: addGameToLibraryButton,
-    secondary: null
+    secondary: null,
   };
 }
 
 export function HeroPanelPrimaryActions() {
   const { primary } = useHeroPanelActions();
-  return (
-    <div className="hero-panel-actions__container">
-      {primary}
-    </div>
-  );
+  return <div className="hero-panel-actions__container">{primary}</div>;
 }
 
 export function HeroPanelSecondaryActions() {

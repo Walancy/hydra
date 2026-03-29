@@ -64,7 +64,6 @@ export function LibraryTab({
       transition={{ duration: 0.2 }}
       aria-hidden={false}
     >
-
       {!hasAnyGames && (
         <div className="profile-content__no-games">
           <div className="profile-content__telescope-icon">
@@ -118,53 +117,49 @@ export function LibraryTab({
                 <SortOptions sortBy={sortBy} onSortChange={onSortChange} />
               </div>
 
+              <ul className="profile-content__games-grid">
+                {libraryGames?.map((game, index) => {
+                  const hasAnimated = animatedGameIdsRef.current.has(
+                    game.objectId
+                  );
+                  const isNewGame = !hasAnimated && !isLoadingLibraryGames;
 
-                <ul className="profile-content__games-grid">
-                  {libraryGames?.map((game, index) => {
-                    const hasAnimated = animatedGameIdsRef.current.has(
-                      game.objectId
-                    );
-                    const isNewGame = !hasAnimated && !isLoadingLibraryGames;
-
-                    return (
-                      <motion.li
-                        key={`${sortBy}-${game.objectId}`}
-                        style={{ listStyle: "none" }}
-                        initial={
-                          isNewGame
-                            ? { opacity: 0.5, y: 15, scale: 0.96 }
-                            : false
+                  return (
+                    <motion.li
+                      key={`${sortBy}-${game.objectId}`}
+                      style={{ listStyle: "none" }}
+                      initial={
+                        isNewGame ? { opacity: 0.5, y: 15, scale: 0.96 } : false
+                      }
+                      animate={
+                        isNewGame ? { opacity: 1, y: 0, scale: 1 } : false
+                      }
+                      transition={
+                        isNewGame
+                          ? {
+                              duration: 0.15,
+                              ease: "easeOut",
+                              delay: index * 0.01,
+                            }
+                          : undefined
+                      }
+                      onAnimationComplete={() => {
+                        if (isNewGame) {
+                          animatedGameIdsRef.current.add(game.objectId);
                         }
-                        animate={
-                          isNewGame ? { opacity: 1, y: 0, scale: 1 } : false
-                        }
-                        transition={
-                          isNewGame
-                            ? {
-                                duration: 0.15,
-                                ease: "easeOut",
-                                delay: index * 0.01,
-                              }
-                            : undefined
-                        }
-                        onAnimationComplete={() => {
-                          if (isNewGame) {
-                            animatedGameIdsRef.current.add(game.objectId);
-                          }
-                        }}
-                      >
-                        <UserLibraryGameCard
-                          game={game}
-                          statIndex={statsIndex}
-                          onMouseEnter={onMouseEnter}
-                          onMouseLeave={onMouseLeave}
-                          sortBy={sortBy}
-                        />
-                      </motion.li>
-                    );
-                  })}
-                </ul>
-
+                      }}
+                    >
+                      <UserLibraryGameCard
+                        game={game}
+                        statIndex={statsIndex}
+                        onMouseEnter={onMouseEnter}
+                        onMouseLeave={onMouseLeave}
+                        sortBy={sortBy}
+                      />
+                    </motion.li>
+                  );
+                })}
+              </ul>
             </div>
           )}
         </div>

@@ -49,20 +49,41 @@ export function CreateFolderModal({
   return (
     <Modal
       visible={visible}
-      title={initialName ? t("editar_pasta", { defaultValue: "Editar Pasta" }) : t("criar_pasta", { defaultValue: "Criar Pasta" })}
+      title={
+        initialName
+          ? t("editar_pasta", { defaultValue: "Editar Pasta" })
+          : t("criar_pasta", { defaultValue: "Criar Pasta" })
+      }
       onClose={onClose}
       large
       className="create-folder-modal"
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "70vh", width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+          height: "70vh",
+          width: "100%",
+        }}
+      >
         <TextField
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("nome_da_pasta", { defaultValue: "Nome da pasta" })}
           autoFocus
         />
-        
-        <div style={{ flex: 1, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 12, paddingRight: 8 }}>
+
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+            gap: 12,
+            paddingRight: 8,
+          }}
+        >
           {games.map((game) => (
             <button
               key={game.objectId}
@@ -72,31 +93,50 @@ export function CreateFolderModal({
                 aspectRatio: "2/3",
                 borderRadius: 8,
                 overflow: "hidden",
-                border: selectedIds.includes(game.objectId) ? "2px solid #5227ff" : "2px solid transparent",
+                border: selectedIds.includes(game.objectId)
+                  ? "2px solid #5227ff"
+                  : "2px solid transparent",
                 cursor: "pointer",
                 padding: 0,
-                background: "rgba(255, 255, 255, 0.05)"
+                background: "rgba(255, 255, 255, 0.05)",
               }}
             >
               <img
                 src={
                   game.shop === "steam"
                     ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-                    : game.libraryImageUrl ?? undefined
+                    : (game.libraryImageUrl ?? undefined)
                 }
                 alt={game.title}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
               {selectedIds.includes(game.objectId) && (
-                <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(82, 39, 255, 0.4)" }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "rgba(82, 39, 255, 0.4)",
+                  }}
+                />
               )}
             </button>
           ))}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: "auto" }}>
-           <Button theme="outline" onClick={onClose}>{t("cancel", { defaultValue: "Cancelar" })}</Button>
-           <Button theme="primary" disabled={!name.trim()} onClick={handleSave}>{t("save", { defaultValue: "Salvar" })}</Button>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            marginTop: "auto",
+          }}
+        >
+          <Button theme="outline" onClick={onClose}>
+            {t("cancel", { defaultValue: "Cancelar" })}
+          </Button>
+          <Button theme="primary" disabled={!name.trim()} onClick={handleSave}>
+            {t("save", { defaultValue: "Salvar" })}
+          </Button>
         </div>
       </div>
     </Modal>

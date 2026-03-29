@@ -1,5 +1,18 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { PencilIcon, DownloadIcon, PeopleIcon, StarIcon, ArrowUpIcon } from "@primer/octicons-react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  PencilIcon,
+  DownloadIcon,
+  PeopleIcon,
+  StarIcon,
+  ArrowUpIcon,
+} from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
@@ -68,7 +81,7 @@ export function GameDetailsContent() {
     setShowGameOptionsModal,
     setGameOptionsInitialCategory,
     achievements,
-    stats
+    stats,
   } = useContext(gameDetailsContext);
 
   const { numberFormatter } = useFormat();
@@ -149,9 +162,11 @@ export function GameDetailsContent() {
     const movies = shopDetails?.movies;
     if (!movies?.length) return null;
     const movie = movies.find((m) => m.highlight) ?? movies[0];
-    
-    if (movie.hls_h264) return { src: movie.hls_h264, type: "application/x-mpegURL" };
-    if (movie.dash_h264) return { src: movie.dash_h264, type: "application/dash+xml" };
+
+    if (movie.hls_h264)
+      return { src: movie.hls_h264, type: "application/x-mpegURL" };
+    if (movie.dash_h264)
+      return { src: movie.dash_h264, type: "application/dash+xml" };
     if (movie.mp4?.max) return { src: movie.mp4.max, type: "video/mp4" };
     if (movie.mp4?.["480"]) return { src: movie.mp4["480"], type: "video/mp4" };
     if (movie.webm?.max) return { src: movie.webm.max, type: "video/webm" };
@@ -176,7 +191,9 @@ export function GameDetailsContent() {
   // Start initial timer when shopDetails loads
   useEffect(() => {
     if (heroVideoSrc) startVideoTimer();
-    return () => { if (videoTimerRef.current) clearTimeout(videoTimerRef.current); };
+    return () => {
+      if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
+    };
   }, [heroVideoSrc, startVideoTimer]);
 
   // Reset video state when navigating to a different game
@@ -246,17 +263,20 @@ export function GameDetailsContent() {
             src={heroImage}
             className="game-details__hero-image"
             alt={game?.title}
-            style={{ opacity: showVideo ? 0 : 1, transition: 'opacity 1s ease' }}
+            style={{
+              opacity: showVideo ? 0 : 1,
+              transition: "opacity 1s ease",
+            }}
           />
           {heroVideo && (
             <div
               style={{
                 opacity: showVideo ? 1 : 0,
-                transition: 'opacity 1s ease',
-                position: 'fixed',
+                transition: "opacity 1s ease",
+                position: "fixed",
                 inset: 0,
                 zIndex: 0,
-                pointerEvents: 'none',
+                pointerEvents: "none",
               }}
             >
               <VideoPlayer
@@ -272,46 +292,118 @@ export function GameDetailsContent() {
             </div>
           )}
           <div className="game-details__hero-image-overlay" />
-          <div className="game-details__hero-scroll-dimmer" style={{ opacity: scrollOpacity, position: 'fixed', inset: 0, backgroundColor: '#000', pointerEvents: 'none', zIndex: 1, transition: 'opacity 0.1s' }} />
+          <div
+            className="game-details__hero-scroll-dimmer"
+            style={{
+              opacity: scrollOpacity,
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "#000",
+              pointerEvents: "none",
+              zIndex: 1,
+              transition: "opacity 0.1s",
+            }}
+          />
 
           <div
             className="game-details__hero-logo-backdrop"
             style={{ opacity: backdropOpacity, height: "100%" }}
           >
-            <div className="game-details__hero-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%', flex: 1, justifyContent: 'center' }}>
-              <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div
+              className="game-details__hero-content"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                width: "100%",
+                flex: 1,
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                }}
+              >
                 <GameLogo game={game} shopDetails={shopDetails} />
               </div>
 
               {shopDetails && (
-                <div style={{ display: 'flex', gap: 12, fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 500, marginTop: 16 }}>
-                  {shopDetails?.publishers?.[0] && <span>{shopDetails.publishers[0]}</span>}
-                  {shopDetails?.publishers?.[0] && shopDetails?.release_date?.date && <span>•</span>}
-                  {shopDetails?.release_date?.date && <span>{shopDetails.release_date.date}</span>}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.7)",
+                    fontWeight: 500,
+                    marginTop: 16,
+                  }}
+                >
+                  {shopDetails?.publishers?.[0] && (
+                    <span>{shopDetails.publishers[0]}</span>
+                  )}
+                  {shopDetails?.publishers?.[0] &&
+                    shopDetails?.release_date?.date && <span>•</span>}
+                  {shopDetails?.release_date?.date && (
+                    <span>{shopDetails.release_date.date}</span>
+                  )}
                 </div>
               )}
 
               {shopDetails?.short_description && (
-                <div 
-                  style={{ maxWidth: 800, fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', marginTop: 12, marginBottom: 12 }} 
-                  dangerouslySetInnerHTML={{ __html: shopDetails.short_description }} 
+                <div
+                  style={{
+                    maxWidth: 800,
+                    fontSize: 16,
+                    lineHeight: 1.5,
+                    color: "rgba(255,255,255,0.9)",
+                    marginTop: 12,
+                    marginBottom: 12,
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: shopDetails.short_description,
+                  }}
                 />
               )}
 
               {stats && (
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 16,
+                    alignItems: "center",
+                    marginBottom: 16,
+                    color: "rgba(255,255,255,0.4)",
+                    fontWeight: 500,
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", gap: 6, alignItems: "center" }}
+                  >
                     <DownloadIcon size={16} />
-                    <span style={{ fontSize: 14 }}>{numberFormatter.format(stats?.downloadCount)}</span>
+                    <span style={{ fontSize: 14 }}>
+                      {numberFormatter.format(stats?.downloadCount)}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <div
+                    style={{ display: "flex", gap: 6, alignItems: "center" }}
+                  >
                     <PeopleIcon size={16} />
-                    <span style={{ fontSize: 14 }}>{numberFormatter.format(stats?.playerCount)}</span>
+                    <span style={{ fontSize: 14 }}>
+                      {numberFormatter.format(stats?.playerCount)}
+                    </span>
                   </div>
                   {(stats?.averageScore ?? 0) > 0 && (
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <div
+                      style={{ display: "flex", gap: 6, alignItems: "center" }}
+                    >
                       <StarIcon size={16} />
-                      <span style={{ fontSize: 14 }}>{stats?.averageScore} / 5</span>
+                      <span style={{ fontSize: 14 }}>
+                        {stats?.averageScore} / 5
+                      </span>
                     </div>
                   )}
                 </div>
@@ -322,11 +414,28 @@ export function GameDetailsContent() {
               </div>
             </div>
 
-            <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '32px 0 24px 0', width: '100%' }} />
+            <hr
+              style={{
+                borderColor: "rgba(255,255,255,0.1)",
+                margin: "32px 0 24px 0",
+                width: "100%",
+              }}
+            />
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "8px", width: "100%" }}>
-              <div className="game-details__tabs" style={{ display: "flex", gap: "8px", overflowX: "auto" }}>
-                <Button 
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingBottom: "8px",
+                width: "100%",
+              }}
+            >
+              <div
+                className="game-details__tabs"
+                style={{ display: "flex", gap: "8px", overflowX: "auto" }}
+              >
+                <Button
                   theme={activeTab === "overview" ? "primary" : "outline"}
                   onClick={() => setActiveTab("overview")}
                 >
@@ -334,73 +443,97 @@ export function GameDetailsContent() {
                 </Button>
                 {shop !== "custom" && (
                   <>
-
-                    {(userDetails === null || (achievements && achievements.length > 0)) && (
-                      <Button 
-                        theme={activeTab === "achievements" ? "primary" : "outline"}
+                    {(userDetails === null ||
+                      (achievements && achievements.length > 0)) && (
+                      <Button
+                        theme={
+                          activeTab === "achievements" ? "primary" : "outline"
+                        }
                         onClick={() => setActiveTab("achievements")}
                       >
                         Conquistas
                       </Button>
                     )}
 
-                  <Button 
-                    theme={activeTab === "howLongToBeat" ? "primary" : "outline"}
-                    onClick={() => setActiveTab("howLongToBeat")}
+                    <Button
+                      theme={
+                        activeTab === "howLongToBeat" ? "primary" : "outline"
+                      }
+                      onClick={() => setActiveTab("howLongToBeat")}
+                    >
+                      HowLongToBeat
+                    </Button>
+
+                    <Button
+                      theme={activeTab === "language" ? "primary" : "outline"}
+                      onClick={() => setActiveTab("language")}
+                    >
+                      Idioma
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
+                <HeroPanelSecondaryActions />
+
+                {game && (
+                  <Button
+                    onClick={handleEditGameClick}
+                    theme="primary"
+                    title={t("edit_game_modal_button")}
                   >
-                    HowLongToBeat
+                    <PencilIcon size={16} />
                   </Button>
+                )}
 
-                  <Button 
-                    theme={activeTab === "language" ? "primary" : "outline"}
-                    onClick={() => setActiveTab("language")}
-                  >
-                    Idioma
+                {game?.shop !== "custom" && (
+                  <Button onClick={handleCloudSaveButtonClick} theme="primary">
+                    <div
+                      className="game-details__cloud-icon-container"
+                      style={{
+                        display: "inline-flex",
+                        width: 20,
+                        height: 20,
+                        marginRight: 8,
+                      }}
+                    >
+                      <img
+                        src={cloudIconAnimated}
+                        alt=""
+                        className="game-details__cloud-icon"
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    </div>
+                    {t("cloud_save")}
                   </Button>
-                </>
-              )}
+                )}
+              </div>
             </div>
-
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <HeroPanelSecondaryActions />
-
-              {game && (
-                <Button
-                  onClick={handleEditGameClick}
-                  theme="primary"
-                  title={t("edit_game_modal_button")}
-                >
-                  <PencilIcon size={16} />
-                </Button>
-              )}
-
-              {game?.shop !== "custom" && (
-                <Button
-                  onClick={handleCloudSaveButtonClick}
-                  theme="primary"
-                >
-                  <div className="game-details__cloud-icon-container" style={{ display: "inline-flex", width: 20, height: 20, marginRight: 8 }}>
-                    <img
-                      src={cloudIconAnimated}
-                      alt=""
-                      className="game-details__cloud-icon"
-                      style={{ width: "100%", height: "100%" }}
-                    />
-                  </div>
-                  {t("cloud_save")}
-                </Button>
-              )}
-            </div>
-          </div>
           </div>
         </div>
-        
+
         <div className="game-details__content-wrapper">
           <div className="game-details__description-container">
             <div className="game-details__description-content">
               {activeTab === "overview" && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: '32px', alignItems: 'start' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) 300px",
+                    gap: "32px",
+                    alignItems: "start",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "24px",
+                    }}
+                  >
                     <GallerySlider />
 
                     <div>
@@ -417,22 +550,30 @@ export function GameDetailsContent() {
                 </div>
               )}
 
-              {activeTab === "overview" && shop !== "custom" && shop && objectId && (
-                <div ref={reviewsRef} style={{ width: '100%', marginTop: '32px' }}>
-                  <GameReviews
-                    shop={shop}
-                    objectId={objectId}
-                    game={game}
-                    userDetailsId={userDetails?.id}
-                    isGameInLibrary={isGameInLibrary}
-                    hasUserReviewed={hasUserReviewed}
-                    onUserReviewedChange={setHasUserReviewed}
-                  />
-                </div>
-              )}
+              {activeTab === "overview" &&
+                shop !== "custom" &&
+                shop &&
+                objectId && (
+                  <div
+                    ref={reviewsRef}
+                    style={{ width: "100%", marginTop: "32px" }}
+                  >
+                    <GameReviews
+                      shop={shop}
+                      objectId={objectId}
+                      game={game}
+                      userDetailsId={userDetails?.id}
+                      isGameInLibrary={isGameInLibrary}
+                      hasUserReviewed={hasUserReviewed}
+                      onUserReviewedChange={setHasUserReviewed}
+                    />
+                  </div>
+                )}
             </div>
 
-            {shop !== "custom" && activeTab !== "overview" && <Sidebar activeTab={activeTab} />}
+            {shop !== "custom" && activeTab !== "overview" && (
+              <Sidebar activeTab={activeTab} />
+            )}
           </div>
         </div>
 
@@ -440,7 +581,9 @@ export function GameDetailsContent() {
           <Button
             theme="primary"
             onClick={() => {
-              document.getElementById("scrollableDiv")?.scrollTo({ top: 0, behavior: "smooth" });
+              document
+                .getElementById("scrollableDiv")
+                ?.scrollTo({ top: 0, behavior: "smooth" });
             }}
             title={t("scroll_to_top") || "Voltar ao topo"}
             style={{
@@ -455,7 +598,7 @@ export function GameDetailsContent() {
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-              animation: "fade-in 0.2s ease"
+              animation: "fade-in 0.2s ease",
             }}
           >
             <ArrowUpIcon size={24} />

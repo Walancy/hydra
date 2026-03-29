@@ -8,7 +8,12 @@ import {
   useState,
 } from "react";
 import { ProfileHero } from "../profile-hero/profile-hero";
-import { useAppDispatch, useFormat, useUserDetails, useDominantColor } from "@renderer/hooks";
+import {
+  useAppDispatch,
+  useFormat,
+  useUserDetails,
+  useDominantColor,
+} from "@renderer/hooks";
 import { setHeaderTitle } from "@renderer/features";
 import { useTranslation } from "react-i18next";
 import type { GameShop } from "@types";
@@ -377,7 +382,10 @@ export function ProfileContent() {
 
     return (
       <section className="profile-content__section">
-        <div className="profile-content__main" style={{ gap: 24, display: "flex", flexDirection: "column" }}>
+        <div
+          className="profile-content__main"
+          style={{ gap: 24, display: "flex", flexDirection: "column" }}
+        >
           <div className="profile-content__tab-panels">
             <AnimatePresence mode="wait">
               {activeTab === "library" && (
@@ -411,21 +419,21 @@ export function ProfileContent() {
                 />
               )}
 
-              {activeTab === "stats" && userStats && (
-                <UserStatsBox />
-              )}
+              {activeTab === "stats" && userStats && <UserStatsBox />}
 
-              {activeTab === "friends" && (((userProfile.friends?.length) ?? 0) > 0 || isMe) && (
-                <>
-                  <FriendsBoxAddButton />
-                  <div style={{ marginTop: 16 }} />
-                  <FriendsBox />
-                </>
-              )}
+              {activeTab === "friends" &&
+                ((userProfile.friends?.length ?? 0) > 0 || isMe) && (
+                  <>
+                    <FriendsBoxAddButton />
+                    <div style={{ marginTop: 16 }} />
+                    <FriendsBox />
+                  </>
+                )}
 
-              {activeTab === "activity" && ((userProfile.recentGames?.length) ?? 0) > 0 && (
-                <RecentGamesBox />
-              )}
+              {activeTab === "activity" &&
+                (userProfile.recentGames?.length ?? 0) > 0 && (
+                  <RecentGamesBox />
+                )}
             </AnimatePresence>
           </div>
         </div>
@@ -465,8 +473,8 @@ export function ProfileContent() {
           activeTab={activeTab}
           reviewsTotalCount={reviewsTotalCount}
           onTabChange={setActiveTab}
-          showFriendsTab={((userProfile?.friends?.length) ?? 0) > 0 || isMe}
-          showActivityTab={((userProfile?.recentGames?.length) ?? 0) > 0}
+          showFriendsTab={(userProfile?.friends?.length ?? 0) > 0 || isMe}
+          showActivityTab={(userProfile?.recentGames?.length ?? 0) > 0}
           isBgLight={isBgLight}
         />
       </ProfileHero>

@@ -47,7 +47,10 @@ interface ProfileHeroProps {
   rightAction?: ReactNode;
 }
 
-export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps>) {
+export function ProfileHero({
+  children,
+  rightAction,
+}: Readonly<ProfileHeroProps>) {
   const [isEditingMode, setIsEditingMode] = useState(false);
   const [editDisplayName, setEditDisplayName] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -161,7 +164,7 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
     setIsSavingProfile(true);
     try {
       await patchUser({ displayName: editDisplayName });
-      
+
       if (userProfile?.id !== "kQ3bLwNy") {
         await getUserProfile();
         await fetchUserDetails();
@@ -170,13 +173,23 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
       }
 
       setIsEditingMode(false);
-      showSuccessToast(t("profile_updated", { defaultValue: "Perfil atualizado!" }));
+      showSuccessToast(
+        t("profile_updated", { defaultValue: "Perfil atualizado!" })
+      );
     } catch {
       showErrorToast(t("try_again"));
     } finally {
       setIsSavingProfile(false);
     }
-  }, [editDisplayName, patchUser, getUserProfile, fetchUserDetails, showSuccessToast, showErrorToast, t]);
+  }, [
+    editDisplayName,
+    patchUser,
+    getUserProfile,
+    fetchUserDetails,
+    showSuccessToast,
+    showErrorToast,
+    t,
+  ]);
 
   const profileActions = useMemo(() => {
     if (!userProfile) return null;
@@ -210,7 +223,7 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
       return (
         <>
           <UploadBackgroundImageButton />
-          
+
           <button
             type="button"
             className="profile-hero__transparent-action-btn"
@@ -230,7 +243,14 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
             onClick={handleSignOut}
             disabled={isPerformingAction}
           >
-            <span style={{ color: "#f87171", display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                color: "#f87171",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
               <SignOutIcon fill="#f87171" />
               <span>{t("exit", { defaultValue: "Sair" })}</span>
             </span>
@@ -346,7 +366,10 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
         const { filePaths } = await window.electron.showOpenDialog({
           properties: ["openFile"],
           filters: [
-            { name: "Image", extensions: ["jpg", "jpeg", "png", "gif", "webp"] },
+            {
+              name: "Image",
+              extensions: ["jpg", "jpeg", "png", "gif", "webp"],
+            },
           ],
         });
         if (filePaths && filePaths.length > 0) {
@@ -354,7 +377,9 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
           await patchUser({ profileImageUrl: filePaths[0] });
           await getUserProfile();
           await fetchUserDetails();
-          showSuccessToast(t("profile_updated", { defaultValue: "Foto atualizada!" }));
+          showSuccessToast(
+            t("profile_updated", { defaultValue: "Foto atualizada!" })
+          );
         }
       } catch (err) {
         showErrorToast(t("try_again"));
@@ -364,7 +389,15 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
       return;
     }
     setShowFullscreenAvatar(true);
-  }, [isEditingMode, patchUser, getUserProfile, fetchUserDetails, showSuccessToast, showErrorToast, t]);
+  }, [
+    isEditingMode,
+    patchUser,
+    getUserProfile,
+    fetchUserDetails,
+    showSuccessToast,
+    showErrorToast,
+    t,
+  ]);
 
   const copyFriendCode = useCallback(() => {
     if (userProfile?.id) {
@@ -429,9 +462,23 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
               : ""
           }`}
         >
-          {isEditingMode && <div className="profile-hero__edit-overlay-backdrop" onClick={() => setIsEditingMode(false)} />}
-          <div className={`profile-hero__user-information ${isEditingMode ? "profile-hero__user-information--editing" : ""}`}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          {isEditingMode && (
+            <div
+              className="profile-hero__edit-overlay-backdrop"
+              onClick={() => setIsEditingMode(false)}
+            />
+          )}
+          <div
+            className={`profile-hero__user-information ${isEditingMode ? "profile-hero__user-information--editing" : ""}`}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
               <AnimatedBorder
                 borderWidth={borderWidth}
                 containerSize={96}
@@ -468,7 +515,9 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                       key={style}
                       type="button"
                       className={`profile-hero__border-picker-btn profile-hero__border-picker-btn--${style} ${
-                        selectedBorder === style ? "profile-hero__border-picker-btn--active" : ""
+                        selectedBorder === style
+                          ? "profile-hero__border-picker-btn--active"
+                          : ""
                       }`}
                       onClick={() => {
                         setSelectedBorder(style);
@@ -494,10 +543,24 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                       <img
                         src={`https://discord-decoration.art/mdecorations/${selectedBorder}.webp`}
                         alt="Decoração atual"
-                        style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "inherit" }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          borderRadius: "inherit",
+                        }}
                       />
                     ) : (
-                      <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.2, textAlign: "center" }}>🎨</span>
+                      <span
+                        style={{
+                          fontSize: "0.6rem",
+                          color: "rgba(255,255,255,0.5)",
+                          lineHeight: 1.2,
+                          textAlign: "center",
+                        }}
+                      >
+                        🎨
+                      </span>
                     )}
                   </button>
                 </div>
@@ -517,7 +580,14 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
               )}
 
               {isEditingMode && selectedBorder !== "none" && (
-                <div style={{ display: "flex", gap: 16, marginTop: 4, alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 16,
+                    marginTop: 4,
+                    alignItems: "center",
+                  }}
+                >
                   <input
                     type="range"
                     min="1"
@@ -526,13 +596,17 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                     onChange={(e) => {
                       const v = Number(e.target.value);
                       setBorderWidth(v);
-                      localStorage.setItem("hydra_avatar_border_width", String(v));
+                      localStorage.setItem(
+                        "hydra_avatar_border_width",
+                        String(v)
+                      );
                     }}
                     title="Largura da Borda"
                     style={{ width: 60, cursor: "ew-resize" }}
                   />
 
-                  {(selectedBorder === "border-beam" || selectedBorder === "electric-border") && (
+                  {(selectedBorder === "border-beam" ||
+                    selectedBorder === "electric-border") && (
                     <>
                       <input
                         type="range"
@@ -542,22 +616,44 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                         onChange={(e) => {
                           const v = Number(e.target.value);
                           setBeamSpeed(v);
-                          localStorage.setItem("hydra_avatar_beam_speed", String(v));
-                          window.dispatchEvent(new Event("avatar_style_update"));
+                          localStorage.setItem(
+                            "hydra_avatar_beam_speed",
+                            String(v)
+                          );
+                          window.dispatchEvent(
+                            new Event("avatar_style_update")
+                          );
                         }}
                         title="Velocidade da Animação (Menos = Mais rápido)"
-                        style={{ width: 60, cursor: "ew-resize", direction: "rtl" }}
+                        style={{
+                          width: 60,
+                          cursor: "ew-resize",
+                          direction: "rtl",
+                        }}
                       />
-                      <input 
-                        type="color" 
-                        value={beamColor} 
+                      <input
+                        type="color"
+                        value={beamColor}
                         onChange={(e) => {
                           setBeamColor(e.target.value);
-                          localStorage.setItem("hydra_avatar_beam_color", e.target.value);
-                          window.dispatchEvent(new Event("avatar_style_update"));
+                          localStorage.setItem(
+                            "hydra_avatar_beam_color",
+                            e.target.value
+                          );
+                          window.dispatchEvent(
+                            new Event("avatar_style_update")
+                          );
                         }}
                         title="Cor do Efeito"
-                        style={{ width: 24, height: 24, padding: 0, border: "none", borderRadius: 4, cursor: "pointer", background: "transparent" }}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          padding: 0,
+                          border: "none",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                          background: "transparent",
+                        }}
                       />
                       {selectedBorder === "border-beam" && (
                         <input
@@ -568,8 +664,13 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                           onChange={(e) => {
                             const v = Number(e.target.value);
                             setBeamLength(v);
-                            localStorage.setItem("hydra_avatar_beam_length", String(v));
-                            window.dispatchEvent(new Event("avatar_style_update"));
+                            localStorage.setItem(
+                              "hydra_avatar_beam_length",
+                              String(v)
+                            );
+                            window.dispatchEvent(
+                              new Event("avatar_style_update")
+                            );
                           }}
                           title="Comprimento do Rastro"
                           style={{ width: 60, cursor: "ew-resize" }}
@@ -584,8 +685,13 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                           onChange={(e) => {
                             const v = Number(e.target.value) / 100;
                             setBeamChaos(v);
-                            localStorage.setItem("hydra_avatar_beam_chaos", String(v));
-                            window.dispatchEvent(new Event("avatar_style_update"));
+                            localStorage.setItem(
+                              "hydra_avatar_beam_chaos",
+                              String(v)
+                            );
+                            window.dispatchEvent(
+                              new Event("avatar_style_update")
+                            );
                           }}
                           title="Caos (Espalhamento elétrico)"
                           style={{ width: 60, cursor: "ew-resize" }}
@@ -607,7 +713,9 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                         className="profile-hero__display-name-input"
                         value={editDisplayName}
                         onChange={(e) => setEditDisplayName(e.target.value)}
-                        placeholder={t("display_name", { defaultValue: "Nome" })}
+                        placeholder={t("display_name", {
+                          defaultValue: "Nome",
+                        })}
                         autoFocus
                       />
                     ) : (
@@ -656,9 +764,15 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
                   </span>
                   {userProfile?.id === "kQ3bLwNy" && (
                     <>
-                      <span className="profile-hero__tag profile-hero__tag--vip">VIP</span>
-                      <span className="profile-hero__tag profile-hero__tag--staff">STAFF</span>
-                      <span className="profile-hero__tag profile-hero__tag--supporter">SUPPORTER</span>
+                      <span className="profile-hero__tag profile-hero__tag--vip">
+                        VIP
+                      </span>
+                      <span className="profile-hero__tag profile-hero__tag--staff">
+                        STAFF
+                      </span>
+                      <span className="profile-hero__tag profile-hero__tag--supporter">
+                        SUPPORTER
+                      </span>
                     </>
                   )}
                 </div>
@@ -699,7 +813,9 @@ export function ProfileHero({ children, rightAction }: Readonly<ProfileHeroProps
             }`}
           >
             <div className="profile-hero__tabs-area">{children}</div>
-            <div className={`profile-hero__actions ${isEditingMode ? "profile-hero__actions--editing" : ""}`}>
+            <div
+              className={`profile-hero__actions ${isEditingMode ? "profile-hero__actions--editing" : ""}`}
+            >
               {rightAction}
               {profileActions}
             </div>

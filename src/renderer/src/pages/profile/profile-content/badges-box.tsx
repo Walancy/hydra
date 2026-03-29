@@ -7,7 +7,8 @@ export function BadgesBox() {
   const { userProfile, badges } = useContext(userProfileContext);
   const [showAllBadgesModal, setShowAllBadgesModal] = useState(false);
 
-  if (!userProfile || !userProfile.badges || userProfile.badges.length === 0) return null;
+  if (!userProfile || !userProfile.badges || userProfile.badges.length === 0)
+    return null;
 
   return (
     <>

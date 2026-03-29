@@ -27,7 +27,11 @@ export function useHomeGroups() {
 
   const createGroup = useCallback(
     (name: string, initialGameIds?: string | string[]) => {
-      const gIds = Array.isArray(initialGameIds) ? initialGameIds : (initialGameIds ? [initialGameIds] : []);
+      const gIds = Array.isArray(initialGameIds)
+        ? initialGameIds
+        : initialGameIds
+          ? [initialGameIds]
+          : [];
       const newGroup: HomeGroup = {
         id: crypto.randomUUID(),
         name,
@@ -51,7 +55,7 @@ export function useHomeGroups() {
     },
     [groups, saveGroups]
   );
-  
+
   const updateGroup = useCallback(
     (groupId: string, newName: string, newGameIds: string[]) => {
       saveGroups(
@@ -60,8 +64,14 @@ export function useHomeGroups() {
             return { ...g, name: newName, gameIds: newGameIds };
           }
           // Remove from other groups
-          if (g.id !== groupId && g.gameIds.some(id => newGameIds.includes(id))) {
-             return { ...g, gameIds: g.gameIds.filter(id => !newGameIds.includes(id)) };
+          if (
+            g.id !== groupId &&
+            g.gameIds.some((id) => newGameIds.includes(id))
+          ) {
+            return {
+              ...g,
+              gameIds: g.gameIds.filter((id) => !newGameIds.includes(id)),
+            };
           }
           return g;
         })
@@ -77,10 +87,10 @@ export function useHomeGroups() {
           if (g.id === groupId && !g.gameIds.includes(gameId)) {
             return { ...g, gameIds: [...g.gameIds, gameId] };
           }
-          // Remove game from other groups if it's already in one? 
+          // Remove game from other groups if it's already in one?
           // PS5 typically only allows a game in one folder at a time on home screen.
           if (g.id !== groupId && g.gameIds.includes(gameId)) {
-             return { ...g, gameIds: g.gameIds.filter(id => id !== gameId) };
+            return { ...g, gameIds: g.gameIds.filter((id) => id !== gameId) };
           }
           return g;
         })

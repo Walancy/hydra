@@ -14,8 +14,12 @@
     border-color: rgba(255, 255, 255, 0.1) !important;
     border-radius: 100px !important;
 
-    &:hover { border-color: rgba(255, 255, 255, 0.25) !important; }
-    &--focused { border-color: rgba(255, 255, 255, 0.45) !important; }
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.25) !important;
+    }
+    &--focused {
+      border-color: rgba(255, 255, 255, 0.45) !important;
+    }
   }
 
   .button {
@@ -33,7 +37,7 @@
   height: 60vh;
   max-height: 580px;
   min-height: 400px;
-  
+
   /* ── Sidebar ─────────────────────────────────────────────── */
   &__sidebar {
     width: 220px;
@@ -59,8 +63,13 @@
 
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
   }
 
   &__category-btn {
@@ -78,7 +87,10 @@
     font-weight: 500;
     line-height: 1.2;
     white-space: nowrap;
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease,
+      border-color 0.15s ease;
 
     &:hover {
       background: rgba(255, 255, 255, 0.07);
@@ -141,8 +153,13 @@
 
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
   }
 
   &__empty {

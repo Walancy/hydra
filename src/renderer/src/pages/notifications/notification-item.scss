@@ -1,12 +1,12 @@
 @use "../../scss/globals.scss";
 
 /* Type-based accent colors */
-$accent-teal:   #{globals.$brand-teal};
-$accent-amber:  #f5a623;
-$accent-blue:   #{globals.$brand-blue};
+$accent-teal: #{globals.$brand-teal};
+$accent-amber: #f5a623;
+$accent-blue: #{globals.$brand-blue};
 $accent-purple: #8b5cf6;
-$accent-green:  #22c55e;
-$accent-sky:    #38bdf8;
+$accent-green: #22c55e;
+$accent-sky: #38bdf8;
 
 .notification-item {
   position: relative;
@@ -31,28 +31,40 @@ $accent-sky:    #38bdf8;
 
   /* Unread state — only dim non-read items, no dot or bar */
   &--unread {
-    .notification-item__title { color: rgba(255, 255, 255, 0.95); }
+    .notification-item__title {
+      color: rgba(255, 255, 255, 0.95);
+    }
   }
 
   /* Type-specific icon color only (no bars, no backgrounds) */
   &--friend-request {
-    .notification-item__icon-wrap { color: $accent-blue; }
+    .notification-item__icon-wrap {
+      color: $accent-blue;
+    }
   }
 
   &--badge {
-    .notification-item__icon-wrap { color: $accent-amber; }
+    .notification-item__icon-wrap {
+      color: $accent-amber;
+    }
   }
 
   &--review {
-    .notification-item__icon-wrap { color: $accent-purple; }
+    .notification-item__icon-wrap {
+      color: $accent-purple;
+    }
   }
 
   &--download {
-    .notification-item__icon-wrap { color: $accent-green; }
+    .notification-item__icon-wrap {
+      color: $accent-green;
+    }
   }
 
   &--update {
-    .notification-item__icon-wrap { color: $accent-sky; }
+    .notification-item__icon-wrap {
+      color: $accent-sky;
+    }
   }
 
   /* Icon container — no fill, smaller */
@@ -111,7 +123,9 @@ $accent-sky:    #38bdf8;
     color: rgba(255, 255, 255, 0.28);
     margin-top: 4px;
 
-    svg { flex-shrink: 0; }
+    svg {
+      flex-shrink: 0;
+    }
   }
 
   /* Friend request action buttons */

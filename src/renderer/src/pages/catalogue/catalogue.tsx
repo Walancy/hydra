@@ -39,7 +39,6 @@ import { CatalogueSection } from "./catalogue-section";
 import { CategoryExplorer } from "./category-explorer";
 import { TopSellers } from "./top-sellers";
 
-
 const ProtonCompatibilitySection = lazy(async () => {
   const mod = await import("./proton-compatibility-section");
   return { default: mod.ProtonCompatibilitySection };
@@ -451,8 +450,6 @@ export default function Catalogue() {
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>
-
-
       {/* Sticky filter bar centered */}
       <div className="catalogue__filter-bar">
         <div className="catalogue__filter-bar-inner">

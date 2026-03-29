@@ -25,11 +25,19 @@
 }
 
 @keyframes backdrop-fade-in {
-  0% { background-color: rgba(0, 0, 0, 0); }
-  100% { background-color: rgba(0, 0, 0, 0.45); }
+  0% {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  100% {
+    background-color: rgba(0, 0, 0, 0.45);
+  }
 }
 
 @keyframes backdrop-fade-out {
-  0% { background-color: rgba(0, 0, 0, 0.45); }
-  100% { background-color: rgba(0, 0, 0, 0); }
+  0% {
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+  100% {
+    background-color: rgba(0, 0, 0, 0);
+  }
 }

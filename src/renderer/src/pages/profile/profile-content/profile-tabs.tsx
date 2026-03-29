@@ -2,7 +2,12 @@ import { Button } from "@renderer/components";
 import { useTranslation } from "react-i18next";
 import "./profile-content.scss";
 
-export type ProfileTabType = "library" | "reviews" | "stats" | "friends" | "activity";
+export type ProfileTabType =
+  | "library"
+  | "reviews"
+  | "stats"
+  | "friends"
+  | "activity";
 
 interface ProfileTabsProps {
   activeTab: ProfileTabType;
@@ -27,7 +32,13 @@ export function ProfileTabs({
     <ul className="profile-content__home-style-tabs">
       <li>
         <Button
-          theme={activeTab === "library" ? (isBgLight ? "dark" : "primary") : "outline"}
+          theme={
+            activeTab === "library"
+              ? isBgLight
+                ? "dark"
+                : "primary"
+              : "outline"
+          }
           onClick={() => onTabChange("library")}
         >
           {t("library", { defaultValue: "Biblioteca" })}
@@ -35,7 +46,13 @@ export function ProfileTabs({
       </li>
       <li>
         <Button
-          theme={activeTab === "reviews" ? (isBgLight ? "dark" : "primary") : "outline"}
+          theme={
+            activeTab === "reviews"
+              ? isBgLight
+                ? "dark"
+                : "primary"
+              : "outline"
+          }
           onClick={() => onTabChange("reviews")}
         >
           {t("user_reviews", { defaultValue: "Avaliações" })}
@@ -44,7 +61,9 @@ export function ProfileTabs({
       </li>
       <li>
         <Button
-          theme={activeTab === "stats" ? (isBgLight ? "dark" : "primary") : "outline"}
+          theme={
+            activeTab === "stats" ? (isBgLight ? "dark" : "primary") : "outline"
+          }
           onClick={() => onTabChange("stats")}
         >
           {t("stats", { defaultValue: "Estatísticas" })}
@@ -53,7 +72,13 @@ export function ProfileTabs({
       {showFriendsTab && (
         <li>
           <Button
-            theme={activeTab === "friends" ? (isBgLight ? "dark" : "primary") : "outline"}
+            theme={
+              activeTab === "friends"
+                ? isBgLight
+                  ? "dark"
+                  : "primary"
+                : "outline"
+            }
             onClick={() => onTabChange("friends")}
           >
             {t("friends", { defaultValue: "Amigos" })}
@@ -63,7 +88,13 @@ export function ProfileTabs({
       {showActivityTab && (
         <li>
           <Button
-            theme={activeTab === "activity" ? (isBgLight ? "dark" : "primary") : "outline"}
+            theme={
+              activeTab === "activity"
+                ? isBgLight
+                  ? "dark"
+                  : "primary"
+                : "outline"
+            }
             onClick={() => onTabChange("activity")}
           >
             {t("activity", { defaultValue: "Atividade" })}

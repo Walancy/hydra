@@ -31,16 +31,16 @@ export function AnimatedBorder({
 }: Readonly<AnimatedBorderProps>) {
   if (styleName === "none") {
     return (
-      <div className={`animated-border-wrapper ${borderClass}`}>
-        {children}
-      </div>
+      <div className={`animated-border-wrapper ${borderClass}`}>{children}</div>
     );
   }
 
   const bSize = containerSize ? containerSize * 2 : 300;
   const eDisplacement = containerSize ? containerSize * 0.25 : 30;
   const eOffset = containerSize ? containerSize * 0.25 : 30;
-  const gifUrl = isGifDecoration(styleName) ? getDecorationUrl(styleName) : null;
+  const gifUrl = isGifDecoration(styleName)
+    ? getDecorationUrl(styleName)
+    : null;
 
   return (
     <div className={`animated-border-wrapper ${borderClass}`}>
