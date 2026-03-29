@@ -70,11 +70,18 @@
     margin: 0;
     padding: 0;
     gap: globals.$spacing-unit;
+    align-items: center;
 
     @media (max-width: 600px) {
       gap: calc(globals.$spacing-unit * 0.5);
       flex-wrap: wrap;
     }
+  }
+
+  &__tabs-hint {
+    display: flex;
+    align-items: center;
+    list-style: none;
   }
 
   &__folder-header {

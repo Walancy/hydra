@@ -18,6 +18,7 @@ import {
   useBackgroundMusic,
 } from "@renderer/hooks";
 import { useDownloadOptionsListener } from "@renderer/hooks/use-download-options-listener";
+import { useGlobalGamepadNavigation } from "@renderer/hooks/use-global-gamepad-navigation";
 
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -63,6 +64,22 @@ type WorkWondersWithKnowledge = WorkWonders & {
 export function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const { updateLibrary, library } = useLibrary();
+
+  useGlobalGamepadNavigation();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "F11") return;
+      e.preventDefault();
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const [isSidebarForceOpen, setIsSidebarForceOpen] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -394,7 +411,7 @@ export function App() {
   return (
     <>
       {window.electron.platform === "win32" && (
-        <div className="title-bar">
+        <div className="title-bar" data-gamepad-ignore="true">
           <HydraIcon className="title-bar__logo" aria-hidden="true" />
           {!isSidebarHovered && !isSidebarForceOpen && (
             <div className="title-bar__options">

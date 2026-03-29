@@ -30,6 +30,9 @@ import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
 import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";
 import { CreateFolderModal } from "./create-folder-modal";
 import { setOpenedFolderName } from "@renderer/features";
+import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
+import { useHomeGamepad } from "@renderer/hooks/use-home-gamepad";
+import { GamepadHint } from "@renderer/components/gamepad-hint/gamepad-hint";
 import "./home.scss";
 
 export default function Home() {
@@ -42,6 +45,7 @@ export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isMyGames, setIsMyGames] = useState(true);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
 
   const [isDraggingScroll, setIsDraggingScroll] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -324,6 +328,60 @@ export default function Home() {
     slider.scrollTo({ left: card.offsetLeft - offset, behavior: "smooth" });
   }, []);
 
+  const isGamepadConnected = useGamepadConnected();
+  const allTabKeys = ["myGames", ...categories] as const;
+  const activeTabIndex = isMyGames
+    ? 0
+    : 1 + categories.indexOf(currentCatalogueCategory);
+
+  const handleTabChange = useCallback(
+    (idx: number) => {
+      if (idx === 0) handleMyGamesClick();
+      else handleCatTabClick(categories[idx - 1]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [categories, currentCatalogueCategory, isMyGames]
+  );
+
+  const handleGamepadConfirm = useCallback(() => {
+    const item = homeItems[selectedIndex];
+    if (!item) return;
+    if (item.type === "folder") {
+      setOpenedGroup(item.data as HomeGroup);
+      setSelectedIndex(0);
+    } else if (item.type === "button_library") {
+      navigate("/library");
+    } else if (item.type === "button_create_folder") {
+      setShowCreateFolderModal(true);
+    } else if (item.type === "game") {
+      navigate(buildGameDetailsPath(item.data as ShopAssets));
+    }
+  }, [homeItems, selectedIndex, navigate]);
+
+  const handleGamepadBack = useCallback(() => {
+    if (openedGroup) {
+      setOpenedGroup(null);
+      setSelectedIndex(0);
+    }
+  }, [openedGroup]);
+
+  useHomeGamepad({
+    isLoading,
+    isEnabled: isGamepadConnected,
+    items: homeItems as Parameters<typeof useHomeGamepad>[0]["items"],
+    selectedIndex,
+    openedGroup,
+    allTabs: allTabKeys as unknown as string[],
+    activeTabIndex,
+    setSelectedIndex,
+    scrollToCard,
+    onTabChange: handleTabChange,
+    onConfirm: handleGamepadConfirm,
+    onBack: handleGamepadBack,
+    sliderRef,
+    actionsRef,
+  });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isLoading || currentGames.length === 0) return;
@@ -424,7 +482,12 @@ export default function Home() {
 
         <div className="home__content">
           {!openedGroup && (
-            <ul className="home__tabs">
+            <ul className="home__tabs" data-gamepad-ignore="true">
+              {isGamepadConnected && (
+                <li className="home__tabs-hint">
+                  <GamepadHint label="LT" position="left" />
+                </li>
+              )}
               <li>
                 <Button
                   theme={
@@ -451,6 +514,11 @@ export default function Home() {
                   </Button>
                 </li>
               ))}
+              {isGamepadConnected && (
+                <li className="home__tabs-hint">
+                  <GamepadHint label="RT" position="right" />
+                </li>
+              )}
             </ul>
           )}
 
@@ -497,6 +565,7 @@ export default function Home() {
           <div
             className={openedGroup ? "home__folder-games-grid" : "home__slider"}
             ref={sliderRef}
+            data-gamepad-ignore="true"
             onContextMenu={(e) => handleContextMenu(e)}
             onMouseDown={(e) => {
               if (openedGroup) return;
@@ -671,7 +740,7 @@ export default function Home() {
                 })}
           </div>
 
-          <div className="home__bottom-segment">
+          <div className="home__bottom-segment" ref={actionsRef}>
             {selectedGame && (
               <GameInfo game={selectedGame} isBgLight={isBgLight} />
             )}

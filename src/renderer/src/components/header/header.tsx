@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useGamepad, useGamepadConnected } from "@renderer/hooks/use-gamepad";
+import { GamepadHint } from "@renderer/components/gamepad-hint/gamepad-hint";
 import {
   ArrowLeftIcon,
   BellIcon,
@@ -34,13 +36,48 @@ import { AuthPage } from "@shared";
 import { NotificationsSidebar } from "../notifications-sidebar/notifications-sidebar";
 
 export function Header() {
+  const isGamepadConnected = useGamepadConnected();
   const inputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const scanButtonTooltipId = useId();
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const currentRouteIndex = navRoutes.findIndex(({ path }) =>
+    path === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(path)
+  );
+
+  const navigatePrev = useCallback(() => {
+    const idx =
+      currentRouteIndex <= 0 ? navRoutes.length - 1 : currentRouteIndex - 1;
+    navigate(navRoutes[idx].path);
+  }, [currentRouteIndex, navigate]);
+
+  const navigateNext = useCallback(() => {
+    const idx =
+      currentRouteIndex >= navRoutes.length - 1 ? 0 : currentRouteIndex + 1;
+    navigate(navRoutes[idx].path);
+  }, [currentRouteIndex, navigate]);
+
+  useGamepad({
+    priority: 5,
+    onButton: {
+      LB: () => {
+        navigatePrev();
+        return true;
+      },
+      RB: () => {
+        navigateNext();
+        return true;
+      },
+    },
+  });
+
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [notifSidebarOpen, setNotifSidebarOpen] = useState(false);
 
   const [avatarDecorOptions, setAvatarDecorOptions] = useState({
@@ -351,6 +388,7 @@ export function Header() {
       )}
 
       <header
+        data-gamepad-ignore="true"
         className={cn("header", {
           "header--dragging-disabled": draggingDisabled,
           "header--is-windows": window.electron.platform === "win32",
@@ -369,7 +407,8 @@ export function Header() {
           </button>
         </section>
 
-        <nav className="header__nav">
+        <nav className="header__nav" data-gamepad-ignore="true">
+          {isGamepadConnected && <GamepadHint label="LB" position="left" />}
           {navRoutes.map(({ path, nameKey }) => (
             <button
               key={path}
@@ -385,6 +424,7 @@ export function Header() {
               {t(nameKey, { ns: "sidebar" })}
             </button>
           ))}
+          {isGamepadConnected && <GamepadHint label="RB" position="right" />}
         </nav>
 
         <section className="header__section header__section--right">

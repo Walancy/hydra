@@ -474,6 +474,7 @@ export function Sidebar() {
   return (
     <aside
       ref={sidebarRef}
+      data-gamepad-ignore="true"
       className={cn("sidebar", {
         "sidebar--resizing": isResizing,
         "sidebar--darwin": window.electron.platform === "darwin",
