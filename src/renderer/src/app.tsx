@@ -73,12 +73,16 @@ export function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "F11") return;
-      e.preventDefault();
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      } else {
-        document.documentElement.requestFullscreen().catch(() => {});
+      if (e.key === "F11") {
+        e.preventDefault();
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        } else {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else if (e.key === "F10") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("hydra:test-splash"));
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -89,6 +93,15 @@ export function App() {
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   const handleSidebarEnter = useCallback(() => setIsSidebarHovered(true), []);
   const handleSidebarLeave = useCallback(() => {
@@ -557,7 +570,7 @@ export function App() {
 
   return (
     <>
-      {window.electron.platform === "win32" && (
+      {window.electron.platform === "win32" && !isFullscreen && (
         <div className="title-bar" data-gamepad-ignore="true">
           <HydraIcon className="title-bar__logo" aria-hidden="true" />
           {!isSidebarHovered && !isSidebarForceOpen && !isGamepadConnected && (
@@ -574,13 +587,7 @@ export function App() {
               >
                 Menu
               </button>
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() => window.electron.scanInstalledGames()}
-              >
-                Importar
-              </button>
+
               <button
                 type="button"
                 className="title-bar__option"
@@ -588,62 +595,7 @@ export function App() {
               >
                 Tema
               </button>
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() =>
-                  window.dispatchEvent(new CustomEvent("hydra:test-splash"))
-                }
-              >
-                Test Intro
-              </button>
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() =>
-                  window.electron.showAchievementTestNotification?.()
-                }
-              >
-                Test Notif
-              </button>
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() => {
-                  setLastPacket({
-                    gameId: library[0]?.id || "test-game-id",
-                    progress: Math.random() * 0.9 + 0.1,
-                    downloadSpeed: 5 * 1024 * 1024,
-                    timeRemaining: 120000,
-                    numPeers: 12,
-                    numSeeds: 30,
-                    isDownloadingMetadata: false,
-                    isCheckingFiles: false,
-                    folderName: "Cyberpunk 2077 Simulator",
-                    status: "downloading",
-                    fileSize: 1000000000,
-                    bytesDownloaded: 150000000,
-                  } as any);
-                }}
-              >
-                Test DL
-              </button>
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() =>
-                  window.dispatchEvent(new CustomEvent("hydra:test-friend"))
-                }
-              >
-                Test Amigo
-              </button>
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() => (window.electron as any).openDevTools()}
-              >
-                DevTools
-              </button>
+
             </div>
           )}
         </div>
@@ -655,7 +607,7 @@ export function App() {
         onClose={() => setShowThemeModal(false)}
         large
       >
-        <div style={{ height: "450px", overflow: "hidden" }}>
+        <div className="theme-modal-container">
           <SettingsAppearance
             appearance={{ theme: null, authorId: null, authorName: null }}
           />

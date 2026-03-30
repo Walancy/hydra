@@ -2,21 +2,17 @@
 
 .search-dropdown {
   position: fixed;
-  top: 0;
+  top: 111px;
   left: 0;
   width: 100vw;
   height: auto;
-  max-height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-height: calc(100vh - 111px);
+  background: transparent;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 49px 0 32px 0;
+  padding: 16px 0 32px 0;
   -webkit-app-region: no-drag;
 
   &__input-container {
@@ -29,7 +25,6 @@
     background-color: rgba(255, 255, 255, 0.05);
     border: none;
     border-radius: 100px;
-    margin-bottom: 32px;
     transition: background-color 0.2s ease;
 
     &:focus-within {
@@ -49,13 +44,14 @@
     outline: none;
     width: 100%;
     color: #fff;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 400;
     font-family: inherit;
-    text-align: center;
+    text-align: left;
 
     &::placeholder {
       color: rgba(255, 255, 255, 0.3);
+      font-weight: 400;
     }
 
     &:focus,
@@ -86,7 +82,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 16px;
     padding: 0;
   }
 
@@ -104,7 +100,7 @@
     display: flex;
     gap: 16px;
     overflow-x: auto;
-    padding-bottom: 16px;
+    padding: 12px 0 16px;
     width: 100%;
     scroll-behavior: smooth;
 
@@ -126,24 +122,35 @@
   &__card {
     flex: 0 0 120px;
     width: 120px;
-    aspect-ratio: 2/3;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
     outline: none;
 
     &:hover,
     &--active {
       transform: translateY(-4px);
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      .search-dropdown__card-image {
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
     }
+  }
+
+  &__card-image {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
 
     img {
       width: 100%;
@@ -160,29 +167,73 @@
       background: rgba(255, 255, 255, 0.02);
       color: rgba(255, 255, 255, 0.2);
     }
+  }
 
-    .card-title-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      padding: 24px 12px 12px;
-      background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.9) 0%,
-        transparent 100%
-      );
+  &__card-title {
+    width: 100%;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 11px;
+    font-weight: 400;
+    text-align: center;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  &__tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      text-align: center;
-      line-height: 1.2;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    &-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1px;
+      margin-left: 2px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.6);
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+    }
+  }
+
+  &__clear-text-button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
     }
   }
 

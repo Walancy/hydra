@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ClockIcon, SearchIcon, XIcon } from "@primer/octicons-react";
+import { SearchCard } from "./search-card";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { useTranslation } from "react-i18next";
 import type { SearchHistoryEntry } from "@renderer/hooks/use-search-history";
 import type { SearchSuggestion } from "@renderer/hooks/use-search-suggestions";
 import { useGamepad } from "@renderer/hooks";
+import { GradualBlur } from "../ui/gradual-blur";
 import "./search-dropdown.scss";
 
 export interface SearchDropdownProps {
@@ -91,15 +93,66 @@ export function SearchDropdown({
   const hasSuggestions = suggestions.length > 0;
 
   const dropdownContent = (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          className="search-dropdown"
-          initial={{ opacity: 0, filter: "blur(10px)" }}
-          animate={{ opacity: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, filter: "blur(10px)", pointerEvents: "none" }}
-          transition={{ duration: 0.15, ease: "easeInOut" }}
-        >
+    <>
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            key="blur-bg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 999,
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "60vh",
+                background:
+                  "linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 40%, transparent 100%)",
+                zIndex: 1,
+              }}
+            />
+            <GradualBlur
+              position="top"
+              height="60vh"
+              strength={3.5}
+              divCount={8}
+              curve="ease-out"
+              exponential
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                zIndex: 0,
+                pointerEvents: "none",
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            className="search-dropdown"
+            initial={{ opacity: 0, filter: "blur(10px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(10px)", pointerEvents: "none" }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+          >
           <div className="search-dropdown__content" ref={containerRef}>
             <div className="search-dropdown__input-container">
               <SearchIcon size={16} className="search-dropdown__search-icon" />
@@ -135,55 +188,23 @@ export function SearchDropdown({
                 </span>
                 <div className="search-dropdown__cards-scroll">
                   {suggestions.map((item) => (
-                    <button
+                    <SearchCard
                       key={`${item.objectId}-${item.shop}`}
-                      type="button"
-                      className="search-dropdown__card"
+                      item={item}
+                      isActive={false}
                       onClick={() => onSelectSuggestion(item)}
-                    >
-                      {item.libraryImageUrl ? (
-                        <img src={item.libraryImageUrl} alt={item.title} />
-                      ) : item.shop === "steam" ? (
-                        <img
-                          src={`https://steamcdn-a.akamaihd.net/steam/apps/${item.objectId}/library_600x900_2x.jpg`}
-                          alt={item.title}
-                          onError={(e) => {
-                            if (
-                              item.iconUrl &&
-                              e.currentTarget.src !== item.iconUrl
-                            ) {
-                              e.currentTarget.src = item.iconUrl;
-                            }
-                          }}
-                        />
-                      ) : item.iconUrl ? (
-                        <img src={item.iconUrl} alt={item.title} />
-                      ) : (
-                        <div className="card-placeholder">
-                          <SearchIcon size={24} />
-                        </div>
-                      )}
-                      <div className="card-title-overlay">{item.title}</div>
-                    </button>
+                    />
                   ))}
                 </div>
               </div>
             )}
 
             {!hasSuggestions && hasHistory && (
-              <div style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 16,
-                    padding: "0 32px",
-                  }}
-                >
+              <div style={{ width: "440px", alignSelf: "center", display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span
                     className="search-dropdown__section-title"
-                    style={{ margin: 0 }}
+                    style={{ margin: 0, fontSize: 12, fontWeight: 400, textTransform: "none", letterSpacing: "normal" }}
                   >
                     {t("recent_searches")}
                   </span>
@@ -195,61 +216,34 @@ export function SearchDropdown({
                     {t("clear_history")}
                   </button>
                 </div>
-                <div className="search-dropdown__cards-scroll">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-start" }}>
                   {historyItems.map((item) => (
                     <button
                       key={`history-${item.query}-${item.timestamp}`}
                       type="button"
-                      className="search-dropdown__card search-dropdown__card--history"
-                      style={{
-                        height: 60,
-                        flex: "0 0 200px",
-                        padding: 12,
-                        justifyContent: "center",
-                      }}
+                      className="search-dropdown__tag"
                       onClick={() => onSelectHistory(item.query)}
                     >
-                      <div
+                      <ClockIcon size={14} fill="rgba(255,255,255,0.4)" />
+                      <span
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          height: "100%",
+                          maxWidth: 200,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <ClockIcon size={16} fill="rgba(255,255,255,0.4)" />
-                        <span
-                          style={{
-                            color: "#fff",
-                            fontWeight: 500,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            flex: 1,
-                            textAlign: "left",
-                          }}
-                        >
-                          {item.query}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemoveHistoryItem(item.query);
-                          }}
-                          style={{
-                            padding: 4,
-                            borderRadius: 100,
-                            background: "rgba(255,255,255,0.1)",
-                            zIndex: 2,
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <XIcon size={12} />
-                        </button>
+                        {item.query}
+                      </span>
+                      <div
+                        role="button"
+                        className="search-dropdown__tag-close"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveHistoryItem(item.query);
+                        }}
+                      >
+                        <XIcon size={12} />
                       </div>
                     </button>
                   ))}
@@ -261,9 +255,10 @@ export function SearchDropdown({
               <div className="search-dropdown__loading">{t("loading")}</div>
             )}
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 
   return createPortal(dropdownContent, document.body);

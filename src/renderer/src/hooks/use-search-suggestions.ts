@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAppSelector } from "./redux";
 import { debounce } from "lodash-es";
 import { logger } from "@renderer/logger";
@@ -88,26 +88,41 @@ export function useSearchSuggestions(
       setIsLoading(true);
 
       try {
-        const response = await window.electron.hydraApi.get<
-          {
-            title: string;
-            objectId: string;
-            shop: GameShop;
-            iconUrl: string | null;
-          }[]
-        >("/catalogue/search/suggestions", {
-          params: {
-            query: searchQuery,
-            limit,
+        const response = await window.electron.hydraApi.post<{
+          edges: import("@types").CatalogueSearchResult[];
+          count: number;
+        }>("/catalogue/search", {
+          data: {
+            title: searchQuery,
+            take: limit,
+            skip: 0,
+            genres: [],
+            tags: [],
+            developers: [],
+            publishers: [],
+            downloadSourceFingerprints: [],
+            protondbSupportBadges: [],
+            deckCompatibility: [],
+            downloadSourceIds: [],
           },
           needsAuth: false,
         });
 
         if (abortController.signal.aborted) return;
 
-        const catalogueSuggestions: SearchSuggestion[] = response.map(
+        const sortedEdges = [...response.edges].sort(
+          (a, b) =>
+            (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0) + 
+            ((b as any).reviewCount || 0) - ((a as any).reviewCount || 0)
+        );
+
+        const catalogueSuggestions: SearchSuggestion[] = sortedEdges.map(
           (item) => ({
-            ...item,
+            title: item.title,
+            objectId: item.objectId,
+            shop: item.shop,
+            iconUrl: (item as any).iconUrl || null,
+            libraryImageUrl: item.libraryImageUrl || null,
             source: "catalogue" as const,
           })
         );
@@ -128,9 +143,10 @@ export function useSearchSuggestions(
     []
   );
 
-  const debouncedFetchCatalogue = useRef(
-    debounce(fetchCatalogueSuggestions, 300)
-  ).current;
+  const debouncedFetchCatalogue = useMemo(
+    () => debounce(fetchCatalogueSuggestions, 300),
+    [fetchCatalogueSuggestions]
+  );
 
   useEffect(() => {
     if (!enabled || !query || query.length < 2) {

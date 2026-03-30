@@ -210,3 +210,13 @@ progress[value] {
     color: transparent;
   }
 }
+
+.theme-modal-container {
+  max-height: 75vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  
+  /* Garantindo que o espaçamento mínimo seja amigável em telas super pequenas */
+  min-height: 300px;
+}
