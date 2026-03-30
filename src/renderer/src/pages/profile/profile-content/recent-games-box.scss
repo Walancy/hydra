@@ -24,7 +24,7 @@
     padding: calc(globals.$spacing-unit * 1.5);
     gap: calc(globals.$spacing-unit * 2);
     align-items: center;
-    background: rgba(255, 255, 255, 0.02); 
+    background: rgba(255, 255, 255, 0.02);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -41,7 +41,7 @@
     height: 48px;
     border-radius: 6px;
     object-fit: cover;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   &__game-details {

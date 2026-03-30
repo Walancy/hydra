@@ -47,8 +47,9 @@
     border-radius: 0;
     transition: background-color 0.2s;
     outline: none;
-    
-    &:hover, &:focus {
+
+    &:hover,
+    &:focus {
       background-color: rgba(255, 255, 255, 0.03);
     }
   }

@@ -93,165 +93,168 @@ export function SearchDropdown({
   const dropdownContent = (
     <AnimatePresence>
       {visible && (
-        <motion.div 
+        <motion.div
           className="search-dropdown"
           initial={{ opacity: 0, filter: "blur(10px)" }}
           animate={{ opacity: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, filter: "blur(10px)", pointerEvents: "none" }}
           transition={{ duration: 0.15, ease: "easeInOut" }}
         >
-      <div className="search-dropdown__content" ref={containerRef}>
-        <div className="search-dropdown__input-container">
-          <SearchIcon size={16} className="search-dropdown__search-icon" />
-          <input
-            ref={inputRef}
-            type="text"
-            className="search-dropdown__input"
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-          />
-          {searchValue && (
-            <button
-              className="search-dropdown__clear-button"
-              onClick={() => {
-                onSearchChange("");
-                inputRef.current?.focus();
-              }}
-            >
-              <XIcon size={14} />
-            </button>
-          )}
-        </div>
-
-        {hasSuggestions && (
-          <div style={{ width: "100%" }}>
-            <span
-              className="search-dropdown__section-title"
-              style={{ padding: "0 32px" }}
-            >
-              {t("suggestions")}
-            </span>
-            <div className="search-dropdown__cards-scroll" tabIndex={0}>
-              {suggestions.map((item) => (
+          <div className="search-dropdown__content" ref={containerRef}>
+            <div className="search-dropdown__input-container">
+              <SearchIcon size={16} className="search-dropdown__search-icon" />
+              <input
+                ref={inputRef}
+                type="text"
+                className="search-dropdown__input"
+                value={searchValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+              />
+              {searchValue && (
                 <button
-                  key={`${item.objectId}-${item.shop}`}
-                  type="button"
-                  className="search-dropdown__card"
-                  onClick={() => onSelectSuggestion(item)}
-                >
-                  {item.libraryImageUrl ? (
-                    <img src={item.libraryImageUrl} alt={item.title} />
-                  ) : item.shop === "steam" ? (
-                    <img 
-                      src={`https://steamcdn-a.akamaihd.net/steam/apps/${item.objectId}/library_600x900_2x.jpg`} 
-                      alt={item.title} 
-                      onError={(e) => {
-                        if (item.iconUrl && e.currentTarget.src !== item.iconUrl) {
-                          e.currentTarget.src = item.iconUrl;
-                        }
-                      }}
-                    />
-                  ) : item.iconUrl ? (
-                    <img src={item.iconUrl} alt={item.title} />
-                  ) : (
-                    <div className="card-placeholder">
-                      <SearchIcon size={24} />
-                    </div>
-                  )}
-                  <div className="card-title-overlay">{item.title}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!hasSuggestions && hasHistory && (
-          <div style={{ width: "100%" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 16,
-                padding: "0 32px",
-              }}
-            >
-              <span
-                className="search-dropdown__section-title"
-                style={{ margin: 0 }}
-              >
-                {t("recent_searches")}
-              </span>
-              <button
-                type="button"
-                className="search-dropdown__clear-text-button"
-                onClick={onClearHistory}
-              >
-                {t("clear_history")}
-              </button>
-            </div>
-            <div className="search-dropdown__cards-scroll">
-              {historyItems.map((item) => (
-                <button
-                  key={`history-${item.query}-${item.timestamp}`}
-                  type="button"
-                  className="search-dropdown__card search-dropdown__card--history"
-                  style={{
-                    height: 60,
-                    flex: "0 0 200px",
-                    padding: 12,
-                    justifyContent: "center",
+                  className="search-dropdown__clear-button"
+                  onClick={() => {
+                    onSearchChange("");
+                    inputRef.current?.focus();
                   }}
-                  onClick={() => onSelectHistory(item.query)}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      height: "100%",
-                    }}
-                  >
-                    <ClockIcon size={16} fill="rgba(255,255,255,0.4)" />
-                    <span
-                      style={{
-                        color: "#fff",
-                        fontWeight: 500,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        flex: 1,
-                        textAlign: "left",
-                      }}
-                    >
-                      {item.query}
-                    </span>
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveHistoryItem(item.query);
-                      }}
-                      style={{
-                        padding: 4,
-                        borderRadius: 100,
-                        background: "rgba(255,255,255,0.1)",
-                        zIndex: 2,
-                      }}
-                    >
-                      <XIcon size={12} />
-                    </div>
-                  </div>
+                  <XIcon size={14} />
                 </button>
-              ))}
+              )}
             </div>
-          </div>
-        )}
 
-        {isLoadingSuggestions && !hasSuggestions && !hasHistory && (
-          <div className="search-dropdown__loading">{t("loading")}</div>
-        )}
-      </div>
+            {hasSuggestions && (
+              <div style={{ width: "100%" }}>
+                <span
+                  className="search-dropdown__section-title"
+                  style={{ padding: "0 32px" }}
+                >
+                  {t("suggestions")}
+                </span>
+                <div className="search-dropdown__cards-scroll" tabIndex={0}>
+                  {suggestions.map((item) => (
+                    <button
+                      key={`${item.objectId}-${item.shop}`}
+                      type="button"
+                      className="search-dropdown__card"
+                      onClick={() => onSelectSuggestion(item)}
+                    >
+                      {item.libraryImageUrl ? (
+                        <img src={item.libraryImageUrl} alt={item.title} />
+                      ) : item.shop === "steam" ? (
+                        <img
+                          src={`https://steamcdn-a.akamaihd.net/steam/apps/${item.objectId}/library_600x900_2x.jpg`}
+                          alt={item.title}
+                          onError={(e) => {
+                            if (
+                              item.iconUrl &&
+                              e.currentTarget.src !== item.iconUrl
+                            ) {
+                              e.currentTarget.src = item.iconUrl;
+                            }
+                          }}
+                        />
+                      ) : item.iconUrl ? (
+                        <img src={item.iconUrl} alt={item.title} />
+                      ) : (
+                        <div className="card-placeholder">
+                          <SearchIcon size={24} />
+                        </div>
+                      )}
+                      <div className="card-title-overlay">{item.title}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!hasSuggestions && hasHistory && (
+              <div style={{ width: "100%" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 16,
+                    padding: "0 32px",
+                  }}
+                >
+                  <span
+                    className="search-dropdown__section-title"
+                    style={{ margin: 0 }}
+                  >
+                    {t("recent_searches")}
+                  </span>
+                  <button
+                    type="button"
+                    className="search-dropdown__clear-text-button"
+                    onClick={onClearHistory}
+                  >
+                    {t("clear_history")}
+                  </button>
+                </div>
+                <div className="search-dropdown__cards-scroll">
+                  {historyItems.map((item) => (
+                    <button
+                      key={`history-${item.query}-${item.timestamp}`}
+                      type="button"
+                      className="search-dropdown__card search-dropdown__card--history"
+                      style={{
+                        height: 60,
+                        flex: "0 0 200px",
+                        padding: 12,
+                        justifyContent: "center",
+                      }}
+                      onClick={() => onSelectHistory(item.query)}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          height: "100%",
+                        }}
+                      >
+                        <ClockIcon size={16} fill="rgba(255,255,255,0.4)" />
+                        <span
+                          style={{
+                            color: "#fff",
+                            fontWeight: 500,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            flex: 1,
+                            textAlign: "left",
+                          }}
+                        >
+                          {item.query}
+                        </span>
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveHistoryItem(item.query);
+                          }}
+                          style={{
+                            padding: 4,
+                            borderRadius: 100,
+                            background: "rgba(255,255,255,0.1)",
+                            zIndex: 2,
+                          }}
+                        >
+                          <XIcon size={12} />
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {isLoadingSuggestions && !hasSuggestions && !hasHistory && (
+              <div className="search-dropdown__loading">{t("loading")}</div>
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

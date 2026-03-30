@@ -2,7 +2,7 @@
 
 .search-dropdown {
   position: fixed;
-  top: 0; 
+  top: 0;
   left: 0;
   width: 100vw;
   height: auto;
@@ -20,7 +20,7 @@
   -webkit-app-region: no-drag;
 
   &__input-container {
-    width: 440px; 
+    width: 440px;
     display: flex;
     align-self: center;
     align-items: center;
@@ -107,7 +107,7 @@
     padding-bottom: 16px;
     width: 100%;
     scroll-behavior: smooth;
-    
+
     // Hide scrollbar
     scrollbar-width: none;
     &::-webkit-scrollbar {
@@ -167,7 +167,11 @@
       left: 0;
       width: 100%;
       padding: 24px 12px 12px;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.9) 0%,
+        transparent 100%
+      );
       color: #fff;
       font-size: 13px;
       font-weight: 600;
@@ -190,5 +194,4 @@
     font-size: 14px;
     width: 100%;
   }
-
 }
