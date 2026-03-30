@@ -25,6 +25,7 @@ import {
   ContextMenu,
   type ContextMenuItemData,
   ConfirmationModal,
+  DownloadGameModal,
 } from "@renderer/components";
 import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
 import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";

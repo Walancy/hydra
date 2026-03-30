@@ -27,3 +27,4 @@ export * from "./create-collection-modal/create-collection-modal";
 export * from "./toggle/toggle";
 export * from "./gamepad-guide/gamepad-guide";
 export * from "./splash-screen/splash-screen";
+export * from "./download-game-modal/download-game-modal";
