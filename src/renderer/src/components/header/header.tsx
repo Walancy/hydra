@@ -170,7 +170,6 @@ export function Header() {
 
   const isHomePage = location.pathname === "/";
   const isOnLibraryPage = location.pathname.startsWith("/library");
-  const isOnCataloguePage = location.pathname.startsWith("/catalogue");
   const isGamePage = location.pathname.startsWith("/game");
 
   const searchValue = isOnLibraryPage

@@ -376,7 +376,9 @@ export function App() {
             offset: 0,
           }),
         };
-      } catch (err) {}
+      } catch (err) {
+        // ignore
+      }
 
       try {
         if (!initialUserId || (window as any).__HYDRA_PROFILE_CACHE__) return;
@@ -409,7 +411,9 @@ export function App() {
           pinned: (libraryRes as any)?.pinnedGames || [],
           bg: bgColor,
         };
-      } catch (err) {}
+      } catch (err) {
+        // ignore
+      }
     }, 500);
   }, [fetchUserDetails, updateUserDetails, dispatch, setupWorkWonders]);
 

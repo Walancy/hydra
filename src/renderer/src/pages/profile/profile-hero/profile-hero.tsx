@@ -25,7 +25,6 @@ import {
   useToast,
   useUserDetails,
 } from "@renderer/hooks";
-import { addSeconds } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -94,7 +93,6 @@ export function ProfileHero({
   const { gameRunning } = useAppSelector((state) => state.gameRunning);
 
   const { t } = useTranslation("user_profile");
-  const { formatDistance } = useDate();
 
   const { showSuccessToast, showErrorToast } = useToast();
 

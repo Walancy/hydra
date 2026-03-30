@@ -133,7 +133,7 @@ export function SearchDropdown({
                 >
                   {t("suggestions")}
                 </span>
-                <div className="search-dropdown__cards-scroll" tabIndex={0}>
+                <div className="search-dropdown__cards-scroll">
                   {suggestions.map((item) => (
                     <button
                       key={`${item.objectId}-${item.shop}`}
@@ -230,7 +230,8 @@ export function SearchDropdown({
                         >
                           {item.query}
                         </span>
-                        <div
+                        <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onRemoveHistoryItem(item.query);
@@ -240,10 +241,15 @@ export function SearchDropdown({
                             borderRadius: 100,
                             background: "rgba(255,255,255,0.1)",
                             zIndex: 2,
+                            border: "none",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
                           <XIcon size={12} />
-                        </div>
+                        </button>
                       </div>
                     </button>
                   ))}
