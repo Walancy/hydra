@@ -32,4 +32,10 @@
   &__downloads-button {
     margin-right: auto;
   }
+
+  &__version-button {
+    .gamepad-active & {
+      display: none;
+    }
+  }
 }

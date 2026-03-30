@@ -122,6 +122,8 @@ export function UserLibraryGameCard({
         type="button"
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
+        onFocus={onMouseEnter}
+        onBlur={onMouseLeave}
         className="user-library-game-card__wrapper"
         title={isTooltipHovered ? undefined : game.title}
         onClick={() => navigate(buildUserGameDetailsPath(game))}

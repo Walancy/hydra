@@ -12,6 +12,7 @@ import "./home.scss";
 interface GameInfoProps {
   game: ShopAssets;
   isBgLight?: boolean;
+  onInstallClick?: (game: ShopAssets) => void;
 }
 
 const detailsCache = new Map<string, ShopDetailsWithAssets>();
@@ -74,7 +75,11 @@ function cleanPublisher(raw: string): string {
 
 const UUID_RE = /^[0-9a-f-]{36}$/i;
 
-export function GameInfo({ game, isBgLight = false }: Readonly<GameInfoProps>) {
+export function GameInfo({
+  game,
+  isBgLight = false,
+  onInstallClick,
+}: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
   const [details, setDetails] = useState<ShopDetailsWithAssets | null>(
@@ -182,6 +187,10 @@ export function GameInfo({ game, isBgLight = false }: Readonly<GameInfoProps>) {
             className="home__install-button"
             theme={isBgLight ? "dark" : "primary"}
             onClick={() => {
+              if (onInstallClick) {
+                onInstallClick(game);
+                return;
+              }
               const path = buildGameDetailsPath({
                 ...game,
                 objectId: game.objectId,

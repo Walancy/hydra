@@ -47,7 +47,6 @@ export function FolderInfo({
             key={g.objectId}
             type="button"
             className="home__folder-game-card-btn"
-            style={{ all: "unset", cursor: "pointer", display: "block" }}
             onClick={() => navigate(buildGameDetailsPath(g))}
           >
             <img

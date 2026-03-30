@@ -452,6 +452,7 @@ contextBridge.exposeInMainWorld("electron", {
   openExternal: (src: string) => ipcRenderer.invoke("openExternal", src),
   openCheckout: () => ipcRenderer.invoke("openCheckout"),
   openDevTools: () => ipcRenderer.invoke("openDevTools"),
+  showVirtualKeyboard: () => ipcRenderer.invoke("showVirtualKeyboard"),
   showOpenDialog: (options: Electron.OpenDialogOptions) =>
     ipcRenderer.invoke("showOpenDialog", options),
   showItemInFolder: (path: string) =>

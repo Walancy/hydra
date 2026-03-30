@@ -98,7 +98,8 @@ export function UserProfileContextProvider({
       .get<UserStats>(`/users/${userId}/stats`)
       .then((stats) => {
         setUserStats(stats);
-      });
+      })
+      .catch(() => {});
   }, [userId]);
 
   const getUserLibraryGames = useCallback(

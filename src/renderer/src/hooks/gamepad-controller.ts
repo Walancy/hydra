@@ -64,9 +64,52 @@ function scheduleRepeat(idx: number): void {
   holdTimers.set(idx, t);
 }
 
+function getScrollParent(node: Element | null): Element | null {
+  if (!node || node === document.body || node === document.documentElement) {
+    return document.scrollingElement || document.body;
+  }
+  const overflowY = window.getComputedStyle(node).overflowY;
+  if (overflowY === "auto" || overflowY === "scroll") {
+    if (node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+  }
+  return getScrollParent(node.parentElement);
+}
+
+const DEADZONE = 0.2;
+const SCROLL_SPEED = 20;
+
 function poll(): void {
   const pad = getActivePad();
   if (pad) {
+    if (pad.axes.length >= 4) {
+      const rightStickY = pad.axes[3];
+      if (Math.abs(rightStickY) > DEADZONE) {
+        let target = getScrollParent(document.activeElement);
+        if (
+          !target ||
+          target === document.body ||
+          target === document.scrollingElement
+        ) {
+          target =
+            document.querySelector(
+              ".app-page__content, .modal__content, .catalogue__content, .library__content, .downloads__content, .profile__scroll-area, .settings__content, main"
+            ) ||
+            document.scrollingElement ||
+            document.body;
+        }
+
+        // Apply deadzone subtraction for smoother acceleration from center
+        const sign = Math.sign(rightStickY);
+        const activeValue = Math.abs(rightStickY) - DEADZONE;
+        const normalized = activeValue / (1 - DEADZONE);
+        const speed = sign * normalized * SCROLL_SPEED;
+
+        target.scrollBy({ top: speed, behavior: "instant" });
+      }
+    }
+
     pad.buttons.forEach((btn, idx) => {
       const was = prevPressed.has(idx);
       if (btn.pressed && !was) {

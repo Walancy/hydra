@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useGamepad } from "./use-gamepad";
-import { useGamepadConnected } from "./use-gamepad";
+import { useGamepadConnected, useGamepad } from "./use-gamepad";
+import { playBeep } from "@renderer/helpers";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]:not([disabled]):not([tabindex='-1'])",
@@ -19,7 +19,9 @@ function isVisible(el: Element): boolean {
 }
 
 function isIgnored(el: Element): boolean {
-  return el.closest("[data-gamepad-ignore]") !== null;
+  const ignoredNode = el.closest("[data-gamepad-ignore]");
+  if (!ignoredNode) return false;
+  return ignoredNode.getAttribute("data-gamepad-ignore") === "true";
 }
 
 /**
@@ -27,6 +29,35 @@ function isIgnored(el: Element): boolean {
  * Isso exclui automaticamente header, sidebar, title-bar e bottom-panel.
  */
 function getCandidates(): Element[] {
+  // 1. Procurar modais abertos primeiro (prioridade máxima)
+  const openModal = Array.from(document.querySelectorAll(".modal")).find(
+    isVisible
+  );
+  if (openModal) {
+    return Array.from(openModal.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+      (el) => !isIgnored(el) && isVisible(el)
+    );
+  }
+
+  // 2. Procurar aba de Notificações
+  const openNotif = document.querySelector(
+    ".notifications-sidebar-wrapper--open"
+  );
+  if (openNotif && isVisible(openNotif)) {
+    return Array.from(openNotif.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+      (el) => !isIgnored(el) && isVisible(el)
+    );
+  }
+
+  // 3. Procurar aba da Sidebar (force-open)
+  const forceSidebar = document.querySelector(".sidebar-wrapper--force-open");
+  if (forceSidebar && isVisible(forceSidebar)) {
+    return Array.from(forceSidebar.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+      (el) => !isIgnored(el) && isVisible(el)
+    );
+  }
+
+  // 4. Default pro <main> inteiro
   const root = document.querySelector("main") ?? document.body;
   return Array.from(root.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
     (el) => !isIgnored(el) && isVisible(el)
@@ -95,10 +126,23 @@ function moveFocus(dir: Dir): void {
   let best: Element | null = null;
   let bestScore = Infinity;
 
+  const DOCUMENT_POSITION_PRECEDING = 2;
+  const DOCUMENT_POSITION_FOLLOWING = 4;
+
   for (const el of candidates) {
     if (el === active) continue;
     const toRect = el.getBoundingClientRect();
     if (!isAhead(fromRect, toRect, dir)) continue;
+
+    const pos = active.compareDocumentPosition(el);
+    const isPreceding = (pos & DOCUMENT_POSITION_PRECEDING) !== 0;
+    const isFollowing = (pos & DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+    // Prevent jumping backward in DOM for down/right moves (e.g. sticky headers overlaying content)
+    if ((dir === "down" || dir === "right") && isPreceding) continue;
+    // Prevent jumping forward in DOM for up/left moves (e.g. fixed footers overlaying content)
+    if ((dir === "up" || dir === "left") && isFollowing) continue;
+
     const s = scoreEl(fromRect, toRect, dir);
     if (s < bestScore) {
       bestScore = s;
@@ -106,7 +150,10 @@ function moveFocus(dir: Dir): void {
     }
   }
 
-  if (best) (best as HTMLElement).focus({ preventScroll: false });
+  if (best) {
+    playBeep();
+    (best as HTMLElement).focus({ preventScroll: false });
+  }
 }
 
 /**

@@ -29,7 +29,7 @@ import { MAX_MINUTES_TO_SHOW_IN_PLAYTIME } from "@renderer/constants";
 import { ProfileTabs, type ProfileTabType } from "./profile-tabs";
 import { LibraryTab } from "./library-tab";
 import { ReviewsTab } from "./reviews-tab";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import "./profile-content.scss";
 
 type SortOption = "playtime" | "achievementCount" | "playedRecently";
@@ -142,7 +142,7 @@ export function ProfileContent() {
   }, [userProfile, dispatch]);
 
   useEffect(() => {
-    if (userProfile) {
+    if (userProfile?.id) {
       // When sortBy changes, clear animated games so all games animate in
       if (currentSortByRef.current !== sortBy) {
         animatedGameIdsRef.current.clear();
@@ -150,7 +150,7 @@ export function ProfileContent() {
       }
       getUserLibraryGames(sortBy, true);
     }
-  }, [sortBy, getUserLibraryGames, userProfile]);
+  }, [sortBy, getUserLibraryGames, userProfile?.id]);
 
   const animatedGameIdsRef = useRef<Set<string>>(new Set());
   const currentSortByRef = useRef<SortOption>(sortBy);
@@ -423,16 +423,52 @@ export function ProfileContent() {
 
               {activeTab === "friends" &&
                 ((userProfile.friends?.length ?? 0) > 0 || isMe) && (
-                  <>
-                    <FriendsBoxAddButton />
-                    <div style={{ marginTop: 16 }} />
+                  <motion.div
+                    key="friends"
+                    className="profile-content__tab-panel"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="profile-content__section-header">
+                      <div className="profile-content__section-title-group">
+                        <h2>{t("friends", { defaultValue: "Amigos" })}</h2>
+                        <span className="profile-content__section-badge">
+                          {userProfile.friends?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+                    {isMe && (
+                      <>
+                        <FriendsBoxAddButton />
+                        <div style={{ marginTop: 16 }} />
+                      </>
+                    )}
                     <FriendsBox />
-                  </>
+                  </motion.div>
                 )}
 
               {activeTab === "activity" &&
                 (userProfile.recentGames?.length ?? 0) > 0 && (
-                  <RecentGamesBox />
+                  <motion.div
+                    key="activity"
+                    className="profile-content__tab-panel"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="profile-content__section-header">
+                      <div className="profile-content__section-title-group">
+                        <h2>{t("activity", { defaultValue: "Atividade" })}</h2>
+                        <span className="profile-content__section-badge">
+                          {userProfile.recentGames?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+                    <RecentGamesBox />
+                  </motion.div>
                 )}
             </AnimatePresence>
           </div>

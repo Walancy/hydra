@@ -398,11 +398,40 @@
     }
   }
 
+  &__playing-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__game-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: globals.$muted-color;
+    text-decoration: none;
+    font-size: 1.05rem;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__game-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
   &__current-game {
     &-wrapper {
       display: flex;
       flex-direction: column;
       gap: calc(globals.$spacing-unit / 2);
+      margin-top: calc(globals.$spacing-unit);
     }
 
     &-details {

@@ -170,3 +170,44 @@ export const getAchievementSoundVolume = async (): Promise<number> => {
 export const getGameKey = (shop: GameShop, objectId: string): string => {
   return `${shop}:${objectId}`;
 };
+
+let sharedAudioCtx: AudioContext | null = null;
+
+export const playBeep = () => {
+  try {
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+    }
+
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume();
+    }
+
+    const audioCtx = sharedAudioCtx;
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      400,
+      audioCtx.currentTime + 0.04
+    );
+
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.002);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      audioCtx.currentTime + 0.04
+    );
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.04);
+  } catch {
+    // Ignored
+  }
+};

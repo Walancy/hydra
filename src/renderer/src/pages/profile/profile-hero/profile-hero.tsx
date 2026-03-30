@@ -788,28 +788,27 @@ export function ProfileHero({
 
               {currentGame && (
                 <div className="profile-hero__current-game-wrapper">
+                  <small className="profile-hero__playing-text">
+                    {t("playing_now", { defaultValue: "Jogando" })}
+                  </small>
                   <div className="profile-hero__current-game-details">
                     <Link
                       to={buildGameDetailsPath({
                         ...currentGame,
                         objectId: currentGame.objectId,
                       })}
+                      className="profile-hero__game-link"
                     >
-                      {currentGame.title}
+                      {currentGame.iconUrl && (
+                        <img
+                          src={currentGame.iconUrl}
+                          alt={currentGame.title}
+                          className="profile-hero__game-icon"
+                        />
+                      )}
+                      <span>{currentGame.title}</span>
                     </Link>
                   </div>
-
-                  <small>
-                    {t("playing_for", {
-                      amount: formatDistance(
-                        addSeconds(
-                          new Date(),
-                          -currentGame.sessionDurationInSeconds
-                        ),
-                        new Date()
-                      ),
-                    })}
-                  </small>
                 </div>
               )}
             </div>

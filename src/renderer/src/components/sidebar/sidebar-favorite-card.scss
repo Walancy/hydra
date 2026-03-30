@@ -14,8 +14,10 @@
   text-align: left;
   -webkit-app-region: no-drag;
 
-  &:hover {
+  &:hover,
+  &:focus-within {
     background-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9) !important;
   }
 
   &__cover {

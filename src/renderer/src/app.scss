@@ -5,10 +5,29 @@
   outline: none;
 }
 
-/* Foco visível quando usando controle (classe adicionada pelo gamepad nav) */
+/* Foco visível apenas em elementos interativos genuínos */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.gamepad-active button:focus,
+.gamepad-active input:focus,
+.gamepad-active a:focus,
+.gamepad-active textarea:focus,
+.gamepad-active select:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
 :focus-visible,
 .gamepad-active :focus {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  outline: none;
+}
+
+.home__card:focus-visible,
+.gamepad-active .home__card:focus {
+  box-shadow: none !important;
+  outline: none;
 }
 
 ::-webkit-scrollbar {
@@ -84,6 +103,12 @@ main {
 main {
   overflow: hidden;
   position: relative;
+  transition: opacity 1.2s ease;
+
+  &.app-is-loading {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 input::-webkit-outer-spin-button,

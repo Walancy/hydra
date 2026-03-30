@@ -8,6 +8,7 @@ import { logger } from "@renderer/logger";
 import { useState, useCallback, useMemo } from "react";
 import { NotificationItem } from "@renderer/pages/notifications/notification-item";
 import { LocalNotificationItem } from "@renderer/pages/notifications/local-notification-item";
+import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
 import type {
   Notification,
   LocalNotification,
@@ -34,6 +35,7 @@ export function NotificationsSidebar({
   const { t, i18n } = useTranslation("notifications_page");
   const { showSuccessToast, showErrorToast } = useToast();
   const { userDetails } = useUserDetails();
+  const isGamepadConnected = useGamepadConnected();
 
   const [apiNotifications, setApiNotifications] = useState<Notification[]>([]);
   const [localNotifications, setLocalNotifications] = useState<
@@ -136,6 +138,17 @@ export function NotificationsSidebar({
     });
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (open && isGamepadConnected) {
+      setTimeout(() => {
+        const defaultFocus = document.querySelector(
+          ".notifications-sidebar__close-btn"
+        ) as HTMLElement;
+        if (defaultFocus) defaultFocus.focus({ preventScroll: false });
+      }, 50);
+    }
+  }, [open, isGamepadConnected]);
 
   useEffect(
     () => () => {
@@ -367,6 +380,7 @@ export function NotificationsSidebar({
       {/* Sidebar panel */}
       <div
         className={`notifications-sidebar-wrapper${open ? " notifications-sidebar-wrapper--open" : ""}`}
+        data-gamepad-ignore={!open ? "true" : undefined}
       >
         <div className="notifications-sidebar">
           {/* Header */}

@@ -128,6 +128,13 @@ export function Sidebar() {
       .catch(() => {});
   }, [userDetails?.id]);
 
+  useEffect(() => {
+    const handleTestFriend = () => setOnlineFriendsCount((prev) => prev + 1);
+    window.addEventListener("hydra:test-friend", handleTestFriend);
+    return () =>
+      window.removeEventListener("hydra:test-friend", handleTestFriend);
+  }, []);
+
   const [showCreateCollectionModal, setShowCreateCollectionModal] =
     useState(false);
   const [collectionContextMenu, setCollectionContextMenu] = useState<{
@@ -474,7 +481,6 @@ export function Sidebar() {
   return (
     <aside
       ref={sidebarRef}
-      data-gamepad-ignore="true"
       className={cn("sidebar", {
         "sidebar--resizing": isResizing,
         "sidebar--darwin": window.electron.platform === "darwin",

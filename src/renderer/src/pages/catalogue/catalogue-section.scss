@@ -56,9 +56,12 @@
   user-select: none;
   cursor: pointer;
 
-  &:hover {
-    transform: translateY(-3px);
+  &:hover,
+  &:focus-within {
+    transform: translateY(-3px) scale(1.05) !important;
     background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0px 4px 25px 0px rgba(0, 0, 0, 0.8) !important;
+    z-index: 10;
   }
 
   &__cover-wrap {

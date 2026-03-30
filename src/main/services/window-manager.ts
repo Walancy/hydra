@@ -217,8 +217,6 @@ export class WindowManager {
     this.mainWindow.removeMenu();
 
     this.mainWindow.on("ready-to-show", () => {
-      if (!app.isPackaged || isStaging)
-        WindowManager.mainWindow?.webContents.openDevTools({ mode: "detach" });
       WindowManager.mainWindow?.show();
     });
 
@@ -282,8 +280,8 @@ export class WindowManager {
 
       authWindow.removeMenu();
 
-      if (!app.isPackaged)
-        authWindow.webContents.openDevTools({ mode: "detach" });
+      // if (!app.isPackaged)
+      //   authWindow.webContents.openDevTools({ mode: "detach" });
 
       authWindow.loadURL(
         `${import.meta.env.MAIN_VITE_AUTH_URL}${page}?${searchParams.toString()}`
@@ -497,9 +495,6 @@ export class WindowManager {
 
       editorWindow.once("ready-to-show", () => {
         editorWindow.show();
-        if (!app.isPackaged || isStaging) {
-          editorWindow.webContents.openDevTools({ mode: "detach" });
-        }
       });
 
       editorWindow.webContents.on("before-input-event", (_event, input) => {
@@ -576,9 +571,9 @@ export class WindowManager {
       this.gameLauncherWindow = null;
     });
 
-    if (!app.isPackaged || isStaging) {
-      this.gameLauncherWindow.webContents.openDevTools({ mode: "detach" });
-    }
+    // if (!app.isPackaged || isStaging) {
+    //   this.gameLauncherWindow.webContents.openDevTools({ mode: "detach" });
+    // }
   }
 
   public static showGameLauncherWindow() {

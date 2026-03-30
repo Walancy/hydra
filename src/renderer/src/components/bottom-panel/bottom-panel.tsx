@@ -11,7 +11,7 @@ import {
 
 import "./bottom-panel.scss";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { VERSION_CODENAME } from "@renderer/constants";
 
 export function BottomPanel() {
@@ -86,7 +86,10 @@ export function BottomPanel() {
     }
 
     const game = lastPacket
-      ? library.find((game) => game.id === lastPacket?.gameId)
+      ? library.find((game) => game.id === lastPacket?.gameId) ||
+        (lastPacket.gameId === "test-game-id"
+          ? { title: "Test Game" }
+          : undefined)
       : undefined;
 
     if (game) {
@@ -152,8 +155,15 @@ export function BottomPanel() {
   ]);
 
   const hasActiveStatus = useMemo(() => {
-    return !!commonRedistStatus || !!extraction || !!lastPacket;
-  }, [commonRedistStatus, extraction, lastPacket]);
+    return !!commonRedistStatus || !!extraction;
+  }, [commonRedistStatus, extraction]);
+
+  const location = useLocation();
+  const isSettingsPage = location.pathname.startsWith("/settings");
+
+  if (!hasActiveStatus && !isSettingsPage) {
+    return null;
+  }
 
   return (
     <footer className="bottom-panel">
@@ -167,15 +177,17 @@ export function BottomPanel() {
         </button>
       )}
 
-      <button
-        data-open-workwonders-changelog-mini
-        className="bottom-panel__version-button"
-      >
-        <small>
-          {sessionHash ? `${sessionHash} -` : ""} v{version} &quot;
-          {VERSION_CODENAME}&quot;
-        </small>
-      </button>
+      {isSettingsPage && (
+        <button
+          data-open-workwonders-changelog-mini
+          className="bottom-panel__version-button"
+        >
+          <small>
+            {sessionHash ? `${sessionHash} -` : ""} v{version} &quot;
+            {VERSION_CODENAME}&quot;
+          </small>
+        </button>
+      )}
     </footer>
   );
 }

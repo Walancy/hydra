@@ -36,6 +36,8 @@ if (process.platform !== "linux") {
   app.commandLine.appendSwitch("--no-sandbox");
 }
 
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+
 i18n.init({
   resources,
   lng: "en",

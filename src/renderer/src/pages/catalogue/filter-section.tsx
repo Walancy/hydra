@@ -106,6 +106,7 @@ export function FilterSection({
         ref={content}
         className="filter-section__content"
         style={{ maxHeight: `${height}px` }}
+        data-gamepad-ignore={!isOpen ? "true" : undefined}
       >
         <div className="filter-section__content-inner">
           {selectedItemsCount > 0 ? (

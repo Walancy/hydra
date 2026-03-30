@@ -28,7 +28,6 @@
 
   &__repacks {
     display: flex;
-    gap: calc(globals.$spacing-unit * 2);
     flex-direction: column;
   }
 
@@ -42,6 +41,16 @@
     padding: calc(globals.$spacing-unit * 2);
     padding-right: calc(globals.$spacing-unit * 4);
     position: relative;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    transition: background-color 0.2s;
+    outline: none;
+    
+    &:hover, &:focus {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
   }
 
   &__availability-orb {

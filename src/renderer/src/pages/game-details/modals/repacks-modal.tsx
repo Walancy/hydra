@@ -15,7 +15,7 @@ import {
   TextField,
   CheckboxField,
 } from "@renderer/components";
-import type { DownloadSource, Game, GameRepack } from "@types";
+import type { DownloadSource, LibraryGame, GameRepack, Game } from "@types";
 
 import { DownloadSettingsModal } from "./download-settings-modal";
 import { gameDetailsContext } from "@renderer/context";
@@ -34,6 +34,8 @@ import "./repacks-modal.scss";
 
 export interface RepacksModalProps {
   visible: boolean;
+  gameOverride?: LibraryGame | null;
+  repacksOverride?: GameRepack[];
   startDownload: (
     repack: GameRepack,
     downloader: Downloader,
@@ -48,6 +50,8 @@ export interface RepacksModalProps {
 
 export function RepacksModal({
   visible,
+  gameOverride,
+  repacksOverride,
   startDownload,
   onClose,
 }: Readonly<RepacksModalProps>) {
@@ -71,7 +75,10 @@ export function RepacksModal({
     new Set()
   );
 
-  const { game, repacks } = useContext(gameDetailsContext);
+  const context = useContext(gameDetailsContext);
+  const game = gameOverride !== undefined ? gameOverride : context?.game;
+  const repacks =
+    repacksOverride !== undefined ? repacksOverride : context?.repacks || [];
 
   const { t } = useTranslation("game_details");
 
@@ -394,9 +401,8 @@ export function RepacksModal({
               const tooltipId = `availability-orb-${repack.id}`;
 
               return (
-                <Button
+                <button
                   key={repack.id}
-                  theme="dark"
                   onClick={() => handleRepackClick(repack)}
                   className="repacks-modal__repack-button"
                 >
@@ -430,7 +436,7 @@ export function RepacksModal({
                   {hashesInDebrid[getHashFromMagnet(repack.uris[0]) ?? ""] && (
                     <DebridBadge />
                   )}
-                </Button>
+                </button>
               );
             })
           )}

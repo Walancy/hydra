@@ -353,6 +353,8 @@ declare global {
     /* Misc */
     openExternal: (src: string) => Promise<void>;
     openCheckout: () => Promise<void>;
+    openDevTools: () => Promise<void>;
+    showVirtualKeyboard: () => Promise<void>;
     getVersion: () => Promise<string>;
     isStaging: () => Promise<boolean>;
     ping: () => string;

@@ -44,6 +44,7 @@ export function GameCard({ game, ...props }: GameCardProps) {
       type="button"
       className="game-card"
       onMouseEnter={handleHover}
+      onFocus={handleHover}
     >
       <div className="game-card__backdrop">
         <img

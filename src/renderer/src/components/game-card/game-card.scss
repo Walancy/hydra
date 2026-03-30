@@ -97,10 +97,19 @@
     font-weight: bold;
   }
 
-  &:hover &__cover {
-    transform: scale(1.05);
-  }
-  &:hover &__content {
-    transform: translateY(0px);
+  &:hover,
+  &:focus {
+    outline: none;
+    transform: scale(1.03) !important;
+    z-index: 10;
+    box-shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.8) !important;
+
+    .game-card__cover {
+      transform: scale(1.05);
+    }
+
+    .game-card__content {
+      transform: translateY(0px);
+    }
   }
 }

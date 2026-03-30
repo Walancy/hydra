@@ -42,9 +42,23 @@ export function LibraryTab({
   isMe,
 }: Readonly<LibraryTabProps>) {
   useEffect(() => {
-    if (hasMoreLibraryGames && !isLoadingLibraryGames) {
-      onLoadMore();
+    if (!hasMoreLibraryGames || isLoadingLibraryGames) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const loaderElement = document.getElementById("library-load-more");
+    if (loaderElement) {
+      observer.observe(loaderElement);
     }
+
+    return () => observer.disconnect();
   }, [hasMoreLibraryGames, isLoadingLibraryGames, onLoadMore]);
 
   const { t } = useTranslation("user_profile");
@@ -160,6 +174,22 @@ export function LibraryTab({
                   );
                 })}
               </ul>
+            </div>
+          )}
+          {hasMoreLibraryGames && (
+            <div
+              id="library-load-more"
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "24px 0",
+              }}
+            >
+              {isLoadingLibraryGames && (
+                <span className="profile-content__loading-text">
+                  {t("loading")}...
+                </span>
+              )}
             </div>
           )}
         </div>

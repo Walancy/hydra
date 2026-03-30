@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useGamepad, useGamepadConnected } from "@renderer/hooks/use-gamepad";
 import { GamepadHint } from "@renderer/components/gamepad-hint/gamepad-hint";
@@ -8,7 +8,7 @@ import {
   BellIcon,
   SearchIcon,
   SyncIcon,
-  XIcon,
+  DownloadIcon,
 } from "@primer/octicons-react";
 import { Tooltip } from "react-tooltip";
 
@@ -18,6 +18,7 @@ import {
   useSearchHistory,
   useSearchSuggestions,
   useUserDetails,
+  useDownload,
 } from "@renderer/hooks";
 
 import "./header.scss";
@@ -25,7 +26,7 @@ import { AutoUpdateSubHeader } from "./auto-update-sub-header";
 import { ScanGamesModal } from "./scan-games-modal";
 import { setFilters, setLibrarySearchQuery } from "@renderer/features";
 import cn from "classnames";
-import { SearchDropdown } from "@renderer/components";
+import { SearchDropdown, Modal } from "@renderer/components";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import type { GameShop } from "@types";
 import { routes as navRoutes } from "../sidebar/routes";
@@ -34,12 +35,16 @@ import { AnimatedBorder } from "../animated-border/animated-border";
 import { GradualBlur } from "../ui/gradual-blur";
 import { AuthPage } from "@shared";
 import { NotificationsSidebar } from "../notifications-sidebar/notifications-sidebar";
+import Downloads from "../../pages/downloads/downloads";
 
 export function Header() {
   const isGamepadConnected = useGamepadConnected();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
   const scanButtonTooltipId = useId();
+
+  const { lastPacket } = useDownload();
+  const [downloadsModalOpen, setDownloadsModalOpen] = useState(false);
+
+  const hasActiveDownload = !!lastPacket?.gameId;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,8 +78,47 @@ export function Header() {
         navigateNext();
         return true;
       },
+      X: () => {
+        handleToggleSearch();
+        window.electron.showVirtualKeyboard();
+        return true;
+      },
+      Y: () => {
+        handleProfileClick();
+        return true;
+      },
     },
   });
+
+  useEffect(() => {
+    const handleOpenNotifs = () => {
+      setNotifSidebarOpen((o) => {
+        if (!o) window.dispatchEvent(new CustomEvent("hydra:close-sidebar"));
+        return !o;
+      });
+    };
+    const handleCloseNotifs = () => setNotifSidebarOpen(false);
+
+    window.addEventListener(
+      "hydra:open-notifications",
+      handleOpenNotifs as EventListener
+    );
+    window.addEventListener(
+      "hydra:close-notifications",
+      handleCloseNotifs as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "hydra:open-notifications",
+        handleOpenNotifs as EventListener
+      );
+      window.removeEventListener(
+        "hydra:close-notifications",
+        handleCloseNotifs as EventListener
+      );
+    };
+  }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -135,13 +179,7 @@ export function Header() {
 
   const dispatch = useAppDispatch();
 
-  const [isFocused, setIsFocused] = useState(false);
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const [dropdownPosition, setDropdownPosition] = useState({
-    x: 0,
-    y: 0,
-  });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{
@@ -157,47 +195,13 @@ export function Header() {
   const { suggestions, isLoading: isLoadingSuggestions } = useSearchSuggestions(
     searchValue,
     isOnLibraryPage,
-    isDropdownVisible && isFocused && !isOnCataloguePage
+    isSearchOpen
   );
 
   const historyItems = getRecentHistory(
     isOnLibraryPage ? "library" : "catalogue",
-    3
+    10
   );
-
-  const totalItems = historyItems.length + suggestions.length;
-
-  const updateDropdownPosition = () => {
-    if (searchContainerRef.current) {
-      const rect = searchContainerRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        x: rect.left,
-        y: rect.bottom,
-      });
-    }
-  };
-
-  const handleFocus = () => {
-    if (isFocused && isDropdownVisible) {
-      updateDropdownPosition();
-      return;
-    }
-
-    setIsFocused(true);
-    setActiveIndex(-1);
-    setTimeout(() => {
-      updateDropdownPosition();
-      setIsDropdownVisible(true);
-    }, 220);
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => {
-      setIsFocused(false);
-      setIsDropdownVisible(false);
-      setActiveIndex(-1);
-    }, 200);
-  };
 
   const handleBackButtonClick = () => {
     navigate(-1);
@@ -209,7 +213,6 @@ export function Header() {
     } else {
       dispatch(setFilters({ title: value.slice(0, 255) }));
     }
-    setActiveIndex(-1);
   };
 
   const executeSearch = (query: string) => {
@@ -223,8 +226,7 @@ export function Header() {
       navigate("/catalogue");
     }
 
-    setIsDropdownVisible(false);
-    inputRef.current?.blur();
+    setIsSearchOpen(false);
   };
 
   const handleSelectHistory = (query: string) => {
@@ -236,24 +238,8 @@ export function Header() {
     objectId: string;
     shop: GameShop;
   }) => {
-    setIsDropdownVisible(false);
-    inputRef.current?.blur();
+    setIsSearchOpen(false);
     navigate(buildGameDetailsPath(suggestion));
-  };
-
-  const handleClearSearch = () => {
-    if (isOnLibraryPage) {
-      dispatch(setLibrarySearchQuery(""));
-    } else {
-      dispatch(setFilters({ title: "" }));
-    }
-    setActiveIndex(-1);
-  };
-
-  const handleClearSearchMouseDown = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    event.preventDefault();
   };
 
   const handleRemoveHistoryItem = (query: string) => {
@@ -262,42 +248,6 @@ export function Header() {
 
   const handleClearHistory = () => {
     clearHistory();
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (activeIndex >= 0 && activeIndex < totalItems) {
-        if (activeIndex < historyItems.length) {
-          handleSelectHistory(historyItems[activeIndex].query);
-        } else {
-          const suggestionIndex = activeIndex - historyItems.length;
-          handleSelectSuggestion(suggestions[suggestionIndex]);
-        }
-      } else if (searchValue.trim()) {
-        executeSearch(searchValue);
-      }
-    } else if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setActiveIndex((prev) => (prev < totalItems - 1 ? prev + 1 : prev));
-      if (!isDropdownVisible) {
-        setIsDropdownVisible(true);
-        updateDropdownPosition();
-      }
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setActiveIndex((prev) => (prev > -1 ? prev - 1 : -1));
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      setIsDropdownVisible(false);
-      setActiveIndex(-1);
-      inputRef.current?.blur();
-    }
-  };
-
-  const handleCloseDropdown = () => {
-    setIsDropdownVisible(false);
-    setActiveIndex(-1);
   };
 
   const handleStartScan = async () => {
@@ -320,17 +270,6 @@ export function Header() {
   };
 
   useEffect(() => {
-    if (!isDropdownVisible) return;
-
-    const handleResize = () => {
-      updateDropdownPosition();
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [isDropdownVisible]);
-
-  useEffect(() => {
     if (searchParams.get("openScanModal") === "true") {
       setShowScanModal(true);
       searchParams.delete("openScanModal");
@@ -338,33 +277,9 @@ export function Header() {
     }
   }, [searchParams, setSearchParams]);
 
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
   const handleToggleSearch = () => {
-    setIsSearchOpen((prev) => {
-      if (!prev) {
-        setTimeout(() => inputRef.current?.focus(), 100);
-      }
-      return !prev;
-    });
+    setIsSearchOpen((prev) => !prev);
   };
-
-  useEffect(() => {
-    if (!isSearchOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(target)
-      ) {
-        setIsSearchOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isSearchOpen]);
 
   return (
     <>
@@ -443,58 +358,38 @@ export function Header() {
             </button>
           )}
 
-          {isSearchOpen ? (
-            <div
-              ref={searchContainerRef}
-              className="header__search-bar header__search-bar--right"
-            >
-              <SearchIcon size={14} className="header__search-bar-icon" />
-              <input
-                ref={inputRef}
-                type="text"
-                name="search"
-                placeholder={
-                  isOnLibraryPage ? t("search_library") : t("search")
-                }
-                value={searchValue}
-                className="header__search-input"
-                onChange={(event) => handleSearch(event.target.value)}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-              />
-              {searchValue && (
-                <button
-                  type="button"
-                  onMouseDown={handleClearSearchMouseDown}
-                  onClick={handleClearSearch}
-                  className="header__action-button"
-                >
-                  <XIcon size={14} />
-                </button>
-              )}
-              <button
-                type="button"
-                className="header__action-button"
-                onClick={handleToggleSearch}
-              >
-                <XIcon size={16} />
-              </button>
-            </div>
-          ) : (
+          <button
+            type="button"
+            className="header__action-button"
+            onClick={handleToggleSearch}
+          >
+            <SearchIcon size={16} />
+          </button>
+
+          {hasActiveDownload && (
             <button
               type="button"
-              className="header__action-button"
-              onClick={handleToggleSearch}
+              className="header__action-button header__action-button--downloading"
+              onClick={() => setDownloadsModalOpen(true)}
+              title={t("downloads", {
+                ns: "sidebar",
+                defaultValue: "Downloads",
+              })}
             >
-              <SearchIcon size={16} />
+              <DownloadIcon size={16} />
             </button>
           )}
 
           <button
             type="button"
             className="header__action-button"
-            onClick={() => setNotifSidebarOpen((o) => !o)}
+            onClick={() =>
+              setNotifSidebarOpen((o) => {
+                if (!o)
+                  window.dispatchEvent(new CustomEvent("hydra:close-sidebar"));
+                return !o;
+              })
+            }
             title={t("notifications", { ns: "sidebar" })}
           >
             <BellIcon size={16} />
@@ -547,14 +442,7 @@ export function Header() {
       <AutoUpdateSubHeader />
 
       <SearchDropdown
-        visible={
-          isDropdownVisible &&
-          (searchValue.trim().length > 0 ||
-            historyItems.length > 0 ||
-            suggestions.length > 0 ||
-            isLoadingSuggestions)
-        }
-        position={dropdownPosition}
+        visible={isSearchOpen}
         historyItems={historyItems}
         suggestions={suggestions}
         isLoadingSuggestions={isLoadingSuggestions}
@@ -562,10 +450,11 @@ export function Header() {
         onSelectSuggestion={handleSelectSuggestion}
         onRemoveHistoryItem={handleRemoveHistoryItem}
         onClearHistory={handleClearHistory}
-        onClose={handleCloseDropdown}
-        activeIndex={activeIndex}
-        currentQuery={searchValue}
-        searchContainerRef={searchContainerRef}
+        onClose={() => setIsSearchOpen(false)}
+        searchValue={searchValue}
+        onSearchChange={handleSearch}
+        onExecuteSearch={() => searchValue.trim() && executeSearch(searchValue)}
+        placeholder={isOnLibraryPage ? t("search_library") : t("search")}
       />
 
       <ScanGamesModal
@@ -581,6 +470,19 @@ export function Header() {
         open={notifSidebarOpen}
         onClose={() => setNotifSidebarOpen(false)}
       />
+
+      <Modal
+        visible={downloadsModalOpen}
+        title={t("downloads", { ns: "sidebar", defaultValue: "Downloads" })}
+        onClose={() => setDownloadsModalOpen(false)}
+        large
+      >
+        <div
+          style={{ height: "60vh", overflowY: "auto", position: "relative" }}
+        >
+          {downloadsModalOpen && <Downloads />}
+        </div>
+      </Modal>
     </>
   );
 }

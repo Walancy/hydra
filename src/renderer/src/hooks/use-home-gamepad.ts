@@ -59,6 +59,13 @@ export function useHomeGamepad({
    */
   const isInSliderMode = useCallback((): boolean => {
     const active = document.activeElement;
+
+    const isOverlayOpen =
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      ) !== null;
+    if (isOverlayOpen) return false; // Delegate navigation entirely if an overlay is active
+
     if (
       !active ||
       active === document.body ||
@@ -66,6 +73,12 @@ export function useHomeGamepad({
     )
       return true;
     if (actionsRef.current?.contains(active)) return false;
+
+    // Se o foco estiver no cabeçalho da pasta (botões Adicionar Jogo, Excluir, Input),
+    // desative o modo Slider nativo e deixe a navegação global 2D agir!
+    const folderHeader = document.querySelector(".home__folder-header");
+    if (folderHeader?.contains(active)) return false;
+
     return true; // qualquer outro foco → tratar como slider mode
   }, [actionsRef]);
 
@@ -84,6 +97,12 @@ export function useHomeGamepad({
   // ── D-Pad ←/→: move o card selecionado (slider mode) ──────────────────────
   const handleDpadLeft = useCallback((): true | void => {
     if (!isEnabled) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
     if (!isInSliderMode()) return; // no actions mode, deixa global nav agir
     if (isLoading || items.length === 0) return true;
     const next = Math.max(selectedIndex - 1, 0);
@@ -102,6 +121,12 @@ export function useHomeGamepad({
 
   const handleDpadRight = useCallback((): true | void => {
     if (!isEnabled) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
     if (!isInSliderMode()) return;
     if (isLoading || items.length === 0) return true;
     const next = Math.min(selectedIndex + 1, items.length - 1);
@@ -121,23 +146,70 @@ export function useHomeGamepad({
   // ── D-Pad ↓: slider → actions ──────────────────────────────────────────────
   const handleDpadDown = useCallback((): true | void => {
     if (!isEnabled) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
     if (!isInSliderMode()) return; // já nas actions, global nav cuida
     if (isLoading) return true;
+
+    if (openedGroup) {
+      return; // Deixa a navegação 2D global agir (não há bottom-segment)
+    }
+
     focusFirstAction();
     return true;
-  }, [isEnabled, isLoading, isInSliderMode, focusFirstAction]);
+  }, [
+    isEnabled,
+    isLoading,
+    isInSliderMode,
+    focusFirstAction,
+    openedGroup,
+    selectedIndex,
+    items.length,
+    setSelectedIndex,
+    scrollToCard,
+  ]);
 
   // ── D-Pad ↑: actions → slider ──────────────────────────────────────────────
   const handleDpadUp = useCallback((): true | void => {
     if (!isEnabled) return;
-    if (isInSliderMode()) return true; // já no slider, nem bug
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
+
+    if (isInSliderMode()) {
+      if (openedGroup) {
+        return; // Deixa a navegação 2D global assumir para subir pros botões do header
+      }
+      return true; // Na Home principal não tem nada acima, então consome o evento
+    }
     returnToSlider();
     return true;
-  }, [isEnabled, isInSliderMode, returnToSlider]);
+  }, [
+    isEnabled,
+    isInSliderMode,
+    returnToSlider,
+    openedGroup,
+    selectedIndex,
+    setSelectedIndex,
+    scrollToCard,
+  ]);
 
   // ── LT/RT: troca de tab ────────────────────────────────────────────────────
   const handleLT = useCallback((): true | void => {
     if (!isEnabled || openedGroup) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
     const next = activeTabIndex <= 0 ? allTabs.length - 1 : activeTabIndex - 1;
     onTabChange(next);
     return true;
@@ -145,6 +217,12 @@ export function useHomeGamepad({
 
   const handleRT = useCallback((): true | void => {
     if (!isEnabled || openedGroup) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
     const next = activeTabIndex >= allTabs.length - 1 ? 0 : activeTabIndex + 1;
     onTabChange(next);
     return true;
@@ -153,6 +231,12 @@ export function useHomeGamepad({
   // ── A: confirma ────────────────────────────────────────────────────────────
   const handleA = useCallback((): true | void => {
     if (!isEnabled) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
     // Se foco está em um botão de ação, deixa o click natural acontecer via global nav
     if (!isInSliderMode()) return;
     if (isLoading) return true;
@@ -174,6 +258,13 @@ export function useHomeGamepad({
   // ── B: volta ───────────────────────────────────────────────────────────────
   const handleB = useCallback((): true | void => {
     if (!isEnabled) return;
+    if (
+      document.querySelector(
+        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+      )
+    )
+      return;
+
     if (!isInSliderMode()) {
       returnToSlider();
       return true;

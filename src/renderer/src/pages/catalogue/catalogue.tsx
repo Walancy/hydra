@@ -89,6 +89,23 @@ const areSameValues = (a: string[], b: string[]) =>
 
 const SECTION_SIZE = 10;
 
+let globalCachedResults: CatalogueSearchResult[] | null = null;
+let globalCachedCount: number = 0;
+let globalCachedPage: number = 1;
+let globalCachedKey: string = "";
+
+const getCachedResults = () => {
+  if (globalCachedResults) return globalCachedResults;
+  if ((window as any).__HYDRA_CATALOGUE_CACHE__) {
+    const cache = (window as any).__HYDRA_CATALOGUE_CACHE__;
+    globalCachedResults = cache.results;
+    globalCachedCount = cache.count;
+    globalCachedPage = cache.page;
+    globalCachedKey = cache.key;
+  }
+  return globalCachedResults;
+};
+
 export default function Catalogue() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const cataloguePageRef = useRef<HTMLDivElement>(null);
@@ -99,9 +116,15 @@ export default function Catalogue() {
     (state) => state.catalogueSearch
   );
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [results, setResults] = useState<CatalogueSearchResult[]>([]);
-  const [itemsCount, setItemsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(
+    getCachedResults() === null || globalCachedPage !== page
+  );
+  const [results, setResults] = useState<CatalogueSearchResult[]>(
+    globalCachedPage === page ? getCachedResults() || [] : []
+  );
+  const [itemsCount, setItemsCount] = useState(
+    globalCachedPage === page ? globalCachedCount : 0
+  );
   const [pageSize] = useState(60);
   const { formatNumber } = useFormat();
   const dispatch = useAppDispatch();
@@ -149,9 +172,16 @@ export default function Catalogue() {
 
         setResults(response.edges);
         setItemsCount(response.count);
+
+        globalCachedResults = response.edges;
+        globalCachedCount = response.count;
+        globalCachedPage = page;
+        globalCachedKey = JSON.stringify({ filtersArg, sources, take, offset });
+
         setIsLoading(false);
       },
-      500
+      500,
+      { leading: true, trailing: true }
     )
   ).current;
 
@@ -159,7 +189,18 @@ export default function Catalogue() {
     s.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 
   useEffect(() => {
-    setResults([]);
+    const key = JSON.stringify({
+      filtersArg: filters,
+      sources: downloadSources,
+      take: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+    if (globalCachedKey === key && globalCachedResults !== null) {
+      // Re-mounting with exactly the same parameters, no need to fetch or show loading skeleton!
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     abortControllerRef.current?.abort();
     debouncedSearch(filters, downloadSources, pageSize, (page - 1) * pageSize);

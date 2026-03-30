@@ -13,15 +13,16 @@
     border-radius: 8px;
     overflow: hidden;
     display: block;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1;
 
-    &:hover {
-      transform: translateY(-3px) scale(1.01);
-    }
-
-    &:focus-visible {
-      outline: 2px solid rgba(255, 255, 255, 0.5);
-      outline-offset: 2px;
+    &:hover,
+    &:focus,
+    &:focus-within {
+      transform: translateY(-3px) scale(1.08) !important;
+      z-index: 10;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0px 4px 25px 0px rgba(0, 0, 0, 0.8) !important;
     }
   }
 
@@ -36,7 +37,9 @@
     transition: transform 0.35s ease;
   }
 
-  &__wrapper:hover &__game-image {
+  &__wrapper:hover &__game-image,
+  &__wrapper:focus &__game-image,
+  &__wrapper:focus-within &__game-image {
     transform: scale(1.04);
   }
 
@@ -106,7 +109,9 @@
     }
   }
 
-  &__wrapper:hover &__fav-btn {
+  &__wrapper:hover &__fav-btn,
+  &__wrapper:focus &__fav-btn,
+  &__wrapper:focus-within &__fav-btn {
     opacity: 1;
   }
 

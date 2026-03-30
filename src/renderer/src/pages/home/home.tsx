@@ -15,7 +15,7 @@ import { Button } from "@renderer/components";
 import type { DownloadSource, LibraryGame, ShopAssets } from "@types";
 import { useLibrary } from "@renderer/hooks/use-library";
 
-import { buildGameDetailsPath } from "@renderer/helpers";
+import { buildGameDetailsPath, playBeep } from "@renderer/helpers";
 import { CatalogueCategory } from "@shared";
 import cn from "classnames";
 import { GameInfo } from "./game-info";
@@ -25,6 +25,7 @@ import {
   ContextMenu,
   type ContextMenuItemData,
   ConfirmationModal,
+  DownloadGameModal,
 } from "@renderer/components";
 import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
 import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";
@@ -41,6 +42,7 @@ export default function Home() {
   const { library } = useLibrary();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [downloadGame, setDownloadGame] = useState<ShopAssets | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isMyGames, setIsMyGames] = useState(true);
@@ -55,43 +57,12 @@ export default function Home() {
 
   const prevIndexRef = useRef(selectedIndex);
 
-  const playBeep = useCallback(() => {
-    try {
-      const audioCtx = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(
-        400,
-        audioCtx.currentTime + 0.04
-      );
-
-      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.002);
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.001,
-        audioCtx.currentTime + 0.04
-      );
-
-      oscillator.start(audioCtx.currentTime);
-      oscillator.stop(audioCtx.currentTime + 0.04);
-    } catch {
-      // Ignored
-    }
-  }, []);
-
   useEffect(() => {
     if (prevIndexRef.current !== selectedIndex) {
       if (!isLoading) playBeep();
       prevIndexRef.current = selectedIndex;
     }
-  }, [selectedIndex, isLoading, playBeep]);
+  }, [selectedIndex, isLoading]);
 
   const dispatch = useAppDispatch();
   const { closeFolderTrigger } = useAppSelector((state) => state.window);
@@ -131,33 +102,36 @@ export default function Home() {
     [CatalogueCategory.Achievements]: [],
   });
 
-  const getCatalogue = useCallback(async (category: CatalogueCategory) => {
-    try {
-      setCurrentCatalogueCategory(category);
-      setIsLoading(true);
+  const getCatalogue = useCallback(
+    async (category: CatalogueCategory, forceLoadingState = true) => {
+      try {
+        setCurrentCatalogueCategory(category);
+        if (forceLoadingState) setIsLoading(true);
 
-      const sources = (await levelDBService.values(
-        "downloadSources"
-      )) as DownloadSource[];
-      const downloadSources = orderBy(sources, "createdAt", "desc");
+        const sources = (await levelDBService.values(
+          "downloadSources"
+        )) as DownloadSource[];
+        const downloadSources = orderBy(sources, "createdAt", "desc");
 
-      const params = {
-        take: 20,
-        skip: 0,
-        downloadSourceIds: downloadSources.map((source) => source.id),
-      };
+        const params = {
+          take: 20,
+          skip: 0,
+          downloadSourceIds: downloadSources.map((source) => source.id),
+        };
 
-      const result = await window.electron.hydraApi.get<ShopAssets[]>(
-        `/catalogue/${category}`,
-        { params, needsAuth: false }
-      );
+        const result = await window.electron.hydraApi.get<ShopAssets[]>(
+          `/catalogue/${category}`,
+          { params, needsAuth: false }
+        );
 
-      setCatalogue((prev) => ({ ...prev, [category]: result }));
-      setSelectedIndex(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        setCatalogue((prev) => ({ ...prev, [category]: result }));
+        setSelectedIndex(0);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const handleCategoryClick = (category: CatalogueCategory) => {
     if (category !== currentCatalogueCategory) {
@@ -191,9 +165,15 @@ export default function Home() {
   }, [closeFolderTrigger]);
 
   useEffect(() => {
-    setIsLoading(true);
-    getCatalogue(CatalogueCategory.Hot);
-  }, [getCatalogue]);
+    // Only fetch catalogue on mount if we are NOT in My Games (which is rare on mount, but just in case)
+    if (
+      !isMyGames &&
+      (!catalogue[CatalogueCategory.Hot] ||
+        catalogue[CatalogueCategory.Hot].length === 0)
+    ) {
+      getCatalogue(CatalogueCategory.Hot);
+    }
+  }, [getCatalogue, isMyGames]);
 
   const categories = Object.values(CatalogueCategory);
 
@@ -563,12 +543,10 @@ export default function Home() {
 
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
           <div
-            className={openedGroup ? "home__folder-games-grid" : "home__slider"}
+            className="home__slider"
             ref={sliderRef}
-            data-gamepad-ignore="true"
             onContextMenu={(e) => handleContextMenu(e)}
             onMouseDown={(e) => {
-              if (openedGroup) return;
               setIsDraggingScroll(true);
               setStartX(e.pageX - e.currentTarget.offsetLeft);
               setScrollLeft(e.currentTarget.scrollLeft);
@@ -577,7 +555,7 @@ export default function Home() {
             onMouseLeave={() => setIsDraggingScroll(false)}
             onMouseUp={() => setIsDraggingScroll(false)}
             onMouseMove={(e) => {
-              if (!isDraggingScroll || openedGroup) return;
+              if (!isDraggingScroll) return;
               e.preventDefault();
               const x = e.pageX - e.currentTarget.offsetLeft;
               const walk = (x - startX) * 2;
@@ -600,6 +578,10 @@ export default function Home() {
                         className={cn("home__card home__action-btn", {
                           "home__card--selected": index === selectedIndex,
                         })}
+                        onFocus={() => {
+                          setSelectedIndex(index);
+                          scrollToCard(index);
+                        }}
                         onClick={() => {
                           if (hasDragged) return;
                           setSelectedIndex(index);
@@ -623,6 +605,10 @@ export default function Home() {
                         className={cn("home__card home__action-btn", {
                           "home__card--selected": index === selectedIndex,
                         })}
+                        onFocus={() => {
+                          setSelectedIndex(index);
+                          scrollToCard(index);
+                        }}
                         onClick={() => {
                           if (hasDragged) return;
                           setSelectedIndex(index);
@@ -680,6 +666,10 @@ export default function Home() {
                         "home__card--selected": index === selectedIndex,
                         "home__folder-card": isFolder,
                       })}
+                      onFocus={() => {
+                        setSelectedIndex(index);
+                        scrollToCard(index);
+                      }}
                       onClick={() => {
                         if (hasDragged) return;
                         setSelectedIndex(index);
@@ -742,7 +732,11 @@ export default function Home() {
 
           <div className="home__bottom-segment" ref={actionsRef}>
             {selectedGame && (
-              <GameInfo game={selectedGame} isBgLight={isBgLight} />
+              <GameInfo
+                game={selectedGame}
+                isBgLight={isBgLight}
+                onInstallClick={(g) => setDownloadGame(g)}
+              />
             )}
             {selectedFolder && (
               <FolderInfo
@@ -816,6 +810,14 @@ export default function Home() {
             setFolderToDelete(null);
           }}
           onClose={() => setFolderToDelete(null)}
+        />
+      )}
+
+      {downloadGame && (
+        <DownloadGameModal
+          visible={!!downloadGame}
+          game={downloadGame as any}
+          onClose={() => setDownloadGame(null)}
         />
       )}
     </SkeletonTheme>

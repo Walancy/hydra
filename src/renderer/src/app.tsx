@@ -5,6 +5,8 @@ import {
   Header,
   Toast,
   Modal,
+  GamepadGuide,
+  SplashScreen,
 } from "@renderer/components";
 import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
 import { WorkWonders } from "workwonders-sdk";
@@ -19,6 +21,7 @@ import {
 } from "@renderer/hooks";
 import { useDownloadOptionsListener } from "@renderer/hooks/use-download-options-listener";
 import { useGlobalGamepadNavigation } from "@renderer/hooks/use-global-gamepad-navigation";
+import { useGamepad, useGamepadConnected } from "@renderer/hooks/use-gamepad";
 
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -35,7 +38,7 @@ import { useTranslation } from "react-i18next";
 import { useSubscription } from "./hooks/use-subscription";
 import { HydraCloudModal } from "./pages/shared-modals/hydra-cloud/hydra-cloud-modal";
 import { ArchiveDeletionModal } from "./pages/downloads/archive-deletion-error-modal";
-import { SettingsAppearance } from "@renderer/pages/settings/appearance/settings-appearance";
+import { SettingsAppearance } from "./pages/settings/appearance/settings-appearance";
 
 import {
   injectCustomCss,
@@ -64,6 +67,7 @@ type WorkWondersWithKnowledge = WorkWonders & {
 export function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const { updateLibrary, library } = useLibrary();
+  const isGamepadConnected = useGamepadConnected();
 
   useGlobalGamepadNavigation();
 
@@ -84,12 +88,66 @@ export function App() {
   const [isSidebarForceOpen, setIsSidebarForceOpen] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleSidebarEnter = useCallback(() => setIsSidebarHovered(true), []);
   const handleSidebarLeave = useCallback(() => {
     setIsSidebarHovered(false);
     setIsSidebarForceOpen(false);
   }, []);
+
+  useGamepad({
+    priority: 3,
+    onButton: {
+      B: () => {
+        if (location.pathname !== "/") {
+          navigate(-1);
+          return true; // Consume
+        }
+        return false;
+      },
+      BACK: () => {
+        window.dispatchEvent(new CustomEvent("hydra:close-notifications"));
+        setIsSidebarForceOpen((prev) => !prev);
+        return true;
+      },
+      START: () => {
+        setIsSidebarForceOpen(false);
+        window.dispatchEvent(new CustomEvent("hydra:open-notifications"));
+        return true;
+      },
+    },
+  });
+
+  useEffect(() => {
+    const handleTestSplash = () => setShowSplash(true);
+    const handleCloseSidebar = () => setIsSidebarForceOpen(false);
+
+    window.addEventListener("hydra:test-splash", handleTestSplash);
+    window.addEventListener(
+      "hydra:close-sidebar",
+      handleCloseSidebar as EventListener
+    );
+
+    return () => {
+      window.removeEventListener("hydra:test-splash", handleTestSplash);
+      window.removeEventListener(
+        "hydra:close-sidebar",
+        handleCloseSidebar as EventListener
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isSidebarForceOpen && isGamepadConnected) {
+      setTimeout(() => {
+        const firstSidebarLink = document.querySelector(".sidebar__nav-link");
+        if (firstSidebarLink) {
+          (firstSidebarLink as HTMLElement).focus({ preventScroll: false });
+        }
+      }, 50);
+    }
+  }, [isSidebarForceOpen, isGamepadConnected]);
 
   // Listen for new download options updates
   useDownloadOptionsListener();
@@ -244,10 +302,12 @@ export function App() {
 
   const setupExternalResources = useCallback(async () => {
     const cachedUserDetails = window.localStorage.getItem("userDetails");
+    let initialUserId = "";
 
     if (cachedUserDetails) {
       const { profileBackground, ...userDetails } =
         JSON.parse(cachedUserDetails);
+      initialUserId = userDetails.id;
 
       dispatch(setUserDetails(userDetails));
       dispatch(setProfileBackground(profileBackground));
@@ -258,6 +318,7 @@ export function App() {
 
     if (userDetails) {
       updateUserDetails(userDetails);
+      initialUserId = userDetails.id;
     }
 
     setupWorkWonders(userDetails?.workwondersJwt, userPreferences?.language);
@@ -268,6 +329,88 @@ export function App() {
       $script.src = `${import.meta.env.RENDERER_VITE_EXTERNAL_RESOURCES_URL}/bundle.js?t=${Date.now()}`;
       document.head.appendChild($script);
     }
+
+    setTimeout(async () => {
+      try {
+        if ((window as any).__HYDRA_CATALOGUE_CACHE__) return;
+        const sources = (await window.electron.leveldb.values(
+          "downloadSources"
+        )) as any[];
+        const validSources = sources.filter((source) => !!source.fingerprint);
+
+        const response = await window.electron.hydraApi.post(
+          "/catalogue/search",
+          {
+            data: {
+              genres: [],
+              tags: [],
+              downloadSourceFingerprints: [],
+              developers: [],
+              publishers: [],
+              protondbSupportBadges: [],
+              deckCompatibility: [],
+              take: 60,
+              skip: 0,
+              downloadSourceIds: validSources.map((s) => s.id),
+            },
+            needsAuth: false,
+          }
+        );
+
+        (window as any).__HYDRA_CATALOGUE_CACHE__ = {
+          results: (response as any).edges,
+          count: (response as any).count,
+          page: 1,
+          key: JSON.stringify({
+            filtersArg: {
+              genres: [],
+              tags: [],
+              downloadSourceFingerprints: [],
+              developers: [],
+              publishers: [],
+              protondbSupportBadges: [],
+              deckCompatibility: [],
+            },
+            sources: validSources,
+            take: 60,
+            offset: 0,
+          }),
+        };
+      } catch (err) {}
+
+      try {
+        if (!initialUserId || (window as any).__HYDRA_PROFILE_CACHE__) return;
+        const [stats, profile, libraryRes] = await Promise.all([
+          window.electron.hydraApi
+            .get(`/users/${initialUserId}/stats`)
+            .catch(() => null),
+          window.electron.hydraApi
+            .get(`/users/${initialUserId}`)
+            .catch(() => null),
+          window.electron.hydraApi
+            .get(`/users/${initialUserId}/library?take=100&skip=0`)
+            .catch(() => null),
+        ]);
+
+        let bgColor: string | undefined;
+        if ((profile as any)?.profileImageUrl) {
+          const { average } = await import("color.js");
+          const bg = await average((profile as any).profileImageUrl, {
+            amount: 1,
+            format: "hex",
+          });
+          bgColor = `linear-gradient(135deg, ${bg}, ${(profile as any).profileImageUrl})`; // Simple fallback coloring to not depend on darkenColor
+        }
+
+        (window as any).__HYDRA_PROFILE_CACHE__ = {
+          stats: stats || null,
+          profile: profile || null,
+          library: (libraryRes as any)?.library || [],
+          pinned: (libraryRes as any)?.pinnedGames || [],
+          bg: bgColor,
+        };
+      } catch (err) {}
+    }, 500);
   }, [fetchUserDetails, updateUserDetails, dispatch, setupWorkWonders]);
 
   useEffect(() => {
@@ -413,12 +556,17 @@ export function App() {
       {window.electron.platform === "win32" && (
         <div className="title-bar" data-gamepad-ignore="true">
           <HydraIcon className="title-bar__logo" aria-hidden="true" />
-          {!isSidebarHovered && !isSidebarForceOpen && (
+          {!isSidebarHovered && !isSidebarForceOpen && !isGamepadConnected && (
             <div className="title-bar__options">
               <button
                 type="button"
                 className="title-bar__option"
-                onClick={() => setIsSidebarForceOpen(true)}
+                onClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent("hydra:close-notifications")
+                  );
+                  setIsSidebarForceOpen(true);
+                }}
               >
                 Menu
               </button>
@@ -435,6 +583,55 @@ export function App() {
                 onClick={() => setShowThemeModal(true)}
               >
                 Tema
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("hydra:test-splash"))
+                }
+              >
+                Test Intro
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() =>
+                  window.electron.showAchievementTestNotification?.()
+                }
+              >
+                Test Notif
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() => {
+                  setLastPacket({
+                    gameId: library[0]?.id || "test-game-id",
+                    progress: Math.random() * 0.9 + 0.1,
+                    downloadSpeed: 5 * 1024 * 1024,
+                    timeRemaining: 120000,
+                    numPeers: 12,
+                    numSeeds: 30,
+                    isDownloadingMetadata: false,
+                    isCheckingFiles: false,
+                    folderName: "Cyberpunk 2077 Simulator",
+                    status: "downloading",
+                    fileSize: 1000000000,
+                    bytesDownloaded: 150000000,
+                  } as any);
+                }}
+              >
+                Test DL
+              </button>
+              <button
+                type="button"
+                className="title-bar__option"
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("hydra:test-friend"))
+                }
+              >
+                Test Amigo
               </button>
               <button
                 type="button"
@@ -482,14 +679,18 @@ export function App() {
         onClose={() => setShowArchiveDeletionModal(false)}
       />
 
-      <main>
-        <BackgroundEffectRenderer />
+      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+
+      <BackgroundEffectRenderer />
+
+      <main className={cn({ "app-is-loading": showSplash })}>
         <div
           className={cn("sidebar-wrapper", {
             "sidebar-wrapper--force-open": isSidebarForceOpen,
           })}
           onMouseEnter={handleSidebarEnter}
           onMouseLeave={handleSidebarLeave}
+          data-gamepad-ignore={!isSidebarForceOpen ? "true" : undefined}
         >
           <Sidebar />
         </div>
@@ -508,6 +709,7 @@ export function App() {
       </main>
 
       <BottomPanel />
+      <GamepadGuide />
     </>
   );
 }

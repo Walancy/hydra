@@ -12,12 +12,19 @@
   display: flex;
   flex-direction: column;
 
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 1;
+
   &:hover .game-item__content-link {
     background-color: rgba(255, 255, 255, 0.05);
   }
 
   &:hover,
   &:focus-within {
+    transform: scale(1.08) !important;
+    z-index: 10;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0px 4px 25px 0px rgba(0, 0, 0, 0.8) !important;
+
     .game-item__plus-wrapper {
       opacity: 1;
     }
@@ -40,8 +47,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
-      outline-offset: -2px;
+      outline: none;
     }
   }
 
