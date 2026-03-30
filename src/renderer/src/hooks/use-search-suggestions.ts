@@ -112,8 +112,10 @@ export function useSearchSuggestions(
 
         const sortedEdges = [...response.edges].sort(
           (a, b) =>
-            (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0) + 
-            ((b as any).reviewCount || 0) - ((a as any).reviewCount || 0)
+            (b.downloadSources?.length ?? 0) -
+            (a.downloadSources?.length ?? 0) +
+            ((b as any).reviewCount || 0) -
+            ((a as any).reviewCount || 0)
         );
 
         const catalogueSuggestions: SearchSuggestion[] = sortedEdges.map(

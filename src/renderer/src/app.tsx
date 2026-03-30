@@ -100,7 +100,8 @@ export function App() {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   const handleSidebarEnter = useCallback(() => setIsSidebarHovered(true), []);
@@ -595,7 +596,6 @@ export function App() {
               >
                 Tema
               </button>
-
             </div>
           )}
         </div>

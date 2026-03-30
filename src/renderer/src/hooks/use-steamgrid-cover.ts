@@ -20,9 +20,10 @@ async function fetchGridByObjectId(objectId: string): Promise<string | null> {
   );
   const data = await resp.json();
   if (data.success && data.data?.length > 0) {
-    const vertical = (data.data as GridItem[]).find(
-      (g) => g.width === 600 && g.height === 900
-    ) ?? (data.data[0] as GridItem);
+    const vertical =
+      (data.data as GridItem[]).find(
+        (g) => g.width === 600 && g.height === 900
+      ) ?? (data.data[0] as GridItem);
     return vertical.url;
   }
   return null;

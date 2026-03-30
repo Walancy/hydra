@@ -153,108 +153,138 @@ export function SearchDropdown({
             exit={{ opacity: 0, filter: "blur(10px)", pointerEvents: "none" }}
             transition={{ duration: 0.15, ease: "easeOut" }}
           >
-          <div className="search-dropdown__content" ref={containerRef}>
-            <div className="search-dropdown__input-container">
-              <SearchIcon size={16} className="search-dropdown__search-icon" />
-              <input
-                ref={inputRef}
-                type="text"
-                className="search-dropdown__input"
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={placeholder}
-              />
-              {searchValue && (
-                <button
-                  className="search-dropdown__clear-button"
-                  onClick={() => {
-                    onSearchChange("");
-                    inputRef.current?.focus();
-                  }}
-                >
-                  <XIcon size={14} />
-                </button>
-              )}
-            </div>
-
-            {hasSuggestions && (
-              <div style={{ width: "100%" }}>
-                <span
-                  className="search-dropdown__section-title"
-                  style={{ padding: "0 32px" }}
-                >
-                  {t("suggestions")}
-                </span>
-                <div className="search-dropdown__cards-scroll">
-                  {suggestions.map((item) => (
-                    <SearchCard
-                      key={`${item.objectId}-${item.shop}`}
-                      item={item}
-                      isActive={false}
-                      onClick={() => onSelectSuggestion(item)}
-                    />
-                  ))}
-                </div>
+            <div className="search-dropdown__content" ref={containerRef}>
+              <div className="search-dropdown__input-container">
+                <SearchIcon
+                  size={16}
+                  className="search-dropdown__search-icon"
+                />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="search-dropdown__input"
+                  value={searchValue}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={placeholder}
+                />
+                {searchValue && (
+                  <button
+                    className="search-dropdown__clear-button"
+                    onClick={() => {
+                      onSearchChange("");
+                      inputRef.current?.focus();
+                    }}
+                  >
+                    <XIcon size={14} />
+                  </button>
+                )}
               </div>
-            )}
 
-            {!hasSuggestions && hasHistory && (
-              <div style={{ width: "440px", alignSelf: "center", display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              {hasSuggestions && (
+                <div style={{ width: "100%" }}>
                   <span
                     className="search-dropdown__section-title"
-                    style={{ margin: 0, fontSize: 12, fontWeight: 400, textTransform: "none", letterSpacing: "normal" }}
+                    style={{ padding: "0 32px" }}
                   >
-                    {t("recent_searches")}
+                    {t("suggestions")}
                   </span>
-                  <button
-                    type="button"
-                    className="search-dropdown__clear-text-button"
-                    onClick={onClearHistory}
-                  >
-                    {t("clear_history")}
-                  </button>
+                  <div className="search-dropdown__cards-scroll">
+                    {suggestions.map((item) => (
+                      <SearchCard
+                        key={`${item.objectId}-${item.shop}`}
+                        item={item}
+                        isActive={false}
+                        onClick={() => onSelectSuggestion(item)}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-start" }}>
-                  {historyItems.map((item) => (
-                    <button
-                      key={`history-${item.query}-${item.timestamp}`}
-                      type="button"
-                      className="search-dropdown__tag"
-                      onClick={() => onSelectHistory(item.query)}
-                    >
-                      <ClockIcon size={14} fill="rgba(255,255,255,0.4)" />
-                      <span
-                        style={{
-                          maxWidth: 200,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {item.query}
-                      </span>
-                      <div
-                        role="button"
-                        className="search-dropdown__tag-close"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveHistoryItem(item.query);
-                        }}
-                      >
-                        <XIcon size={12} />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
 
-            {isLoadingSuggestions && !hasSuggestions && !hasHistory && (
-              <div className="search-dropdown__loading">{t("loading")}</div>
-            )}
-          </div>
+              {!hasSuggestions && hasHistory && (
+                <div
+                  style={{
+                    width: "440px",
+                    alignSelf: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      className="search-dropdown__section-title"
+                      style={{
+                        margin: 0,
+                        fontSize: 12,
+                        fontWeight: 400,
+                        textTransform: "none",
+                        letterSpacing: "normal",
+                      }}
+                    >
+                      {t("recent_searches")}
+                    </span>
+                    <button
+                      type="button"
+                      className="search-dropdown__clear-text-button"
+                      onClick={onClearHistory}
+                    >
+                      {t("clear_history")}
+                    </button>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                      justifyContent: "flex-start",
+                    }}
+                  >
+                    {historyItems.map((item) => (
+                      <button
+                        key={`history-${item.query}-${item.timestamp}`}
+                        type="button"
+                        className="search-dropdown__tag"
+                        onClick={() => onSelectHistory(item.query)}
+                      >
+                        <ClockIcon size={14} fill="rgba(255,255,255,0.4)" />
+                        <span
+                          style={{
+                            maxWidth: 200,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.query}
+                        </span>
+                        <div
+                          role="button"
+                          className="search-dropdown__tag-close"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveHistoryItem(item.query);
+                          }}
+                        >
+                          <XIcon size={12} />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {isLoadingSuggestions && !hasSuggestions && !hasHistory && (
+                <div className="search-dropdown__loading">{t("loading")}</div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

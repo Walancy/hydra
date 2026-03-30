@@ -17,14 +17,20 @@ export function SearchCard({ item, isActive, onClick }: SearchCardProps) {
   const [primaryFailed, setPrimaryFailed] = useState(false);
   const [finalFailed, setFinalFailed] = useState(false);
 
-  const steamGridUrl = useSteamGridCover(item.objectId, item.title, primaryFailed);
+  const steamGridUrl = useSteamGridCover(
+    item.objectId,
+    item.title,
+    primaryFailed
+  );
 
   const primarySrc =
     item.shop === "steam"
       ? getSteamPrimaryUrl(item.objectId)
-      : item.libraryImageUrl ?? item.iconUrl ?? null;
+      : (item.libraryImageUrl ?? item.iconUrl ?? null);
 
-  const activeSrc = primaryFailed ? (steamGridUrl ?? item.libraryImageUrl ?? item.iconUrl ?? null) : primarySrc;
+  const activeSrc = primaryFailed
+    ? (steamGridUrl ?? item.libraryImageUrl ?? item.iconUrl ?? null)
+    : primarySrc;
 
   const cardClass = `search-dropdown__card${isActive ? " search-dropdown__card--active" : ""}`;
 
