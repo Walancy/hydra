@@ -21,7 +21,6 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   useAppSelector,
-  useDate,
   useToast,
   useUserDetails,
 } from "@renderer/hooks";
