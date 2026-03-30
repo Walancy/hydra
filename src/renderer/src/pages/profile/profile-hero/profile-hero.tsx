@@ -19,11 +19,7 @@ import {
   Link,
 } from "@renderer/components";
 import { useTranslation } from "react-i18next";
-import {
-  useAppSelector,
-  useToast,
-  useUserDetails,
-} from "@renderer/hooks";
+import { useAppSelector, useToast, useUserDetails } from "@renderer/hooks";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
