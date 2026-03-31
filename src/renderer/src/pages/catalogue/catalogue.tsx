@@ -495,73 +495,89 @@ export default function Catalogue() {
     <div className="catalogue" ref={cataloguePageRef}>
       {/* Sticky filter bar centered */}
       <div className="catalogue__filter-bar">
-        <div className={`catalogue__filter-bar-inner ${!showFilters ? 'catalogue__filter-bar-inner--closed' : ''}`}>
+        <div
+          className={`catalogue__filter-bar-inner ${!showFilters ? "catalogue__filter-bar-inner--closed" : ""}`}
+        >
           <div className="catalogue__filter-bar-search">
-            <div className="header__search-bar header__search-bar--inline" style={{ width: '100%', padding: '8px 16px', minWidth: 'unset' }}>
+            <div
+              className="header__search-bar header__search-bar--inline"
+              style={{ width: "100%", padding: "8px 16px", minWidth: "unset" }}
+            >
               <SearchIcon size={16} className="header__search-bar-icon" />
               <input
                 type="text"
                 className="header__search-input"
-                placeholder={t("search", { ns: "header", defaultValue: "Buscar..." })}
+                placeholder={t("search", {
+                  ns: "header",
+                  defaultValue: "Buscar...",
+                })}
                 value={filters.title || ""}
-                onChange={(e) => dispatch(setFilters({ title: e.target.value }))}
+                onChange={(e) =>
+                  dispatch(setFilters({ title: e.target.value }))
+                }
               />
             </div>
           </div>
-          <div className={`catalogue__filter-bar-options ${showFilters ? 'catalogue__filter-bar-options--open' : ''}`}>
-          {shouldShowProtonFeatures && (
-            <Suspense fallback={null}>
-              <ProtonCompatibilitySection
-                title={t("protondb")}
-                protonSliderLabel={t("protondb_minimum")}
-                deckSliderLabel={t("steam_deck_minimum")}
-                protonOptions={protonCompatibilityThresholds.map((th) => ({
-                  value: th.value,
-                  label: t(th.labelKey),
-                  color: th.color,
-                }))}
-                protonValue={protonThresholdValue}
-                deckChecked={isDeckCompatible}
-                deckLabel={t("steam_deck_compatible")}
-                icon={<DeviceDesktopIcon size={16} />}
-                onProtonChange={(value) => {
-                  const nextTh = protonCompatibilityThresholds.find(
-                    (th) => th.value === value
-                  );
-                  dispatch(
-                    setFilters({
-                      protondbSupportBadges: nextTh ? [...nextTh.values] : [],
-                    })
-                  );
-                }}
-                onDeckChange={(checked) =>
-                  dispatch(
-                    setFilters({
-                      deckCompatibility: checked
-                        ? ["playable", "verified"]
-                        : [],
-                    })
-                  )
+          <div
+            className={`catalogue__filter-bar-options ${showFilters ? "catalogue__filter-bar-options--open" : ""}`}
+          >
+            {shouldShowProtonFeatures && (
+              <Suspense fallback={null}>
+                <ProtonCompatibilitySection
+                  title={t("protondb")}
+                  protonSliderLabel={t("protondb_minimum")}
+                  deckSliderLabel={t("steam_deck_minimum")}
+                  protonOptions={protonCompatibilityThresholds.map((th) => ({
+                    value: th.value,
+                    label: t(th.labelKey),
+                    color: th.color,
+                  }))}
+                  protonValue={protonThresholdValue}
+                  deckChecked={isDeckCompatible}
+                  deckLabel={t("steam_deck_compatible")}
+                  icon={<DeviceDesktopIcon size={16} />}
+                  onProtonChange={(value) => {
+                    const nextTh = protonCompatibilityThresholds.find(
+                      (th) => th.value === value
+                    );
+                    dispatch(
+                      setFilters({
+                        protondbSupportBadges: nextTh ? [...nextTh.values] : [],
+                      })
+                    );
+                  }}
+                  onDeckChange={(checked) =>
+                    dispatch(
+                      setFilters({
+                        deckCompatibility: checked
+                          ? ["playable", "verified"]
+                          : [],
+                      })
+                    )
+                  }
+                />
+              </Suspense>
+            )}
+            {filterSections.map((section) => (
+              <FilterSection
+                key={section.key}
+                title={section.title}
+                onClear={() => dispatch(setFilters({ [section.key]: [] }))}
+                icon={section.icon}
+                onSelect={(value) =>
+                  handleFilterSelect(section.key, value as string)
                 }
+                items={section.items}
               />
-            </Suspense>
-          )}
-          {filterSections.map((section) => (
-            <FilterSection
-              key={section.key}
-              title={section.title}
-              onClear={() => dispatch(setFilters({ [section.key]: [] }))}
-              icon={section.icon}
-              onSelect={(value) =>
-                handleFilterSelect(section.key, value as string)
-              }
-              items={section.items}
-            />
-          ))}
+            ))}
           </div>
           <div className="catalogue__filter-bar-toggles">
-            <Button theme="outline" onClick={() => setShowFilters(!showFilters)}>
-               <ProjectIcon size={14} /> {t("filters", { defaultValue: "Filtros" })}
+            <Button
+              theme="outline"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <ProjectIcon size={14} />{" "}
+              {t("filters", { defaultValue: "Filtros" })}
             </Button>
           </div>
         </div>

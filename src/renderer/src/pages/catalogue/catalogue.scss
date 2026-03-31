@@ -30,7 +30,7 @@
   }
 
   &::before {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
@@ -45,8 +45,18 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     /* Fading mask so the blur smoothly dissipates downwards */
-    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
+    mask-image: linear-gradient(
+      to bottom,
+      black 0%,
+      black 50%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0%,
+      black 50%,
+      transparent 100%
+    );
     z-index: 5;
     pointer-events: none;
   }
@@ -129,11 +139,13 @@
     justify-content: flex-end;
     overflow-x: auto;
     overflow-y: hidden;
-    transition: max-width 0.4s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.3s ease;
+    transition:
+      max-width 0.4s cubic-bezier(0.2, 0, 0.2, 1),
+      opacity 0.3s ease;
     max-width: 0;
     min-width: 0; /* CRUCIAL for flex item to obey max-width < min-content */
     opacity: 0;
-    
+
     // Hide scrollbar but keep functionality
     &::-webkit-scrollbar {
       display: none;

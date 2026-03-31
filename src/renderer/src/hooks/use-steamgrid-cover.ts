@@ -15,7 +15,9 @@ interface SearchResult {
 
 async function safeFetchJson(url: string) {
   try {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${STEAMGRID_API_KEY}` } });
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${STEAMGRID_API_KEY}` },
+    });
     const text = await res.text();
     if (!text) return null;
     try {
@@ -33,8 +35,10 @@ async function fetchGridByObjectId(
   orientation: "vertical" | "horizontal" = "vertical"
 ): Promise<string | null> {
   const typeEndpoint = orientation === "horizontal" ? "heroes" : "grids";
-  const data = await safeFetchJson(`https://www.steamgriddb.com/api/v2/${typeEndpoint}/steam/${objectId}`);
-  
+  const data = await safeFetchJson(
+    `https://www.steamgriddb.com/api/v2/${typeEndpoint}/steam/${objectId}`
+  );
+
   if (data?.success && data.data?.length > 0) {
     if (orientation === "horizontal") {
       return (data.data[0] as GridItem).url;
@@ -54,30 +58,37 @@ async function fetchGridByTitle(
   orientation: "vertical" | "horizontal" = "vertical"
 ): Promise<string | null> {
   // Try to clean up the title for better search results (e.g. remove TM, edition strings)
-  const cleanTitle = title.replace(/™|®|©/g, '').split(' - ')[0].trim();
-  
+  const cleanTitle = title
+    .replace(/™|®|©/g, "")
+    .split(" - ")[0]
+    .trim();
+
   const searchData = await safeFetchJson(
     `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(cleanTitle)}`
   );
-  
+
   if (!searchData?.success || !searchData.data?.length) {
-      if (cleanTitle !== title) {
-          // fallback to original title if cleaned title failed
-          const searchDataFallback = await safeFetchJson(
-            `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(title)}`
-          );
-          if (!searchDataFallback?.success || !searchDataFallback.data?.length) return null;
-          const gameId = (searchDataFallback.data[0] as SearchResult).id;
-          return fetchGridByGameId(gameId, orientation);
-      }
-      return null;
+    if (cleanTitle !== title) {
+      // fallback to original title if cleaned title failed
+      const searchDataFallback = await safeFetchJson(
+        `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(title)}`
+      );
+      if (!searchDataFallback?.success || !searchDataFallback.data?.length)
+        return null;
+      const gameId = (searchDataFallback.data[0] as SearchResult).id;
+      return fetchGridByGameId(gameId, orientation);
+    }
+    return null;
   }
 
   const gameId = (searchData.data[0] as SearchResult).id;
   return fetchGridByGameId(gameId, orientation);
 }
 
-async function fetchGridByGameId(gameId: number, orientation: "vertical" | "horizontal"): Promise<string | null> {
+async function fetchGridByGameId(
+  gameId: number,
+  orientation: "vertical" | "horizontal"
+): Promise<string | null> {
   const endpointUrl =
     orientation === "horizontal"
       ? `https://www.steamgriddb.com/api/v2/heroes/game/${gameId}`
@@ -90,7 +101,9 @@ async function fetchGridByGameId(gameId: number, orientation: "vertical" | "hori
 
   // fallback if specific dimensions not found (mainly for vertical grids fallback)
   if (orientation === "vertical") {
-    const fallbackData = await safeFetchJson(`https://www.steamgriddb.com/api/v2/grids/game/${gameId}`);
+    const fallbackData = await safeFetchJson(
+      `https://www.steamgriddb.com/api/v2/grids/game/${gameId}`
+    );
     if (fallbackData?.success && fallbackData.data?.length > 0) {
       return (fallbackData.data[0] as GridItem).url;
     }
@@ -163,25 +176,36 @@ export function useSteamGridHeroAndLogo(
     const run = async () => {
       let hero = await fetchGridByObjectId(objectId, "horizontal");
       if (!hero && title) hero = await fetchGridByTitle(title, "horizontal");
-      
+
       let logo: string | null = null;
-      let logoData = await safeFetchJson(`https://www.steamgriddb.com/api/v2/logos/steam/${objectId}`);
-      
+      let logoData = await safeFetchJson(
+        `https://www.steamgriddb.com/api/v2/logos/steam/${objectId}`
+      );
+
       if (logoData?.success && logoData.data?.length > 0) {
         logo = logoData.data[0].url;
       } else if (title) {
         // fallback by title for logo
-        const cleanTitle = title.replace(/™|®|©/g, '').split(' - ')[0].trim();
-        let searchData = await safeFetchJson(`https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(cleanTitle)}`);
-        
+        const cleanTitle = title
+          .replace(/™|®|©/g, "")
+          .split(" - ")[0]
+          .trim();
+        let searchData = await safeFetchJson(
+          `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(cleanTitle)}`
+        );
+
         if (!searchData?.success || !searchData.data?.length) {
-            searchData = await safeFetchJson(`https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(title)}`);
+          searchData = await safeFetchJson(
+            `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(title)}`
+          );
         }
 
         if (searchData?.success && searchData.data?.length) {
           const gameId = searchData.data[0].id;
-          const fallbackLogoData = await safeFetchJson(`https://www.steamgriddb.com/api/v2/logos/game/${gameId}`);
-          
+          const fallbackLogoData = await safeFetchJson(
+            `https://www.steamgriddb.com/api/v2/logos/game/${gameId}`
+          );
+
           if (fallbackLogoData?.success && fallbackLogoData.data?.length > 0) {
             logo = fallbackLogoData.data[0].url;
           }

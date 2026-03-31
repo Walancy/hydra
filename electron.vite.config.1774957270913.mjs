@@ -4,7 +4,7 @@ import {
   defineConfig,
   loadEnv,
   swcPlugin,
-  externalizeDepsPlugin
+  externalizeDepsPlugin,
 } from "electron-vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
@@ -13,43 +13,41 @@ var electron_vite_config_default = defineConfig(({ mode }) => {
   return {
     main: {
       build: {
-        sourcemap: true
+        sourcemap: true,
       },
       resolve: {
         alias: {
           "@main": resolve("src/main"),
           "@locales": resolve("src/locales"),
           "@resources": resolve("resources"),
-          "@shared": resolve("src/shared")
-        }
+          "@shared": resolve("src/shared"),
+        },
       },
-      plugins: [externalizeDepsPlugin(), swcPlugin()]
+      plugins: [externalizeDepsPlugin(), swcPlugin()],
     },
     preload: {
-      plugins: [externalizeDepsPlugin()]
+      plugins: [externalizeDepsPlugin()],
     },
     renderer: {
       build: {
-        sourcemap: true
+        sourcemap: true,
       },
       css: {
         preprocessorOptions: {
           scss: {
-            api: "modern"
-          }
-        }
+            api: "modern",
+          },
+        },
       },
       resolve: {
         alias: {
           "@renderer": resolve("src/renderer/src"),
           "@locales": resolve("src/locales"),
-          "@shared": resolve("src/shared")
-        }
+          "@shared": resolve("src/shared"),
+        },
       },
-      plugins: [svgr(), react()]
-    }
+      plugins: [svgr(), react()],
+    },
   };
 });
-export {
-  electron_vite_config_default as default
-};
+export { electron_vite_config_default as default };

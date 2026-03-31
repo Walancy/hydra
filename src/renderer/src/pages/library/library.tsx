@@ -494,15 +494,30 @@ export default function Library() {
       {hasGames && (
         <div className="library__filter-bar">
           <div className="library__controls-row">
-            <div className="library__controls-left" style={{ flex: 1, minWidth: 200, maxWidth: "100%" }}>
-              <div className="header__search-bar header__search-bar--inline" style={{ width: '100%', padding: '8px 16px', minWidth: 'unset' }}>
+            <div
+              className="library__controls-left"
+              style={{ flex: 1, minWidth: 200, maxWidth: "100%" }}
+            >
+              <div
+                className="header__search-bar header__search-bar--inline"
+                style={{
+                  width: "100%",
+                  padding: "8px 16px",
+                  minWidth: "unset",
+                }}
+              >
                 <SearchIcon size={16} className="header__search-bar-icon" />
                 <input
                   type="text"
                   className="header__search-input"
-                  placeholder={t("search_library", { ns: "header", defaultValue: "Buscar na biblioteca..." })}
+                  placeholder={t("search_library", {
+                    ns: "header",
+                    defaultValue: "Buscar na biblioteca...",
+                  })}
                   value={searchQuery}
-                  onChange={(e) => dispatch(setLibrarySearchQuery(e.target.value))}
+                  onChange={(e) =>
+                    dispatch(setLibrarySearchQuery(e.target.value))
+                  }
                 />
               </div>
             </div>

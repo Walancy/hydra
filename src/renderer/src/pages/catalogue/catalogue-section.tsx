@@ -29,7 +29,7 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
     game.title,
     primaryFailed
   );
-  
+
   const [isDarkBg, setIsDarkBg] = useState(true);
 
   useEffect(() => {
@@ -52,9 +52,7 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
     }
   }, [heroUrl]);
 
-  const activeSrc = primaryFailed
-    ? (heroUrl ?? null)
-    : game.libraryImageUrl;
+  const activeSrc = primaryFailed ? (heroUrl ?? null) : game.libraryImageUrl;
 
   useEffect(() => {
     setAdded(
