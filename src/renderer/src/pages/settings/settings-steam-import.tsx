@@ -13,7 +13,7 @@ export function SettingsSteamImport() {
     setIsImporting(true);
     try {
       const games = await window.electron.importSteamGames();
-      
+
       if (games.length === 0) {
         showErrorToast(t("No Steam games found to import"));
         return;
@@ -47,7 +47,9 @@ export function SettingsSteamImport() {
       <div className="settings-steam-import__info">
         <h3>{t("Import from Steam")}</h3>
         <p>
-          {t("Automatically import games installed on your PC via Steam to launch them directly from Hydra.")}
+          {t(
+            "Automatically import games installed on your PC via Steam to launch them directly from Hydra."
+          )}
         </p>
       </div>
 

@@ -7,7 +7,9 @@ import "./settings-context-integrations.scss";
 
 export function SettingsContextIntegrations() {
   const { t } = useTranslation("settings");
-  const [currentTab, setCurrentTab] = useState<"launchers" | "debrid">("launchers");
+  const [currentTab, setCurrentTab] = useState<"launchers" | "debrid">(
+    "launchers"
+  );
 
   return (
     <div className="settings-context-integrations">
@@ -34,7 +36,7 @@ export function SettingsContextIntegrations() {
         <div className="settings-context-panel">
           <span className="settings-context-panel__section-label">Steam</span>
           <SettingsSteamImport />
-          
+
           <div
             className="settings-steam-import"
             style={{
@@ -45,7 +47,11 @@ export function SettingsContextIntegrations() {
           >
             <div className="settings-steam-import__info">
               <h3>Epic Games / EA App (Em Breve)</h3>
-              <p>{t("Importação automática de outros launchers chegará em breve.")}</p>
+              <p>
+                {t(
+                  "Importação automática de outros launchers chegará em breve."
+                )}
+              </p>
             </div>
           </div>
         </div>
