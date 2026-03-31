@@ -33,6 +33,7 @@ import {
   BriefcaseIcon,
   ProjectIcon,
   DeviceDesktopIcon,
+  SearchIcon,
 } from "@primer/octicons-react";
 import { FeaturedCarousel } from "./featured-carousel";
 import { CatalogueSection } from "./catalogue-section";
@@ -487,13 +488,27 @@ export default function Catalogue() {
     ].filter((s) => s.games.length > 0);
   }, [results, hasActiveFilters, dailyShuffled, library]);
 
+  const [showFilters, setShowFilters] = useState(false);
   const featuredGames = useMemo(() => results.slice(0, 9), [results]);
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>
       {/* Sticky filter bar centered */}
       <div className="catalogue__filter-bar">
-        <div className="catalogue__filter-bar-inner">
+        <div className={`catalogue__filter-bar-inner ${!showFilters ? 'catalogue__filter-bar-inner--closed' : ''}`}>
+          <div className="catalogue__filter-bar-search">
+            <div className="header__search-bar header__search-bar--inline" style={{ width: '100%', padding: '8px 16px', minWidth: 'unset' }}>
+              <SearchIcon size={16} className="header__search-bar-icon" />
+              <input
+                type="text"
+                className="header__search-input"
+                placeholder={t("search", { ns: "header", defaultValue: "Buscar..." })}
+                value={filters.title || ""}
+                onChange={(e) => dispatch(setFilters({ title: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className={`catalogue__filter-bar-options ${showFilters ? 'catalogue__filter-bar-options--open' : ''}`}>
           {shouldShowProtonFeatures && (
             <Suspense fallback={null}>
               <ProtonCompatibilitySection
@@ -543,6 +558,12 @@ export default function Catalogue() {
               items={section.items}
             />
           ))}
+          </div>
+          <div className="catalogue__filter-bar-toggles">
+            <Button theme="outline" onClick={() => setShowFilters(!showFilters)}>
+               <ProjectIcon size={14} /> {t("filters", { defaultValue: "Filtros" })}
+            </Button>
+          </div>
         </div>
       </div>
 

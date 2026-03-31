@@ -7,13 +7,14 @@ import {
   useGameCollections,
   useToast,
 } from "@renderer/hooks";
-import { setHeaderTitle } from "@renderer/features";
+import { setHeaderTitle, setLibrarySearchQuery } from "@renderer/features";
 import {
   HeartIcon,
   TelescopeIcon,
   FileDirectoryIcon,
   PencilIcon,
   TrashIcon,
+  SearchIcon,
 } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import { GameCollection, LibraryGame } from "@types";
@@ -489,14 +490,24 @@ export default function Library() {
     hasNoFilteredGames;
 
   return (
-    <section className="library__page">
+    <section className="library library__page">
       {hasGames && (
         <div className="library__filter-bar">
           <div className="library__controls-row">
-            <div className="library__controls-left">
-              <FilterOptions sortBy={sortBy} onSortChange={handleSortChange} />
+            <div className="library__controls-left" style={{ flex: 1, minWidth: 200, maxWidth: "100%" }}>
+              <div className="header__search-bar header__search-bar--inline" style={{ width: '100%', padding: '8px 16px', minWidth: 'unset' }}>
+                <SearchIcon size={16} className="header__search-bar-icon" />
+                <input
+                  type="text"
+                  className="header__search-input"
+                  placeholder={t("search_library", { ns: "header", defaultValue: "Buscar na biblioteca..." })}
+                  value={searchQuery}
+                  onChange={(e) => dispatch(setLibrarySearchQuery(e.target.value))}
+                />
+              </div>
             </div>
             <div className="library__controls-right">
+              <FilterOptions sortBy={sortBy} onSortChange={handleSortChange} />
               <button
                 type="button"
                 className={`library__favorites-btn ${

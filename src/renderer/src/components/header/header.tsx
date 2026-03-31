@@ -170,6 +170,7 @@ export function Header() {
 
   const isHomePage = location.pathname === "/";
   const isOnLibraryPage = location.pathname.startsWith("/library");
+  const isOnCataloguePage = location.pathname.startsWith("/catalogue");
   const isGamePage = location.pathname.startsWith("/game");
 
   const searchValue = isOnLibraryPage
@@ -305,8 +306,8 @@ export function Header() {
         data-gamepad-ignore="true"
         className={cn("header", {
           "header--dragging-disabled": draggingDisabled,
-          "header--is-windows": window.electron.platform === "win32",
           "header--search-open": isSearchOpen,
+          "header--transparent": isOnCataloguePage || isOnLibraryPage,
         })}
       >
         <section className="header__section header__section--left">
@@ -358,13 +359,15 @@ export function Header() {
             </button>
           )}
 
-          <button
-            type="button"
-            className="header__action-button"
-            onClick={handleToggleSearch}
-          >
-            <SearchIcon size={16} />
-          </button>
+          {!(isOnLibraryPage || isOnCataloguePage) && (
+            <button
+              type="button"
+              className="header__action-button"
+              onClick={handleToggleSearch}
+            >
+              <SearchIcon size={16} />
+            </button>
+          )}
 
           {hasActiveDownload && (
             <button
@@ -436,7 +439,7 @@ export function Header() {
       </header>
 
       {isOnLibraryPage && window.electron.platform === "win32" && (
-        <Tooltip id={scanButtonTooltipId} style={{ zIndex: 1 }} />
+        <Tooltip id={scanButtonTooltipId} style={{ zIndex: 9999 }} />
       )}
 
       <AutoUpdateSubHeader />

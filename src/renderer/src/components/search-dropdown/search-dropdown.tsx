@@ -265,8 +265,8 @@ export function SearchDropdown({
                         >
                           {item.query}
                         </span>
-                        <div
-                          role="button"
+                        <button
+                          type="button"
                           className="search-dropdown__tag-close"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -274,7 +274,7 @@ export function SearchDropdown({
                           }}
                         >
                           <XIcon size={12} />
-                        </div>
+                        </button>
                       </button>
                     ))}
                   </div>

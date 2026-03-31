@@ -220,3 +220,7 @@ progress[value] {
   /* Garantindo que o espaçamento mínimo seja amigável em telas super pequenas */
   min-height: 300px;
 }
+
+.react-tooltip {
+  z-index: 9999 !important;
+}
