@@ -14,7 +14,12 @@ function getSteamPrimaryUrl(objectId: string): string {
 }
 
 export function SearchCard({ item, isActive, onClick }: SearchCardProps) {
-  const [primaryFailed, setPrimaryFailed] = useState(false);
+  const initialPrimarySrc =
+    item.shop === "steam"
+      ? getSteamPrimaryUrl(item.objectId)
+      : (item.libraryImageUrl ?? item.iconUrl ?? null);
+
+  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
   const [finalFailed, setFinalFailed] = useState(false);
 
   const steamGridUrl = useSteamGridCover(

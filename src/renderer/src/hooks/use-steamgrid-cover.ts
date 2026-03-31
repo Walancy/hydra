@@ -31,7 +31,7 @@ async function fetchGridByObjectId(objectId: string): Promise<string | null> {
 
 async function fetchGridByTitle(title: string): Promise<string | null> {
   const searchResp = await fetch(
-    `https://www.steamgriddb.com/api/v2/search/autocomplete?term=${encodeURIComponent(title)}`,
+    `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(title)}`,
     { headers: { Authorization: `Bearer ${STEAMGRID_API_KEY}` } }
   );
   const searchData = await searchResp.json();

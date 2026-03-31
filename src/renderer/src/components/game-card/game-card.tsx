@@ -10,6 +10,7 @@ import { Badge } from "../badge/badge";
 import { StarRating } from "../star-rating/star-rating";
 import { useCallback, useState } from "react";
 import { useFormat } from "@renderer/hooks";
+import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 
 export interface GameCardProps
   extends React.DetailedHTMLProps<
@@ -27,6 +28,30 @@ export function GameCard({ game, ...props }: GameCardProps) {
   const { t } = useTranslation("game_card");
 
   const [stats, setStats] = useState<GameStats | null>(null);
+
+  const initialPrimarySrc =
+    game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+      : (game.libraryImageUrl ?? game.iconUrl ?? null);
+
+  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
+
+  const [finalFailed, setFinalFailed] = useState(false);
+
+  const steamGridUrl = useSteamGridCover(
+    game.objectId,
+    game.title,
+    primaryFailed
+  );
+
+  const primarySrc =
+    game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+      : (game.libraryImageUrl ?? game.iconUrl ?? null);
+
+  const activeSrc = primaryFailed
+    ? (steamGridUrl ?? game.libraryImageUrl ?? game.iconUrl ?? null)
+    : primarySrc;
 
   const handleHover = useCallback(() => {
     if (!stats) {
@@ -47,12 +72,28 @@ export function GameCard({ game, ...props }: GameCardProps) {
       onFocus={handleHover}
     >
       <div className="game-card__backdrop">
-        <img
-          src={game.libraryImageUrl ?? undefined}
-          alt={game.title}
-          className="game-card__cover"
-          loading="lazy"
-        />
+        {!finalFailed && activeSrc ? (
+          <img
+            src={activeSrc}
+            alt={game.title}
+            className="game-card__cover"
+            loading="lazy"
+            onError={() => {
+              if (!primaryFailed) {
+                setPrimaryFailed(true);
+              } else {
+                setFinalFailed(true);
+              }
+            }}
+          />
+        ) : (
+          <img
+            src={game.libraryImageUrl ?? undefined}
+            alt={game.title}
+            className="game-card__cover"
+            loading="lazy"
+          />
+        )}
 
         <div className="game-card__content">
           <div className="game-card__title-container">
