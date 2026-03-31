@@ -267,10 +267,17 @@ export function SearchDropdown({
                         </span>
                         <div
                           role="button"
+                          tabIndex={0}
                           className="search-dropdown__tag-close"
                           onClick={(e) => {
                             e.stopPropagation();
                             onRemoveHistoryItem(item.query);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                              onRemoveHistoryItem(item.query);
+                            }
                           }}
                         >
                           <XIcon size={12} />
