@@ -134,6 +134,7 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("getDownloadSourcesSinceValue"),
 
   /* Library */
+  importSteamGames: () => ipcRenderer.invoke("importSteamGames"),
   toggleAutomaticCloudSync: (
     shop: GameShop,
     objectId: string,

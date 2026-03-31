@@ -299,6 +299,7 @@ export default function Home() {
   const { color: glowColor } = useDominantColor(cardImageUrl);
   const { isLight: isBgLight } = useDominantColor(backgroundSrc);
 
+
   const scrollToCard = useCallback((index: number) => {
     const slider = sliderRef.current;
     if (!slider) return;

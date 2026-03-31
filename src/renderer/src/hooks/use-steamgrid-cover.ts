@@ -178,7 +178,7 @@ export function useSteamGridHeroAndLogo(
       if (!hero && title) hero = await fetchGridByTitle(title, "horizontal");
 
       let logo: string | null = null;
-      let logoData = await safeFetchJson(
+      const logoData = await safeFetchJson(
         `https://www.steamgriddb.com/api/v2/logos/steam/${objectId}`
       );
 
