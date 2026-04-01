@@ -100,6 +100,7 @@ declare global {
     ) => () => Electron.IpcRenderer;
 
     /* Library */
+    importSteamGames: () => Promise<{ title: string; appId: string }[]>;
     toggleAutomaticCloudSync: (
       shop: GameShop,
       objectId: string,

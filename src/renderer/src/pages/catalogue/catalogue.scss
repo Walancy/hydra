@@ -7,7 +7,7 @@
 // sm  <  800px  (compact)
 
 .catalogue {
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -29,34 +29,102 @@
     opacity: 0.25;
   }
 
+
   // ----- Sticky filter bar -----
   &__filter-bar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
+    flex-shrink: 0;
     width: 100%;
-    display: flex;
-    justify-content: center;
     padding-top: calc(globals.$spacing-unit * 2);
+    padding-bottom: calc(globals.$spacing-unit * 1.5);
+    background: transparent;
+
+    @media (max-width: 1100px) {
+      padding-top: calc(globals.$spacing-unit * 2);
+      padding-bottom: calc(globals.$spacing-unit * 1.5);
+    }
+    @media (max-width: 800px) {
+      padding-top: calc(globals.$spacing-unit * 1.5);
+      padding-bottom: calc(globals.$spacing-unit * 1);
+    }
   }
 
   &__filter-bar-inner {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap;
+    justify-content: space-between;
     align-items: center;
     gap: 8px;
     width: 100%;
     max-width: 1400px;
-    padding: 0;
+    margin: 0 auto;
+    padding: 0 48px;
+    transition: padding 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+
+    &--closed {
+      padding: 0 280px;
+
+      @media (max-width: 1100px) {
+        padding: 0 120px;
+      }
+
+      @media (max-width: 800px) {
+        padding: 0 24px;
+      }
+    }
 
     @media (max-width: 1100px) {
-      padding: 0;
+      padding: 0 24px;
     }
 
     @media (max-width: 800px) {
+      padding: 0 12px;
       gap: 6px;
+    }
+  }
+
+  &__filter-bar-search {
+    flex: 1;
+    min-width: 200px;
+    max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+  }
+
+  &__filter-bar-toggles {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  &__filter-bar-options {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; /* Prevent wrapping so it slides horizontally */
+    gap: 8px;
+    justify-content: flex-end;
+    overflow-x: auto;
+    overflow-y: hidden;
+    transition:
+      max-width 0.4s cubic-bezier(0.2, 0, 0.2, 1),
+      opacity 0.3s ease;
+    max-width: 0;
+    min-width: 0; /* CRUCIAL for flex item to obey max-width < min-content */
+    opacity: 0;
+
+    // Hide scrollbar but keep functionality
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    scrollbar-width: none;
+
+    & > * {
+      flex-shrink: 0;
+    }
+
+    &--open {
+      max-width: 1000px;
+      opacity: 1;
     }
   }
 
@@ -99,21 +167,23 @@
 
   // ----- Main content -----
   &__content {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 32px;
     width: 100%;
     max-width: 1400px;
-    padding: 16px 48px 56px;
+    padding: 56px 48px 56px;
     align-self: center;
 
     @media (max-width: 1100px) {
-      padding: 16px 24px 48px;
+      padding: 40px 24px 48px;
       gap: 24px;
     }
 
     @media (max-width: 800px) {
-      padding: 12px 12px 40px;
+      padding: 32px 12px 40px;
       gap: 20px;
     }
   }

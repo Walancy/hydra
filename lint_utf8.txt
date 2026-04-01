@@ -32,26 +32,21 @@ C:\Users\Walancy\Documents\code\hydra\src\main\services\hydra-api.ts
   385:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   396:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-C:\Users\Walancy\Documents\code\hydra\src\main\services\window-manager.ts
-  27:10  error  'isStaging' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
-
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\app.tsx
   335:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   338:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   360:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   361:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   362:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  379:21  error    Empty block statement                     no-empty
-  382:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  396:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  398:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  402:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  405:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  408:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  409:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  412:21  error    Empty block statement                     no-empty
-  622:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  639:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  384:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  398:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  400:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  404:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  407:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  410:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  411:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  626:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  643:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\download-game-modal\download-game-modal.tsx
    13:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -59,8 +54,7 @@ C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\download-game-
   114:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\header\header.tsx
-  173:9   error    'isOnCataloguePage' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
-  406:55  warning  Unexpected any. Specify a different type                                                      @typescript-eslint/no-explicit-any
+  405:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\react-bits\BackgroundEffectRenderer.tsx
    16:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -109,11 +103,6 @@ C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\react-bits\Lig
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\react-bits\Particles\Particles.tsx
   102:4  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\search-dropdown\search-dropdown.tsx
-  136:64  error  `tabIndex` should only be declared on interactive elements                                                                                                                                         jsx-a11y/no-noninteractive-tabindex
-  233:25  error  Visible, non-interactive elements with click handlers must have at least one keyboard listener                                                                                                     jsx-a11y/click-events-have-key-events
-  233:25  error  Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element  jsx-a11y/no-static-element-interactions
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\components\sidebar\sidebar.tsx
   111:39  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
@@ -173,21 +162,20 @@ C:\Users\Walancy\Documents\code\hydra\src\renderer\src\pages\home\game-info.tsx
   178:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\pages\home\home.tsx
-  176:6   warning  React Hook useEffect has a missing dependency: 'catalogue'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-  250:13  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
-  254:59  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
-  257:21  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
-  819:33  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  175:6   warning  React Hook useEffect has a missing dependency: 'catalogue'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  249:13  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  253:59  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  256:21  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  816:10  error    'DownloadGameModal' is not defined                                                                            react/jsx-no-undef
+  818:33  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\pages\profile\profile-content\profile-content.tsx
   186:6  warning  React Hook useEffect has a missing dependency: 'fetchUserReviews'. Either include it or remove the dependency array                                                                                                                                    react-hooks/exhaustive-deps
   486:6  warning  React Hook useMemo has missing dependencies: 'formatPlayTime', 'handleDeleteConfirm', 'handleLoadMore', 'handleVoteReview', 'hasMoreLibraryGames', 'isLoadingLibraryGames', and 'userDetails?.id'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\pages\profile\profile-hero\profile-hero.tsx
-   28:10  error    'addSeconds' is defined but never used. Allowed unused vars must match /^_/u                                      @typescript-eslint/no-unused-vars
-   97:11  error    'formatDistance' is assigned a value but never used. Allowed unused vars must match /^_/u                         @typescript-eslint/no-unused-vars
-  184:6   warning  React Hook useCallback has a missing dependency: 'userProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-  492:46  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  177:6   warning  React Hook useCallback has a missing dependency: 'userProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  485:46  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
 
 C:\Users\Walancy\Documents\code\hydra\src\renderer\src\pages\settings\appearance\background-effect-settings.tsx
     9:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -198,6 +186,6 @@ C:\Users\Walancy\Documents\code\hydra\src\shared\index.ts
    80:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   208:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-Ô£û 127 problems (9 errors, 118 warnings)
+Ô£û 119 problems (1 error, 118 warnings)
 
 info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

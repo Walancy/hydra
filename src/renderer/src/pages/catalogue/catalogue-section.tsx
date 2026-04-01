@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { PlusIcon, DashIcon, QuestionIcon } from "@primer/octicons-react";
 import type { CatalogueSearchResult } from "@types";
 import { buildGameDetailsPath } from "@renderer/helpers";
+import { useSteamGridHeroAndLogo } from "@renderer/hooks/use-steamgrid-cover";
 import "./catalogue-section.scss";
 import cn from "classnames";
 
@@ -20,6 +21,38 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
   const [added, setAdded] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
+
+  const [primaryFailed, setPrimaryFailed] = useState(!game.libraryImageUrl);
+  const [finalFailed, setFinalFailed] = useState(false);
+  const { heroUrl, logoUrl } = useSteamGridHeroAndLogo(
+    game.objectId,
+    game.title,
+    primaryFailed
+  );
+
+  const [isDarkBg, setIsDarkBg] = useState(true);
+
+  useEffect(() => {
+    if (heroUrl) {
+      import("color.js").then(({ average }) => {
+        average(heroUrl, { amount: 1, format: "hex" })
+          .then((heroHex) => {
+            const getLuminance = (hex: string) => {
+              if (!hex || hex.length < 7) return 0;
+              const r = parseInt(hex.slice(1, 3), 16);
+              const g = parseInt(hex.slice(3, 5), 16);
+              const b = parseInt(hex.slice(5, 7), 16);
+              return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            };
+            const heroLum = getLuminance(heroHex as string);
+            setIsDarkBg(heroLum <= 0.6);
+          })
+          .catch(() => setIsDarkBg(true));
+      });
+    }
+  }, [heroUrl]);
+
+  const activeSrc = primaryFailed ? (heroUrl ?? null) : game.libraryImageUrl;
 
   useEffect(() => {
     setAdded(
@@ -74,13 +107,49 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
     >
       {/* Cover image area - fixed ratio */}
       <div className="cat-card__cover-wrap">
-        {game.libraryImageUrl ? (
-          <img
-            src={game.libraryImageUrl}
-            alt={game.title}
-            className="cat-card__cover"
-            loading="lazy"
-          />
+        {activeSrc && !finalFailed ? (
+          <>
+            <img
+              src={activeSrc}
+              alt={game.title}
+              className="cat-card__cover"
+              loading="lazy"
+              onError={() => {
+                if (!primaryFailed) {
+                  setPrimaryFailed(true);
+                } else {
+                  setFinalFailed(true);
+                }
+              }}
+            />
+            {activeSrc === heroUrl && logoUrl && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: isDarkBg
+                    ? "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 60%)"
+                    : "linear-gradient(to right, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 60%)",
+                  display: "flex",
+                  alignItems: "center",
+                  paddingLeft: "16px",
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+              >
+                <img
+                  src={logoUrl}
+                  alt=""
+                  style={{
+                    width: "55%",
+                    maxHeight: "60%",
+                    objectFit: "contain",
+                    objectPosition: "left center",
+                  }}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <div className="cat-card__placeholder">
             <QuestionIcon size={28} />
@@ -94,6 +163,7 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
           })}
           onClick={handleLibrary}
           disabled={isBusy}
+          style={{ zIndex: 2 }}
           aria-label={
             added ? "Remover da biblioteca" : "Adicionar à biblioteca"
           }
