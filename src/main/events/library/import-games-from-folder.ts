@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { registerEvent } from "../register-event";
-import { gamesSublevel, levelKeys } from "@main/level";
+import { gamesSublevel } from "@main/level";
 import { GameExecutables, WindowManager, logger } from "@main/services";
 
 interface ImportedGame {
