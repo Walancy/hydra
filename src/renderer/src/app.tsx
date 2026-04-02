@@ -101,15 +101,16 @@ export function App() {
   const [keyboardRow, setKeyboardRow] = useState(1);
   const [keyboardCol, setKeyboardCol] = useState(0);
 
-  const openKeyboardForFocusedInput = useCallback(() => {
+  const openKeyboardForFocusedInput = useCallback((): boolean => {
     const el = document.activeElement;
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
       setKeyboardTarget(el);
       setKeyboardValue(el.value);
       setKeyboardRow(1);
       setKeyboardCol(0);
-      return true as const;
+      return true;
     }
+    return false;
   }, []);
 
   useEffect(() => {
