@@ -15,6 +15,7 @@ import {
   PencilIcon,
   TrashIcon,
   SearchIcon,
+  UploadIcon,
 } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import { GameCollection, LibraryGame } from "@types";
@@ -125,6 +126,31 @@ export default function Library() {
     setSortBy(nextSortBy);
     localStorage.setItem("library-sort-by", nextSortBy);
   }, []);
+
+  const handleImportFromFolder = useCallback(async () => {
+    const { filePaths } = await window.electron.showOpenDialog({
+      properties: ["openDirectory"],
+    });
+    if (!filePaths || filePaths.length === 0) return;
+
+    const { importedGames } = await window.electron.importGamesFromFolder(
+      filePaths[0]
+    );
+    if (importedGames.length > 0) {
+      showSuccessToast(
+        t("import_folder_success", {
+          defaultValue: "{{count}} jogo(s) importado(s) com sucesso!",
+          count: importedGames.length,
+        })
+      );
+    } else {
+      showErrorToast(
+        t("import_folder_empty", {
+          defaultValue: "Nenhum jogo encontrado na pasta selecionada.",
+        })
+      );
+    }
+  }, [showSuccessToast, showErrorToast, t]);
 
   useEffect(() => {
     dispatch(setHeaderTitle(t("library")));
@@ -492,7 +518,7 @@ export default function Library() {
   return (
     <section className="library library__page">
       {hasGames && (
-        <div className="library__filter-bar">
+        <div className="library__filter-bar" data-gamepad-autofocus-skip="true">
           <div className="library__controls-row">
             <div
               className="library__controls-left"
@@ -523,6 +549,16 @@ export default function Library() {
             </div>
             <div className="library__controls-right">
               <FilterOptions sortBy={sortBy} onSortChange={handleSortChange} />
+              <button
+                type="button"
+                className="library__favorites-btn"
+                onClick={handleImportFromFolder}
+                title={t("import_from_folder", {
+                  defaultValue: "Importar jogos de uma pasta",
+                })}
+              >
+                <UploadIcon size={16} />
+              </button>
               <button
                 type="button"
                 className={`library__favorites-btn ${

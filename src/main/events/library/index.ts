@@ -1,4 +1,5 @@
 import "./add-custom-game-to-library";
+import "./import-games-from-folder";
 import "./add-game-to-favorites";
 import "./add-game-to-library";
 import "./assign-game-to-collection";

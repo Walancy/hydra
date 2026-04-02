@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const icons = require\\('E:/code/hydra/node_modules/@primer/octicons-react'\\); console.log\\(Object.keys\\(icons\\).filter\\(k => /folder|file|search|locate|browse/i.test\\(k\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"const fs = require\\('fs'\\); const files = fs.readdirSync\\('e:/code/hydra/node_modules/workwonders-sdk/dist'\\).slice\\(0,5\\); console.log\\(files\\)\")",
+      "Bash(grep -v \"^\\\\\"[a-z]\\\\\"$\")"
+    ]
+  }
+}

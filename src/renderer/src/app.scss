@@ -198,6 +198,8 @@ progress[value] {
     cursor: pointer;
     transition: color 0.15s ease;
     padding: 4px 8px;
+    -webkit-app-region: no-drag;
+    pointer-events: auto;
 
     &:hover {
       color: rgba(255, 255, 255, 0.9);

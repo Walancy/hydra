@@ -100,7 +100,9 @@ declare global {
     ) => () => Electron.IpcRenderer;
 
     /* Library */
-    importSteamGames: () => Promise<{ title: string; appId: string }[]>;
+    importSteamGames: (
+      customPath?: string
+    ) => Promise<{ title: string; appId: string }[]>;
     toggleAutomaticCloudSync: (
       shop: GameShop,
       objectId: string,
@@ -274,6 +276,11 @@ declare global {
       foundGames: { title: string; executablePath: string }[];
       total: number;
     }>;
+    importGamesFromFolder: (folderPath: string) => Promise<{
+      importedGames: { title: string; executablePath: string }[];
+      total: number;
+    }>;
+    checkFileExists: (filePath: string) => Promise<boolean>;
     onExtractionComplete: (
       cb: (shop: GameShop, objectId: string) => void
     ) => () => Electron.IpcRenderer;

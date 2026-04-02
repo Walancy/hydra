@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGamepad } from "./use-gamepad";
 import type { HomeGroup } from "./use-home-groups";
 import type { ShopAssets } from "@types";
+import { playBeep } from "@renderer/helpers";
 
 interface HomeSliderItem {
   type: "game" | "folder" | "button_library" | "button_create_folder";
@@ -159,6 +160,7 @@ export function useHomeGamepad({
       return; // Deixa a navegação 2D global agir (não há bottom-segment)
     }
 
+    playBeep();
     focusFirstAction();
     return true;
   }, [
@@ -189,6 +191,7 @@ export function useHomeGamepad({
       }
       return true; // Na Home principal não tem nada acima, então consome o evento
     }
+    playBeep();
     returnToSlider();
     return true;
   }, [

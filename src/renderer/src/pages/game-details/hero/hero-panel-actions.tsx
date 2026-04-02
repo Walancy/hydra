@@ -8,6 +8,7 @@ import {
   PinSlashIcon,
   PlayIcon,
   PlusCircleIcon,
+  FileDirectoryIcon,
 } from "@primer/octicons-react";
 import { Button } from "@renderer/components";
 import {
@@ -16,16 +17,18 @@ import {
   useToast,
   useUserDetails,
 } from "@renderer/hooks";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { gameDetailsContext } from "@renderer/context";
 
 import "./hero-panel-actions.scss";
-import { useEffect } from "react";
 
 function useHeroPanelActions() {
   const [toggleLibraryGameDisabled, setToggleLibraryGameDisabled] =
     useState(false);
+  const [executableExists, setExecutableExists] = useState<boolean | null>(
+    null
+  );
 
   const { isGameDeleting } = useDownload();
   const { userDetails } = useUserDetails();
@@ -99,6 +102,22 @@ function useHeroPanelActions() {
       );
     };
   }, [updateLibrary, updateGame]);
+
+  useEffect(() => {
+    setExecutableExists(null);
+    if (!game?.executablePath) return;
+    window.electron
+      .checkFileExists(game.executablePath)
+      .then(setExecutableExists);
+  }, [game?.executablePath]);
+
+  const locateExecutable = async () => {
+    const path = await selectGameExecutable();
+    if (path) {
+      await window.electron.updateExecutablePath(shop, objectId!, path);
+      updateGame();
+    }
+  };
 
   const addGameToLibrary = async () => {
     setToggleLibraryGameDisabled(true);
@@ -231,6 +250,16 @@ function useHeroPanelActions() {
     </Button>
   );
 
+  const locateButton = (
+    <Button
+      theme="primary"
+      onClick={locateExecutable}
+      title={t("locate_executable", { defaultValue: "Localizar executável" })}
+    >
+      <FileDirectoryIcon />
+    </Button>
+  );
+
   const gameActionButton = () => {
     if (isGameRunning) {
       return (
@@ -245,7 +274,7 @@ function useHeroPanelActions() {
       );
     }
 
-    if (game?.executablePath) {
+    if (game?.executablePath && executableExists === true) {
       return (
         <Button
           onClick={openGame}
@@ -260,15 +289,18 @@ function useHeroPanelActions() {
     }
 
     return (
-      <Button
-        onClick={() => setShowRepacksModal(true)}
-        theme="primary"
-        disabled={isGameDownloading}
-        style={{ minWidth: 200 }}
-      >
-        <DownloadIcon />
-        {t("download")}
-      </Button>
+      <>
+        <Button
+          onClick={() => setShowRepacksModal(true)}
+          theme="primary"
+          disabled={isGameDownloading}
+          style={{ minWidth: 200 }}
+        >
+          <DownloadIcon />
+          {t("download")}
+        </Button>
+        {game?.executablePath && executableExists === false && locateButton}
+      </>
     );
   };
 
@@ -278,6 +310,7 @@ function useHeroPanelActions() {
         <>
           {addGameToLibraryButton}
           {showDownloadOptionsButton}
+          {locateButton}
         </>
       ),
       secondary: null,
@@ -327,7 +360,12 @@ function useHeroPanelActions() {
   }
 
   return {
-    primary: addGameToLibraryButton,
+    primary: (
+      <>
+        {addGameToLibraryButton}
+        {locateButton}
+      </>
+    ),
     secondary: null,
   };
 }

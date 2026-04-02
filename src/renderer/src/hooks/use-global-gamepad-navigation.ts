@@ -1,6 +1,16 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useGamepadConnected, useGamepad } from "./use-gamepad";
 import { playBeep } from "@renderer/helpers";
+
+/** Called by app.tsx to open the keyboard when A is pressed on an input */
+let _openKeyboardCallback: (() => boolean | undefined) | null = null;
+
+export function registerOpenKeyboardCallback(
+  cb: (() => boolean | undefined) | null
+) {
+  _openKeyboardCallback = cb;
+}
 
 const FOCUSABLE_SELECTOR = [
   "a[href]:not([disabled]):not([tabindex='-1'])",
@@ -20,8 +30,16 @@ function isVisible(el: Element): boolean {
 
 function isIgnored(el: Element): boolean {
   const ignoredNode = el.closest("[data-gamepad-ignore]");
-  if (!ignoredNode) return false;
-  return ignoredNode.getAttribute("data-gamepad-ignore") === "true";
+  if (ignoredNode?.getAttribute("data-gamepad-ignore") === "true") return true;
+
+  if (
+    el.closest(
+      "#workwonders-knowledge-container, .workwonders-knowledge-container, #workwonders-widget-container, .workwonders-widget-container"
+    )
+  )
+    return true;
+
+  return false;
 }
 
 /**
@@ -157,6 +175,25 @@ function moveFocus(dir: Dir): void {
 }
 
 /**
+ * Focuses the first content candidate, skipping filter bars
+ * (`data-gamepad-autofocus-skip`).
+ */
+export function focusFirstContent(): void {
+  const root = document.querySelector("main") ?? document.body;
+  const candidates = Array.from(
+    root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+  ).filter(
+    (el) =>
+      isVisible(el) &&
+      !isIgnored(el) &&
+      !el.closest("[data-gamepad-autofocus-skip]")
+  );
+  if (candidates.length > 0) {
+    candidates[0].focus({ preventScroll: false });
+  }
+}
+
+/**
  * Ativa/desativa a classe `gamepad-active` no <html>
  * para mostrar outline de foco quando o controle está em uso.
  */
@@ -176,8 +213,20 @@ export function useGamepadActiveClass(): void {
  * Registra navegação espacial por D-Pad globalmente.
  * Prioridade 0 — a mais baixa; componentes locais (priority > 0) interceptam antes.
  */
+export function useGamepadRouteAutoFocus(): void {
+  const isConnected = useGamepadConnected();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isConnected) return;
+    const timer = setTimeout(focusFirstContent, 150);
+    return () => clearTimeout(timer);
+  }, [isConnected, location.pathname]);
+}
+
 export function useGlobalGamepadNavigation(): void {
   useGamepadActiveClass();
+  useGamepadRouteAutoFocus();
 
   useGamepad({
     priority: 0,
@@ -187,8 +236,16 @@ export function useGlobalGamepadNavigation(): void {
       DPAD_LEFT: () => moveFocus("left"),
       DPAD_RIGHT: () => moveFocus("right"),
       A: () => {
-        const el = document.activeElement as HTMLElement | null;
-        el?.click();
+        const el = document.activeElement;
+        // If focused on a text input, open virtual keyboard instead of clicking
+        if (
+          el instanceof HTMLInputElement ||
+          el instanceof HTMLTextAreaElement
+        ) {
+          _openKeyboardCallback?.();
+          return;
+        }
+        (el as HTMLElement | null)?.click();
       },
     },
   });

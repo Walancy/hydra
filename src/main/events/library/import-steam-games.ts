@@ -22,17 +22,43 @@ const IGNORED_STEAM_APP_IDS = new Set([
   "1628350", // Steam Linux Runtime - Sniper
 ]);
 
-const importSteamGames = async (): Promise<ImportedSteamGame[]> => {
+const getSteamPath = (): string => {
+  if (process.platform === "win32") {
+    try {
+      const { execSync } = require("child_process");
+      const output = execSync(
+        'reg query "HKCU\\Software\\Valve\\Steam" /v SteamPath',
+        { encoding: "utf-8" }
+      );
+      const match = output.match(/SteamPath\s+REG_SZ\s+(.+)/i);
+      if (match && match[1]) {
+        return path.normalize(match[1].trim());
+      }
+    } catch (e) {
+      logger.warn(
+        "[ImportSteamGames] Could not read Steam path from registry, falling back to default"
+      );
+    }
+  }
+  return STEAM_DEFAULT_PATH;
+};
+
+const importSteamGames = async (
+  _event: Electron.IpcMainInvokeEvent,
+  customPath?: string
+): Promise<ImportedSteamGame[]> => {
   const games: ImportedSteamGame[] = [];
   try {
+    const steamPath = customPath || getSteamPath();
+
     const libraryFoldersPath = path.join(
-      STEAM_DEFAULT_PATH,
+      steamPath,
       "steamapps",
       "libraryfolders.vdf"
     );
 
     // We start with the default path, but we'll try to find any secondary drives in the vdf file
-    const scanPaths = [STEAM_DEFAULT_PATH];
+    const scanPaths = [steamPath];
 
     if (fs.existsSync(libraryFoldersPath)) {
       const content = await fs.promises.readFile(libraryFoldersPath, "utf-8");

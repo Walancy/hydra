@@ -29,6 +29,7 @@
   transition: transform 0.25s ease;
   overflow: hidden;
   backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 
   &--resizing {
     opacity: globals.$active-opacity;

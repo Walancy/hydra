@@ -4,7 +4,6 @@ import {
   BottomPanel,
   Header,
   Toast,
-  Modal,
   GamepadGuide,
   SplashScreen,
 } from "@renderer/components";
@@ -20,7 +19,10 @@ import {
   useBackgroundMusic,
 } from "@renderer/hooks";
 import { useDownloadOptionsListener } from "@renderer/hooks/use-download-options-listener";
-import { useGlobalGamepadNavigation } from "@renderer/hooks/use-global-gamepad-navigation";
+import {
+  useGlobalGamepadNavigation,
+  registerOpenKeyboardCallback,
+} from "@renderer/hooks/use-global-gamepad-navigation";
 import { useGamepad, useGamepadConnected } from "@renderer/hooks/use-gamepad";
 
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -38,8 +40,6 @@ import { useTranslation } from "react-i18next";
 import { useSubscription } from "./hooks/use-subscription";
 import { HydraCloudModal } from "./pages/shared-modals/hydra-cloud/hydra-cloud-modal";
 import { ArchiveDeletionModal } from "./pages/downloads/archive-deletion-error-modal";
-import { SettingsAppearance } from "./pages/settings/appearance/settings-appearance";
-
 import {
   injectCustomCss,
   removeCustomCss,
@@ -50,6 +50,7 @@ import { levelDBService } from "./services/leveldb.service";
 import type { UserPreferences } from "@types";
 import cn from "classnames";
 import { BackgroundEffectRenderer } from "./components/react-bits/BackgroundEffectRenderer";
+import { GamepadKeyboard } from "./components/gamepad-keyboard/gamepad-keyboard";
 import "react-loading-skeleton/dist/skeleton.css";
 import "./app.scss";
 
@@ -90,10 +91,54 @@ export function App() {
   }, []);
 
   const [isSidebarForceOpen, setIsSidebarForceOpen] = useState(false);
-  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
-  const [showThemeModal, setShowThemeModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [keyboardTarget, setKeyboardTarget] = useState<
+    HTMLInputElement | HTMLTextAreaElement | null
+  >(null);
+  const [keyboardValue, setKeyboardValue] = useState("");
+  const [keyboardRow, setKeyboardRow] = useState(1);
+  const [keyboardCol, setKeyboardCol] = useState(0);
+
+  const openKeyboardForFocusedInput = useCallback(() => {
+    const el = document.activeElement;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      setKeyboardTarget(el);
+      setKeyboardValue(el.value);
+      setKeyboardRow(1);
+      setKeyboardCol(0);
+      return true as const;
+    }
+  }, []);
+
+  useEffect(() => {
+    registerOpenKeyboardCallback(openKeyboardForFocusedInput);
+    return () => registerOpenKeyboardCallback(null);
+  }, [openKeyboardForFocusedInput]);
+
+  const handleKeyboardChange = useCallback(
+    (value: string) => {
+      setKeyboardValue(value);
+      if (keyboardTarget) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          keyboardTarget instanceof HTMLTextAreaElement
+            ? window.HTMLTextAreaElement.prototype
+            : window.HTMLInputElement.prototype,
+          "value"
+        )?.set;
+        nativeInputValueSetter?.call(keyboardTarget, value);
+        keyboardTarget.dispatchEvent(new Event("input", { bubbles: true }));
+        keyboardTarget.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    },
+    [keyboardTarget]
+  );
+
+  const handleKeyboardClose = useCallback(() => {
+    setKeyboardTarget(null);
+    keyboardTarget?.blur();
+  }, [keyboardTarget]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -104,9 +149,19 @@ export function App() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleSidebarEnter = useCallback(() => setIsSidebarHovered(true), []);
+  useEffect(() => {
+    if (isGamepadConnected) {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  }, [isGamepadConnected]);
+
   const handleSidebarLeave = useCallback(() => {
-    setIsSidebarHovered(false);
     setIsSidebarForceOpen(false);
   }, []);
 
@@ -574,45 +629,8 @@ export function App() {
       {window.electron.platform === "win32" && !isFullscreen && (
         <div className="title-bar" data-gamepad-ignore="true">
           <HydraIcon className="title-bar__logo" aria-hidden="true" />
-          {!isSidebarHovered && !isSidebarForceOpen && !isGamepadConnected && (
-            <div className="title-bar__options">
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent("hydra:close-notifications")
-                  );
-                  setIsSidebarForceOpen(true);
-                }}
-              >
-                Menu
-              </button>
-
-              <button
-                type="button"
-                className="title-bar__option"
-                onClick={() => setShowThemeModal(true)}
-              >
-                Tema
-              </button>
-            </div>
-          )}
         </div>
       )}
-
-      <Modal
-        visible={showThemeModal}
-        title="Gerenciar Temas"
-        onClose={() => setShowThemeModal(false)}
-        large
-      >
-        <div className="theme-modal-container">
-          <SettingsAppearance
-            appearance={{ theme: null, authorId: null, authorName: null }}
-          />
-        </div>
-      </Modal>
 
       <Toast
         visible={toast.visible}
@@ -644,7 +662,6 @@ export function App() {
           className={cn("sidebar-wrapper", {
             "sidebar-wrapper--force-open": isSidebarForceOpen,
           })}
-          onMouseEnter={handleSidebarEnter}
           onMouseLeave={handleSidebarLeave}
           data-gamepad-ignore={!isSidebarForceOpen ? "true" : undefined}
         >
@@ -666,6 +683,18 @@ export function App() {
 
       <BottomPanel />
       <GamepadGuide />
+
+      {isGamepadConnected && keyboardTarget && (
+        <GamepadKeyboard
+          value={keyboardValue}
+          onChange={handleKeyboardChange}
+          onClose={handleKeyboardClose}
+          row={keyboardRow}
+          col={keyboardCol}
+          onRowChange={setKeyboardRow}
+          onColChange={setKeyboardCol}
+        />
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@renderer/hooks";
+import { setCatalogueCategory } from "@renderer/features";
 import { useTranslation } from "react-i18next";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
@@ -49,6 +50,8 @@ export default function Home() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
 
+  const [isSliderActive, setIsSliderActive] = useState(true);
+
   const [isDraggingScroll, setIsDraggingScroll] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -70,7 +73,6 @@ export default function Home() {
   const {
     groups,
     createGroup,
-    addGameToGroup,
     removeGameFromGroup,
     deleteGroup,
     renameGroup,
@@ -94,13 +96,7 @@ export default function Home() {
     CatalogueCategory.Hot
   );
 
-  const [catalogue, setCatalogue] = useState<
-    Record<CatalogueCategory, ShopAssets[]>
-  >({
-    [CatalogueCategory.Hot]: [],
-    [CatalogueCategory.Weekly]: [],
-    [CatalogueCategory.Achievements]: [],
-  });
+  const catalogue = useAppSelector((state) => state.homeCatalogue.catalogue);
 
   const getCatalogue = useCallback(
     async (category: CatalogueCategory, forceLoadingState = true) => {
@@ -124,13 +120,13 @@ export default function Home() {
           { params, needsAuth: false }
         );
 
-        setCatalogue((prev) => ({ ...prev, [category]: result }));
+        dispatch(setCatalogueCategory({ category, games: result }));
         setSelectedIndex(0);
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [dispatch]
   );
 
   const handleCategoryClick = (category: CatalogueCategory) => {
@@ -165,15 +161,13 @@ export default function Home() {
   }, [closeFolderTrigger]);
 
   useEffect(() => {
-    // Only fetch catalogue on mount if we are NOT in My Games (which is rare on mount, but just in case)
     if (
-      !isMyGames &&
-      (!catalogue[CatalogueCategory.Hot] ||
-        catalogue[CatalogueCategory.Hot].length === 0)
+      !catalogue[CatalogueCategory.Hot] ||
+      catalogue[CatalogueCategory.Hot].length === 0
     ) {
-      getCatalogue(CatalogueCategory.Hot);
+      getCatalogue(CatalogueCategory.Hot, false);
     }
-  }, [getCatalogue, isMyGames]);
+  }, [getCatalogue]);
 
   const categories = Object.values(CatalogueCategory);
 
@@ -304,8 +298,20 @@ export default function Home() {
     if (!slider) return;
     const card = slider.children[index] as HTMLElement | undefined;
     if (!card) return;
-    const offset = slider.clientWidth * 0.03;
-    slider.scrollTo({ left: card.offsetLeft - offset, behavior: "smooth" });
+    const padding = slider.clientWidth * 0.03;
+    const cardLeft = card.offsetLeft;
+    const cardRight = card.offsetLeft + card.offsetWidth;
+    const visibleLeft = slider.scrollLeft;
+    const visibleRight = slider.scrollLeft + slider.clientWidth;
+
+    if (cardLeft < visibleLeft + padding) {
+      slider.scrollTo({ left: cardLeft - padding, behavior: "smooth" });
+    } else if (cardRight > visibleRight - padding) {
+      slider.scrollTo({
+        left: cardRight - slider.clientWidth + padding,
+        behavior: "smooth",
+      });
+    }
   }, []);
 
   const isGamepadConnected = useGamepadConnected();
@@ -545,6 +551,7 @@ export default function Home() {
           <div
             className="home__slider"
             ref={sliderRef}
+            onFocus={() => setIsSliderActive(true)}
             onContextMenu={(e) => handleContextMenu(e)}
             onMouseDown={(e) => {
               setIsDraggingScroll(true);
@@ -632,29 +639,6 @@ export default function Home() {
                     <button
                       key={itemId}
                       type="button"
-                      draggable={!isFolder && isMyGames}
-                      onDragStart={(e) => {
-                        if (!isFolder && isMyGames) {
-                          e.dataTransfer.setData(
-                            "application/x-game-id",
-                            game!.objectId
-                          );
-                        }
-                      }}
-                      onDragOver={(e) => {
-                        if (isFolder) e.preventDefault();
-                      }}
-                      onDrop={(e) => {
-                        if (isFolder) {
-                          e.preventDefault();
-                          const droppedGameId = e.dataTransfer.getData(
-                            "application/x-game-id"
-                          );
-                          if (droppedGameId) {
-                            addGameToGroup(folder!.id, droppedGameId);
-                          }
-                        }
-                      }}
                       onContextMenu={(e) => {
                         e.stopPropagation();
                         handleContextMenu(e, {
@@ -664,6 +648,10 @@ export default function Home() {
                       }}
                       className={cn("home__card", {
                         "home__card--selected": index === selectedIndex,
+                        "home__card--gamepad-focus":
+                          isGamepadConnected &&
+                          index === selectedIndex &&
+                          isSliderActive,
                         "home__folder-card": isFolder,
                       })}
                       onFocus={() => {
@@ -697,6 +685,7 @@ export default function Home() {
                                   src={item.covers[i]}
                                   alt=""
                                   className="home__folder-thumb"
+                                  draggable={false}
                                 />
                               ) : (
                                 <div className="home__folder-thumb-empty" />
@@ -714,6 +703,7 @@ export default function Home() {
                           alt={game!.title}
                           className="home__card-image"
                           loading="lazy"
+                          draggable={false}
                           onError={(e) => {
                             const img = e.currentTarget;
                             if (
@@ -730,12 +720,49 @@ export default function Home() {
                 })}
           </div>
 
-          <div className="home__bottom-segment" ref={actionsRef}>
+          <div
+            className="home__bottom-segment"
+            ref={actionsRef}
+            onFocus={() => setIsSliderActive(false)}
+          >
             {selectedGame && (
               <GameInfo
                 game={selectedGame}
                 isBgLight={isBgLight}
                 onInstallClick={(g) => setDownloadGame(g)}
+                onAddToLibrary={
+                  !isMyGames
+                    ? (g) => {
+                        window.electron
+                          .addGameToLibrary(g.shop, g.objectId, g.title)
+                          .then(() => {});
+                      }
+                    : undefined
+                }
+                isInLibrary={
+                  !isMyGames &&
+                  libraryAsGames.some(
+                    (g) => g.objectId === selectedGame.objectId
+                  )
+                }
+                onLocateExecutable={async (g) => {
+                  const downloadsPath =
+                    await window.electron.getDefaultDownloadsPath();
+                  const { filePaths } = await window.electron.showOpenDialog({
+                    properties: ["openFile"],
+                    defaultPath: downloadsPath,
+                    filters: [
+                      { name: "Game executable", extensions: ["exe", "lnk"] },
+                    ],
+                  });
+                  if (filePaths?.[0]) {
+                    await window.electron.updateExecutablePath(
+                      g.shop,
+                      g.objectId,
+                      filePaths[0]
+                    );
+                  }
+                }}
               />
             )}
             {selectedFolder && (

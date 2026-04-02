@@ -29,9 +29,10 @@ interface ScanResult {
 }
 
 async function searchInDirectories(
-  executableNames: Set<string>
+  executableNames: Set<string>,
+  directoriesToScan: string[]
 ): Promise<string | null> {
-  for (const scanDir of SCAN_DIRECTORIES) {
+  for (const scanDir of directoriesToScan) {
     if (!fs.existsSync(scanDir)) continue;
 
     const foundPath = await findExecutableInFolder(scanDir, executableNames);
@@ -61,9 +62,23 @@ async function publishScanNotification(foundCount: number): Promise<void> {
   );
 }
 
+import { db, levelKeys } from "@main/level";
+import type { UserPreferences } from "@types";
+
 const scanInstalledGames = async (
   _event: Electron.IpcMainInvokeEvent
 ): Promise<ScanResult> => {
+  const prefs = await db
+    .get<
+      string,
+      UserPreferences | null
+    >(levelKeys.userPreferences, { valueEncoding: "json" })
+    .catch(() => null);
+  const userScanDirs = prefs?.customScanDirectories || [];
+
+  const ALL_SCAN_DIRECTORIES = [
+    ...new Set([...SCAN_DIRECTORIES, ...userScanDirs]),
+  ];
   const games = await gamesSublevel
     .iterator()
     .all()
@@ -89,7 +104,10 @@ const scanInstalledGames = async (
       executableNames.map((name) => name.toLowerCase())
     );
 
-    const foundPath = await searchInDirectories(normalizedNames);
+    const foundPath = await searchInDirectories(
+      normalizedNames,
+      ALL_SCAN_DIRECTORIES
+    );
 
     if (foundPath) {
       await gamesSublevel.put(key, { ...game, executablePath: foundPath });

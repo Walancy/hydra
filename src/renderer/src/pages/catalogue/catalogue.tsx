@@ -494,7 +494,7 @@ export default function Catalogue() {
   return (
     <div className="catalogue" ref={cataloguePageRef}>
       {/* Sticky filter bar centered */}
-      <div className="catalogue__filter-bar">
+      <div className="catalogue__filter-bar" data-gamepad-autofocus-skip="true">
         <div
           className={`catalogue__filter-bar-inner ${!showFilters ? "catalogue__filter-bar-inner--closed" : ""}`}
         >
@@ -520,6 +520,7 @@ export default function Catalogue() {
           </div>
           <div
             className={`catalogue__filter-bar-options ${showFilters ? "catalogue__filter-bar-options--open" : ""}`}
+            data-gamepad-ignore="true"
           >
             {shouldShowProtonFeatures && (
               <Suspense fallback={null}>
@@ -585,7 +586,7 @@ export default function Catalogue() {
 
       {/* Active filter tags */}
       {selectedFiltersCount > 0 && (
-        <div className="catalogue__active-filters">
+        <div className="catalogue__active-filters" data-gamepad-ignore="true">
           <ul className="catalogue__filters-list">
             {groupedFilters.map((filter) => (
               <li key={`${filter.key}-${filter.value}`}>

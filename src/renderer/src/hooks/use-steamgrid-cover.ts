@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
 const STEAMGRID_API_KEY =
-  import.meta.env.RENDERER_VITE_STEAMGRID_API_KEY || "8c53a8c366b96459117a44a68a5d7a60";
+  import.meta.env.RENDERER_VITE_STEAMGRID_API_KEY ||
+  "8c53a8c366b96459117a44a68a5d7a60";
 const cache = new Map<string, string | null>();
 
 interface GridItem {

@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@renderer/components";
 import { useToast } from "@renderer/hooks/use-toast";
-import "./settings-steam-import.scss";
-
+import { DeviceDesktopIcon } from "@primer/octicons-react";
 export function SettingsSteamImport() {
   const { t } = useTranslation("settings");
   const { showSuccessToast, showErrorToast } = useToast();
@@ -43,24 +42,24 @@ export function SettingsSteamImport() {
   };
 
   return (
-    <div className="settings-steam-import">
-      <div className="settings-steam-import__info">
-        <h3>{t("Import from Steam")}</h3>
-        <p>
+    <div className="settings-context-integrations__card">
+      <div className="settings-context-integrations__card-info">
+        <h3 className="settings-context-integrations__card-title">
+          <DeviceDesktopIcon />
+          Steam
+        </h3>
+        <p className="settings-context-integrations__card-description">
           {t(
             "Automatically import games installed on your PC via Steam to launch them directly from Hydra."
           )}
         </p>
       </div>
 
-      <Button
-        theme="outline"
-        onClick={handleImport}
-        disabled={isImporting}
-        className="settings-steam-import__button"
-      >
-        {isImporting ? t("Importing...") : t("Import")}
-      </Button>
+      <div className="settings-context-integrations__card-actions">
+        <Button theme="outline" onClick={handleImport} disabled={isImporting}>
+          {isImporting ? t("Importing...") : t("Import")}
+        </Button>
+      </div>
     </div>
   );
 }

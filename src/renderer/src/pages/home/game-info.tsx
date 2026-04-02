@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { PlayIcon, DownloadIcon, ArrowRightIcon } from "@primer/octicons-react";
+import {
+  PlayIcon,
+  DownloadIcon,
+  ArrowRightIcon,
+  PlusIcon,
+  CheckIcon,
+  FileDirectoryIcon,
+} from "@primer/octicons-react";
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { Button } from "@renderer/components";
@@ -13,6 +20,9 @@ interface GameInfoProps {
   game: ShopAssets;
   isBgLight?: boolean;
   onInstallClick?: (game: ShopAssets) => void;
+  onAddToLibrary?: (game: ShopAssets) => void;
+  isInLibrary?: boolean;
+  onLocateExecutable?: (game: ShopAssets) => void;
 }
 
 const detailsCache = new Map<string, ShopDetailsWithAssets>();
@@ -79,6 +89,9 @@ export function GameInfo({
   game,
   isBgLight = false,
   onInstallClick,
+  onAddToLibrary,
+  isInLibrary = false,
+  onLocateExecutable,
 }: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
@@ -87,6 +100,13 @@ export function GameInfo({
   );
   const fetchedRef = useRef<string>("");
   const [sourceNames, setSourceNames] = useState<string[]>([]);
+  const [executableExists, setExecutableExists] = useState<boolean | null>(
+    null
+  );
+  const executablePath = (game as any).executablePath as
+    | string
+    | null
+    | undefined;
 
   useEffect(() => {
     const key = game.objectId;
@@ -141,6 +161,12 @@ export function GameInfo({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.objectId, game.downloadSources?.join(",")]);
 
+  useEffect(() => {
+    setExecutableExists(null);
+    if (!executablePath) return;
+    window.electron.checkFileExists(executablePath).then(setExecutableExists);
+  }, [executablePath]);
+
   const publisher = details?.publishers?.[0]
     ? cleanPublisher(details.publishers[0])
     : "";
@@ -167,48 +193,81 @@ export function GameInfo({
         </div>
       )}
       <div className="home__actions">
-        {(game as any).executablePath ? (
+        {executablePath && executableExists === true ? (
           <Button
             className="home__play-button"
             theme={isBgLight ? "dark" : "primary"}
             onClick={() =>
-              window.electron.openGame(
-                game.shop,
-                game.objectId,
-                (game as any).executablePath as string
-              )
+              window.electron.openGame(game.shop, game.objectId, executablePath)
             }
           >
             <PlayIcon size={16} />
             {t("play", { defaultValue: "Jogar" })}
           </Button>
         ) : (
+          <>
+            <Button
+              className="home__install-button"
+              theme={isBgLight ? "dark" : "primary"}
+              onClick={() => {
+                if (onInstallClick) {
+                  onInstallClick(game);
+                  return;
+                }
+                const path = buildGameDetailsPath({
+                  ...game,
+                  objectId: game.objectId,
+                });
+                navigate(path, { state: { openRepacks: true } });
+                try {
+                  window.dispatchEvent(
+                    new CustomEvent("hydra:openRepacks", {
+                      detail: { objectId: game.objectId },
+                    })
+                  );
+                } catch (e) {
+                  // Ignore
+                }
+              }}
+            >
+              <DownloadIcon size={16} />
+              {t("install", { defaultValue: "Instalar" })}
+            </Button>
+
+            {executablePath &&
+              executableExists === false &&
+              onLocateExecutable && (
+                <Button
+                  className="home__locate-button"
+                  theme={isBgLight ? "dark" : "outline"}
+                  title={t("locate_executable", {
+                    defaultValue: "Localizar executável do jogo",
+                  })}
+                  onClick={() => onLocateExecutable(game)}
+                >
+                  <FileDirectoryIcon size={16} />
+                </Button>
+              )}
+          </>
+        )}
+
+        {onAddToLibrary && (
           <Button
-            className="home__install-button"
-            theme={isBgLight ? "dark" : "primary"}
-            onClick={() => {
-              if (onInstallClick) {
-                onInstallClick(game);
-                return;
-              }
-              const path = buildGameDetailsPath({
-                ...game,
-                objectId: game.objectId,
-              });
-              navigate(path, { state: { openRepacks: true } });
-              try {
-                window.dispatchEvent(
-                  new CustomEvent("hydra:openRepacks", {
-                    detail: { objectId: game.objectId },
+            className="home__add-library-button"
+            theme={isBgLight ? "dark" : "outline"}
+            title={
+              isInLibrary
+                ? t("already_in_library", {
+                    defaultValue: "Já está na biblioteca",
                   })
-                );
-              } catch (e) {
-                // Ignore
-              }
-            }}
+                : t("add_to_library", {
+                    defaultValue: "Adicionar à biblioteca",
+                  })
+            }
+            onClick={() => !isInLibrary && onAddToLibrary(game)}
+            disabled={isInLibrary}
           >
-            <DownloadIcon size={16} />
-            {t("install", { defaultValue: "Instalar" })}
+            {isInLibrary ? <CheckIcon size={16} /> : <PlusIcon size={16} />}
           </Button>
         )}
 

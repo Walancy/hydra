@@ -147,6 +147,7 @@ export interface UserPreferences {
   autoRunGamemode?: boolean;
   backgroundMusicEnabled?: boolean;
   backgroundMusicVolume?: number;
+  customScanDirectories?: string[];
 }
 
 export interface ScreenState {
