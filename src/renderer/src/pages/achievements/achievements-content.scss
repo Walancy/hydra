@@ -157,7 +157,9 @@ $logo-max-width: 200px;
         transparent 100%
       );
       filter: brightness(0.65);
-      transition: opacity 1s ease, filter ease 0.3s;
+      transition:
+        opacity 1s ease,
+        filter ease 0.3s;
       pointer-events: none;
       user-select: none;
     }
@@ -225,7 +227,8 @@ $logo-max-width: 200px;
           flex-direction: column;
           width: 100%;
           gap: globals.$spacing-unit;
-          padding: 0 max(24px, calc(50% - 700px)) calc(globals.$spacing-unit * 2);
+          padding: 0 max(24px, calc(50% - 700px))
+            calc(globals.$spacing-unit * 2);
         }
       }
 

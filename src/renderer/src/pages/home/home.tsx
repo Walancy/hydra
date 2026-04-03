@@ -102,8 +102,7 @@ export default function Home() {
 
   const getCatalogue = useCallback(
     async (category: CatalogueCategory, forceLoadingState = true) => {
-      const hasCached =
-        catalogue[category] && catalogue[category].length > 0;
+      const hasCached = catalogue[category] && catalogue[category].length > 0;
 
       try {
         setCurrentCatalogueCategory(category);
@@ -184,13 +183,16 @@ export default function Home() {
         });
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const categories = Object.values(CatalogueCategory);
 
   const libraryAsGames = useMemo<
-    (ShopAssets & { executablePath?: string | null; lastTimePlayed?: string | null })[]
+    (ShopAssets & {
+      executablePath?: string | null;
+      lastTimePlayed?: string | null;
+    })[]
   >(
     () =>
       library

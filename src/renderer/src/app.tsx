@@ -682,13 +682,14 @@ export function App() {
   }, [playAudio]);
 
   useEffect(() => {
-    const unsubscribe = window.electron.onForzaTest((_position, achievements) => {
-      setForzaQueue(achievements);
-      playAudio();
-    });
+    const unsubscribe = window.electron.onForzaTest(
+      (_position, achievements) => {
+        setForzaQueue(achievements);
+        playAudio();
+      }
+    );
     return () => unsubscribe();
   }, [playAudio]);
-
 
   const startForzaClosing = useCallback(() => {
     cancelAnimationFrame(forzaAnimRef.current);

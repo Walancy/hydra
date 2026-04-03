@@ -463,7 +463,6 @@ export class WindowManager {
     );
   }
 
-
   public static async showForzaAchievementTestNotification() {
     const userPreferences = await db.get<string, UserPreferences>(
       levelKeys.userPreferences,

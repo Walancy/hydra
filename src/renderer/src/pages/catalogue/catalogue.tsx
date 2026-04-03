@@ -120,6 +120,9 @@ export default function Catalogue() {
     (state) => state.catalogueSearch
   );
 
+  // Local input state decoupled from Redux to avoid dispatching on every keystroke
+  const [localTitle, setLocalTitle] = useState(filters.title ?? "");
+
   const [isLoading, setIsLoading] = useState(
     getCachedResults() === null || globalCachedPage !== page
   );
@@ -147,6 +150,26 @@ export default function Catalogue() {
       (filters.title?.trim().length ?? 0) > 0,
     [filters]
   );
+
+  // Debounce the title dispatch so Redux (and the API) only updates after user stops typing
+  const debouncedTitleDispatch = useRef(
+    debounce((value: string) => {
+      dispatch(setFilters({ title: value }));
+    }, 500)
+  ).current;
+
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      setLocalTitle(value);
+      debouncedTitleDispatch(value);
+    },
+    [debouncedTitleDispatch]
+  );
+
+  // Sync localTitle if filters.title is cleared externally (e.g. "Limpar Filtros")
+  useEffect(() => {
+    if (!filters.title) setLocalTitle("");
+  }, [filters.title]);
 
   const debouncedSearch = useRef(
     debounce(
@@ -189,8 +212,8 @@ export default function Catalogue() {
 
         setIsLoading(false);
       },
-      250,
-      { leading: true, trailing: true }
+      500,
+      { leading: false, trailing: true }
     )
   ).current;
 
@@ -528,10 +551,8 @@ export default function Catalogue() {
                   ns: "header",
                   defaultValue: "Buscar...",
                 })}
-                value={filters.title || ""}
-                onChange={(e) =>
-                  dispatch(setFilters({ title: e.target.value }))
-                }
+                value={localTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
               />
             </div>
           </div>

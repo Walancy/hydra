@@ -164,7 +164,9 @@
       background: #5227ff;
       border-radius: 50%;
       cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
+      transition:
+        transform 0.1s,
+        box-shadow 0.1s;
 
       &:hover {
         transform: scale(1.2);
@@ -206,7 +208,9 @@
         height: 14px;
         background: rgba(255, 255, 255, 0.5);
         border-radius: 50%;
-        transition: transform 0.2s, background 0.2s;
+        transition:
+          transform 0.2s,
+          background 0.2s;
       }
     }
 
@@ -236,11 +240,19 @@
       background: transparent;
       cursor: pointer;
 
-      &::-webkit-color-swatch-wrapper { padding: 0; }
-      &::-webkit-color-swatch { border: none; border-radius: 4px; }
+      &::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+      &::-webkit-color-swatch {
+        border: none;
+        border-radius: 4px;
+      }
     }
 
-    .text-field { flex: 1; min-width: 0; }
+    .text-field {
+      flex: 1;
+      min-width: 0;
+    }
   }
 
   &__color-array {
@@ -265,7 +277,9 @@
     flex-shrink: 0;
     transition: color 0.12s;
 
-    &:hover { color: rgba(255, 80, 80, 0.8); }
+    &:hover {
+      color: rgba(255, 80, 80, 0.8);
+    }
   }
 
   &__add-color {
@@ -294,7 +308,10 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    transition:
+      background 0.12s,
+      color 0.12s,
+      border-color 0.12s;
 
     input[type="radio"] {
       position: absolute;

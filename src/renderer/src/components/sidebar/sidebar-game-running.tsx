@@ -27,8 +27,7 @@ export function SidebarGameRunning() {
 
   if (!gameRunning) return null;
 
-  const elapsed =
-    gameRunning.sessionDurationInMillis + tick * 1000;
+  const elapsed = gameRunning.sessionDurationInMillis + tick * 1000;
 
   const handleClick = () => {
     navigate(
@@ -59,9 +58,7 @@ export function SidebarGameRunning() {
         </div>
       )}
       <div className="sidebar-game-running__info">
-        <span className="sidebar-game-running__title">
-          {gameRunning.title}
-        </span>
+        <span className="sidebar-game-running__title">{gameRunning.title}</span>
         <span className="sidebar-game-running__time">
           {formatElapsed(elapsed)}
         </span>

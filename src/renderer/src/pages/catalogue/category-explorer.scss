@@ -69,18 +69,42 @@
   }
 
   &__card {
-    &--action { --cat-color: #ff5e5e; }
-    &--adventure { --cat-color: #5ed1ff; }
-    &--rpg { --cat-color: #c25eff; }
-    &--strategy { --cat-color: #5eff8e; }
-    &--simulation { --cat-color: #ffbe5e; }
-    &--sports { --cat-color: #ffdd5e; }
-    &--racing { --cat-color: #ff5e9c; }
-    &--puzzle { --cat-color: #5eb1ff; }
-    &--horror { --cat-color: #ff3333; }
-    &--openworld { --cat-color: #5effd1; }
-    &--fighting { --cat-color: #ff8c33; }
-    &--city { --cat-color: #f39c12; }
+    &--action {
+      --cat-color: #ff5e5e;
+    }
+    &--adventure {
+      --cat-color: #5ed1ff;
+    }
+    &--rpg {
+      --cat-color: #c25eff;
+    }
+    &--strategy {
+      --cat-color: #5eff8e;
+    }
+    &--simulation {
+      --cat-color: #ffbe5e;
+    }
+    &--sports {
+      --cat-color: #ffdd5e;
+    }
+    &--racing {
+      --cat-color: #ff5e9c;
+    }
+    &--puzzle {
+      --cat-color: #5eb1ff;
+    }
+    &--horror {
+      --cat-color: #ff3333;
+    }
+    &--openworld {
+      --cat-color: #5effd1;
+    }
+    &--fighting {
+      --cat-color: #ff8c33;
+    }
+    &--city {
+      --cat-color: #f39c12;
+    }
   }
 
   &__label {
@@ -113,7 +137,9 @@
   &__card:hover &__icon {
     opacity: 1;
     transform: translateY(-4px) scale(1.15);
-    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--cat-color) 60%, transparent));
+    filter: drop-shadow(
+      0 0 12px color-mix(in srgb, var(--cat-color) 60%, transparent)
+    );
   }
 
   &__nav {

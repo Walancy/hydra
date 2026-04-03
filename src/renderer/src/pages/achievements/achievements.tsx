@@ -69,8 +69,7 @@ export default function Achievements() {
       <GameDetailsContextConsumer>
         {({ isLoading }) => {
           const showSkeleton =
-            isLoading ||
-            (otherUserId && comparedAchievements === null);
+            isLoading || (otherUserId && comparedAchievements === null);
 
           return (
             <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">

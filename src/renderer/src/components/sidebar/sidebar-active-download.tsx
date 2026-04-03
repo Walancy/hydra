@@ -11,9 +11,7 @@ export function SidebarActiveDownload() {
   if (!lastPacket) return null;
 
   const [shop, objectId] = lastPacket.gameId.split(":");
-  const game = library.find(
-    (g) => g.objectId === objectId && g.shop === shop
-  );
+  const game = library.find((g) => g.objectId === objectId && g.shop === shop);
 
   const title = game?.title ?? lastPacket.gameId;
   const pct = Math.round((lastPacket.progress ?? 0) * 100);

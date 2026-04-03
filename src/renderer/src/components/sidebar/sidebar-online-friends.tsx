@@ -16,7 +16,10 @@ export function SidebarOnlineFriends() {
   const [friends, setFriends] = useState<OnlineFriend[]>([]);
 
   useEffect(() => {
-    if (!userDetails?.id) { setFriends([]); return; }
+    if (!userDetails?.id) {
+      setFriends([]);
+      return;
+    }
 
     window.electron.hydraApi
       .get<{ friends?: OnlineFriend[] }>("/profile/friends")
