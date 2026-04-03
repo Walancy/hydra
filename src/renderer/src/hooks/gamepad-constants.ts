@@ -16,6 +16,7 @@ export const GAMEPAD_BUTTONS = {
   DPAD_DOWN: 13,
   DPAD_LEFT: 14,
   DPAD_RIGHT: 15,
+  GUIDE: 16,
 } as const;
 
 export type GamepadButton = keyof typeof GAMEPAD_BUTTONS;

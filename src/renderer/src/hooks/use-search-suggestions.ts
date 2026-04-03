@@ -3,6 +3,10 @@ import { useAppSelector } from "./redux";
 import { debounce } from "lodash-es";
 import { logger } from "@renderer/logger";
 import type { GameShop } from "@types";
+import {
+  expandAcronym,
+  matchesAcronym,
+} from "@renderer/services/game-acronyms";
 
 export interface SearchSuggestion {
   title: string;
@@ -35,8 +39,22 @@ export function useSearchSuggestions(
         if (matches.length >= limit) break;
 
         const titleLower = game.title.toLowerCase();
-        let queryIndex = 0;
 
+        // Acronym match
+        if (matchesAcronym(queryLower, game.title)) {
+          matches.push({
+            title: game.title,
+            objectId: game.objectId,
+            shop: game.shop,
+            iconUrl: game.iconUrl,
+            libraryImageUrl: game.libraryImageUrl,
+            source: "library",
+          });
+          continue;
+        }
+
+        // Fuzzy character sequence match (existing logic)
+        let queryIndex = 0;
         for (
           let i = 0;
           i < titleLower.length && queryIndex < queryLower.length;
@@ -87,30 +105,64 @@ export function useSearchSuggestions(
 
       setIsLoading(true);
 
+      // Expand acronym to full title if applicable
+      const expandedTitle = expandAcronym(searchQuery);
+
       try {
-        const response = await window.electron.hydraApi.post<{
-          edges: import("@types").CatalogueSearchResult[];
-          count: number;
-        }>("/catalogue/search", {
-          data: {
-            title: searchQuery,
-            take: limit,
-            skip: 0,
-            genres: [],
-            tags: [],
-            developers: [],
-            publishers: [],
-            downloadSourceFingerprints: [],
-            protondbSupportBadges: [],
-            deckCompatibility: [],
-            downloadSourceIds: [],
-          },
-          needsAuth: false,
+        const searchPayload = (title: string) => ({
+          title,
+          take: limit,
+          skip: 0,
+          genres: [],
+          tags: [],
+          developers: [],
+          publishers: [],
+          downloadSourceFingerprints: [],
+          protondbSupportBadges: [],
+          deckCompatibility: [],
+          downloadSourceIds: [],
         });
+
+        // Run original query and expanded query in parallel (if acronym found)
+        const requests = [
+          window.electron.hydraApi.post<{
+            edges: import("@types").CatalogueSearchResult[];
+            count: number;
+          }>("/catalogue/search", {
+            data: searchPayload(searchQuery),
+            needsAuth: false,
+          }),
+        ];
+
+        if (expandedTitle) {
+          requests.push(
+            window.electron.hydraApi.post<{
+              edges: import("@types").CatalogueSearchResult[];
+              count: number;
+            }>("/catalogue/search", {
+              data: searchPayload(expandedTitle),
+              needsAuth: false,
+            })
+          );
+        }
+
+        const [originalResponse, expandedResponse] =
+          await Promise.all(requests);
 
         if (abortController.signal.aborted) return;
 
-        const sortedEdges = [...response.edges].sort(
+        // Merge results: expanded first (more relevant), deduplicate by objectId
+        const seen = new Set<string>();
+        const mergedEdges = [
+          ...(expandedResponse?.edges ?? []),
+          ...(originalResponse?.edges ?? []),
+        ].filter((item) => {
+          if (seen.has(item.objectId)) return false;
+          seen.add(item.objectId);
+          return true;
+        });
+
+        const sortedEdges = [...mergedEdges].sort(
           (a, b) =>
             (b.downloadSources?.length ?? 0) -
             (a.downloadSources?.length ?? 0) +
@@ -118,16 +170,16 @@ export function useSearchSuggestions(
             ((a as any).reviewCount || 0)
         );
 
-        const catalogueSuggestions: SearchSuggestion[] = sortedEdges.map(
-          (item) => ({
+        const catalogueSuggestions: SearchSuggestion[] = sortedEdges
+          .slice(0, limit)
+          .map((item) => ({
             title: item.title,
             objectId: item.objectId,
             shop: item.shop,
             iconUrl: (item as any).iconUrl || null,
             libraryImageUrl: item.libraryImageUrl || null,
             source: "catalogue" as const,
-          })
-        );
+          }));
 
         cacheRef.current.set(cacheKey, catalogueSuggestions);
         setSuggestions(catalogueSuggestions);

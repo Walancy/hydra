@@ -2,7 +2,10 @@ import updater, { UpdateInfo } from "electron-updater";
 import { logger, WindowManager } from "@main/services";
 import { AppUpdaterEvent, UserPreferences } from "@types";
 import { app } from "electron";
-import { publishNotificationUpdateReadyToInstall } from "@main/services/notifications";
+import {
+  publishNotificationUpdateReadyToInstall,
+  publishNotificationUpdateAvailable,
+} from "@main/services/notifications";
 import { db, levelKeys } from "@main/level";
 import { MAIN_LOOP_INTERVAL } from "@main/constants";
 
@@ -49,6 +52,7 @@ export class UpdateManager {
       .once("update-available", (info: UpdateInfo) => {
         this.sendEvent({ type: "update-available", info });
         this.newVersion = info.version;
+        publishNotificationUpdateAvailable(info.version);
       })
       .once("update-downloaded", () => {
         this.sendEvent({ type: "update-downloaded" });

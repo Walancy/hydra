@@ -12,6 +12,8 @@ interface CatalogueSectionProps {
   title: string;
   games: CatalogueSearchResult[];
   isLoading?: boolean;
+  skeletonCount?: number;
+  onVerMais?: () => void;
 }
 
 function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
@@ -196,6 +198,8 @@ export function CatalogueSection({
   title,
   games,
   isLoading = false,
+  skeletonCount = 10,
+  onVerMais,
 }: Readonly<CatalogueSectionProps>) {
   if (!isLoading && !games.length) return null;
 
@@ -203,11 +207,20 @@ export function CatalogueSection({
     <section className="cat-section">
       <div className="cat-section__header">
         <h2 className="cat-section__title">{title}</h2>
+        {onVerMais && !isLoading && (
+          <button
+            type="button"
+            className="cat-section__ver-mais"
+            onClick={onVerMais}
+          >
+            Ver mais →
+          </button>
+        )}
       </div>
 
       <div className="cat-section__grid">
         {isLoading
-          ? Array.from({ length: 10 }).map((_, i) => (
+          ? Array.from({ length: skeletonCount }).map((_, i) => (
               <div key={i} className="cat-card cat-card--skeleton">
                 <div className="cat-card__cover-wrap cat-card__skeleton-img" />
                 <div className="cat-card__info">

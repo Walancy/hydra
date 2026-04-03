@@ -158,7 +158,7 @@ export function AchievementsContent({
     );
   };
 
-  if (!objectId || !shop || !gameTitle || !userDetails) return null;
+  if (!objectId || !shop || !gameTitle) return null;
 
   return (
     <div className="achievements-content__achievements-list">
@@ -167,6 +167,7 @@ export function AchievementsContent({
         className="achievements-content__achievements-list__image"
         alt={gameTitle}
       />
+      <div className="achievements-content__achievements-list__image-overlay" />
 
       <section
         ref={containerRef}
@@ -193,16 +194,19 @@ export function AchievementsContent({
 
           <div className="achievements-content__achievements-list__section__container__achievements-summary-wrapper">
             <AchievementSummary
-              user={{
-                ...userDetails,
-                totalAchievementCount: comparedAchievements
-                  ? comparedAchievements.owner.totalAchievementCount
-                  : achievements!.length,
-                unlockedAchievementCount: comparedAchievements
-                  ? comparedAchievements.owner.unlockedAchievementCount
-                  : achievements!.filter((achievement) => achievement.unlocked)
-                      .length,
-              }}
+              user={
+                {
+                  ...userDetails,
+                  totalAchievementCount: comparedAchievements
+                    ? comparedAchievements.owner.totalAchievementCount
+                    : (achievements ?? []).length,
+                  unlockedAchievementCount: comparedAchievements
+                    ? comparedAchievements.owner.unlockedAchievementCount
+                    : (achievements ?? []).filter(
+                        (achievement) => achievement.unlocked
+                      ).length,
+                } as any
+              }
               isComparison={otherUser !== null}
             />
 
@@ -220,7 +224,7 @@ export function AchievementsContent({
               <div></div>
               {hasActiveSubscription && (
                 <div className="achievements-content__achievements-list__section__table-header__container__user-avatar">
-                  {getProfileImage({ ...userDetails })}
+                  {getProfileImage({ ...userDetails } as any)}
                 </div>
               )}
               <div className="achievements-content__achievements-list__section__table-header__container__other-user-avatar">
@@ -237,8 +241,8 @@ export function AchievementsContent({
           </>
         ) : (
           <>
-            <AchievementPanel achievements={achievements!} />
-            <AchievementList achievements={achievements!} />
+            <AchievementPanel achievements={achievements ?? []} />
+            <AchievementList achievements={achievements ?? []} />
           </>
         )}
       </section>

@@ -7,6 +7,7 @@ import {
   ClockIcon,
   TrophyIcon,
   HeartFillIcon,
+  DashIcon,
 } from "@primer/octicons-react";
 import { LibraryGame } from "@types";
 import { buildGameDetailsPath } from "@renderer/helpers";
@@ -19,12 +20,14 @@ interface LibraryCatCardProps {
     position: { x: number; y: number }
   ) => void;
   onToggleFavorite: (game: LibraryGame) => void;
+  onRemoveFromLibrary?: (game: LibraryGame) => void;
 }
 
 const LibraryCatCard = memo(function LibraryCatCard({
   game,
   onContextMenu,
   onToggleFavorite,
+  onRemoveFromLibrary,
 }: Readonly<LibraryCatCardProps>) {
   const navigate = useNavigate();
   const { formatPlayTime, handleContextMenuClick } = useGameCard(
@@ -62,6 +65,15 @@ const LibraryCatCard = memo(function LibraryCatCard({
     [game, onToggleFavorite]
   );
 
+  const handleRemove = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onRemoveFromLibrary?.(game);
+    },
+    [game, onRemoveFromLibrary]
+  );
+
   const achievementPercent =
     (game.achievementCount ?? 0) > 0
       ? Math.round(
@@ -97,24 +109,42 @@ const LibraryCatCard = memo(function LibraryCatCard({
           </div>
         )}
 
-        {/* Favorite button */}
-        <button
-          type="button"
-          className={`lib-cat-card__fav-btn${game.favorite ? " lib-cat-card__fav-btn--active" : ""}`}
-          onClick={handleFavorite}
-          aria-label={
-            game.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
-          }
-          title={
-            game.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
-          }
-        >
-          {game.favorite ? (
-            <HeartFillIcon size={11} />
-          ) : (
-            <HeartIcon size={11} />
+        {/* Favorite + Remove buttons */}
+        <div className="lib-cat-card__actions">
+          <button
+            type="button"
+            className={`lib-cat-card__fav-btn${game.favorite ? " lib-cat-card__fav-btn--active" : ""}`}
+            onClick={handleFavorite}
+            aria-label={
+              game.favorite
+                ? "Remover dos favoritos"
+                : "Adicionar aos favoritos"
+            }
+            title={
+              game.favorite
+                ? "Remover dos favoritos"
+                : "Adicionar aos favoritos"
+            }
+          >
+            {game.favorite ? (
+              <HeartFillIcon size={11} />
+            ) : (
+              <HeartIcon size={11} />
+            )}
+          </button>
+
+          {onRemoveFromLibrary && (
+            <button
+              type="button"
+              className="lib-cat-card__remove-btn"
+              onClick={handleRemove}
+              aria-label="Remover da biblioteca"
+              title="Remover da biblioteca"
+            >
+              <DashIcon size={11} />
+            </button>
           )}
-        </button>
+        </div>
       </div>
 
       {/* Info strip */}
@@ -151,12 +181,14 @@ interface LibraryCatalogueViewProps {
     position: { x: number; y: number }
   ) => void;
   onToggleFavorite: (game: LibraryGame) => void;
+  onRemoveFromLibrary?: (game: LibraryGame) => void;
 }
 
 export function LibraryCatalogueView({
   games,
   onContextMenu,
   onToggleFavorite,
+  onRemoveFromLibrary,
 }: Readonly<LibraryCatalogueViewProps>) {
   const favorites = useMemo(() => games.filter((g) => g.favorite), [games]);
   const others = useMemo(() => games.filter((g) => !g.favorite), [games]);
@@ -176,6 +208,7 @@ export function LibraryCatalogueView({
                 game={game}
                 onContextMenu={onContextMenu}
                 onToggleFavorite={onToggleFavorite}
+                onRemoveFromLibrary={onRemoveFromLibrary}
               />
             ))}
           </div>
@@ -194,6 +227,7 @@ export function LibraryCatalogueView({
                 game={game}
                 onContextMenu={onContextMenu}
                 onToggleFavorite={onToggleFavorite}
+                onRemoveFromLibrary={onRemoveFromLibrary}
               />
             ))}
           </div>

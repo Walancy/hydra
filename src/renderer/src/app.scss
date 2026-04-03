@@ -149,6 +149,10 @@ progress[value] {
     height: 100%;
     background-color: transparent;
     padding-top: 95px;
+
+    .gamepad-active & {
+      padding-bottom: 52px;
+    }
   }
 }
 

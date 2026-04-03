@@ -52,10 +52,12 @@ export default function Home() {
 
   const [isSliderActive, setIsSliderActive] = useState(true);
 
-  const [isDraggingScroll, setIsDraggingScroll] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [hasDragged, setHasDragged] = useState(false);
+  const dragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0,
+    hasDragged: false,
+  });
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
 
   const prevIndexRef = useRef(selectedIndex);
@@ -100,9 +102,13 @@ export default function Home() {
 
   const getCatalogue = useCallback(
     async (category: CatalogueCategory, forceLoadingState = true) => {
+      const hasCached =
+        catalogue[category] && catalogue[category].length > 0;
+
       try {
         setCurrentCatalogueCategory(category);
-        if (forceLoadingState) setIsLoading(true);
+        // Only show skeleton if we have no cached data yet
+        if (forceLoadingState && !hasCached) setIsLoading(true);
 
         const sources = (await levelDBService.values(
           "downloadSources"
@@ -121,12 +127,13 @@ export default function Home() {
         );
 
         dispatch(setCatalogueCategory({ category, games: result }));
-        setSelectedIndex(0);
+        if (!hasCached) setSelectedIndex(0);
       } finally {
         setIsLoading(false);
       }
     },
-    [dispatch]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dispatch, catalogue]
   );
 
   const handleCategoryClick = (category: CatalogueCategory) => {
@@ -165,14 +172,25 @@ export default function Home() {
       !catalogue[CatalogueCategory.Hot] ||
       catalogue[CatalogueCategory.Hot].length === 0
     ) {
-      getCatalogue(CatalogueCategory.Hot, false);
+      getCatalogue(CatalogueCategory.Hot, false).then(() => {
+        // Prefetch other categories silently after Hot loads
+        const others = Object.values(CatalogueCategory).filter(
+          (c) => c !== CatalogueCategory.Hot
+        );
+        others.forEach((c) => {
+          if (!catalogue[c] || catalogue[c].length === 0) {
+            getCatalogue(c, false).catch(() => {});
+          }
+        });
+      });
     }
-  }, [getCatalogue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const categories = Object.values(CatalogueCategory);
 
   const libraryAsGames = useMemo<
-    (ShopAssets & { executablePath?: string | null })[]
+    (ShopAssets & { executablePath?: string | null; lastTimePlayed?: string | null })[]
   >(
     () =>
       library
@@ -196,6 +214,7 @@ export default function Home() {
           coverImageUrl: null,
           downloadSources: [],
           executablePath: g.executablePath,
+          lastTimePlayed: g.lastTimePlayed ?? null,
         })),
     [library]
   );
@@ -239,11 +258,30 @@ export default function Home() {
       )
       .map((g) => ({ type: "game" as const, data: g, covers: [] }));
 
+    const trendingGames = [...unassignedGames]
+      .filter((g) => g.data.lastTimePlayed != null)
+      .sort(
+        (a, b) =>
+          new Date(b.data.lastTimePlayed!).getTime() -
+          new Date(a.data.lastTimePlayed!).getTime()
+      )
+      .slice(0, 6);
+
+    const trendingIds = new Set(trendingGames.map((g) => g.data.objectId));
+
+    const remainingGames = unassignedGames
+      .filter((g) => !trendingIds.has(g.data.objectId))
+      .sort((a, b) => (a.data.title || "").localeCompare(b.data.title || ""));
+
+    const sortedFolders = [...FOLDERS].sort((a, b) =>
+      (a.data.name || "").localeCompare(b.data.name || "")
+    );
+
     const combined: {
       type: "game" | "folder" | "button_library" | "button_create_folder";
       data: any;
       covers: string[];
-    }[] = [...FOLDERS, ...unassignedGames].slice(0, 15);
+    }[] = [...trendingGames, ...sortedFolders, ...remainingGames];
 
     combined.push({ type: "button_library", data: null as any, covers: [] });
     combined.push({
@@ -554,20 +592,24 @@ export default function Home() {
             onFocus={() => setIsSliderActive(true)}
             onContextMenu={(e) => handleContextMenu(e)}
             onMouseDown={(e) => {
-              setIsDraggingScroll(true);
-              setStartX(e.pageX - e.currentTarget.offsetLeft);
-              setScrollLeft(e.currentTarget.scrollLeft);
-              setHasDragged(false);
+              dragRef.current.isDragging = true;
+              dragRef.current.startX = e.pageX - e.currentTarget.offsetLeft;
+              dragRef.current.scrollLeft = e.currentTarget.scrollLeft;
+              dragRef.current.hasDragged = false;
             }}
-            onMouseLeave={() => setIsDraggingScroll(false)}
-            onMouseUp={() => setIsDraggingScroll(false)}
+            onMouseLeave={() => {
+              dragRef.current.isDragging = false;
+            }}
+            onMouseUp={() => {
+              dragRef.current.isDragging = false;
+            }}
             onMouseMove={(e) => {
-              if (!isDraggingScroll) return;
+              if (!dragRef.current.isDragging) return;
               e.preventDefault();
               const x = e.pageX - e.currentTarget.offsetLeft;
-              const walk = (x - startX) * 2;
-              if (Math.abs(walk) > 5) setHasDragged(true);
-              e.currentTarget.scrollLeft = scrollLeft - walk;
+              const walk = (x - dragRef.current.startX) * 2;
+              if (Math.abs(walk) > 5) dragRef.current.hasDragged = true;
+              e.currentTarget.scrollLeft = dragRef.current.scrollLeft - walk;
             }}
           >
             {showSkeleton
@@ -590,7 +632,7 @@ export default function Home() {
                           scrollToCard(index);
                         }}
                         onClick={() => {
-                          if (hasDragged) return;
+                          if (dragRef.current.hasDragged) return;
                           setSelectedIndex(index);
                           navigate("/library");
                         }}
@@ -617,7 +659,7 @@ export default function Home() {
                           scrollToCard(index);
                         }}
                         onClick={() => {
-                          if (hasDragged) return;
+                          if (dragRef.current.hasDragged) return;
                           setSelectedIndex(index);
                           setShowCreateFolderModal(true);
                         }}
@@ -659,7 +701,7 @@ export default function Home() {
                         scrollToCard(index);
                       }}
                       onClick={() => {
-                        if (hasDragged) return;
+                        if (dragRef.current.hasDragged) return;
                         setSelectedIndex(index);
                       }}
                       onDoubleClick={() => {

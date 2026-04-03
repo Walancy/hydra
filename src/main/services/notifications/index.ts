@@ -105,6 +105,24 @@ export const publishDownloadCompleteNotification = async (game: Game) => {
   );
 };
 
+export const publishNotificationUpdateAvailable = async (version: string) => {
+  const title = t("new_update_available", {
+    ns: "notifications",
+    version,
+  });
+  const body = t("update_available_description", {
+    ns: "notifications",
+    version,
+  });
+
+  // Create local notification only (no OS toast)
+  await LocalNotificationManager.createNotification(
+    "UPDATE_AVAILABLE",
+    title,
+    body
+  );
+};
+
 export const publishNotificationUpdateReadyToInstall = async (
   version: string
 ) => {

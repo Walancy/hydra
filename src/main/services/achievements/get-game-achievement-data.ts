@@ -27,7 +27,7 @@ export const getGameAchievementData = async (
   shop: GameShop,
   useCachedData: boolean
 ) => {
-  if (shop === "custom") {
+  if (!objectId || !shop || shop === "custom") {
     return [];
   }
 

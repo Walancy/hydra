@@ -203,10 +203,6 @@ function useHeroPanelActions() {
     }
   };
 
-  const closeGame = () => {
-    if (game) window.electron.closeGame(game.shop, game.objectId);
-  };
-
   const deleting = game ? isGameDeleting(game?.id) : false;
 
   const removeGameFromLibraryButton = game ? (
@@ -264,12 +260,12 @@ function useHeroPanelActions() {
     if (isGameRunning) {
       return (
         <Button
-          onClick={closeGame}
           theme="primary"
-          disabled={deleting}
-          style={{ minWidth: 200 }}
+          disabled
+          style={{ minWidth: 200, opacity: 0.5, pointerEvents: "none" }}
         >
-          {t("close")}
+          <PlayIcon />
+          {t("playing", { defaultValue: "Jogando" })}
         </Button>
       );
     }

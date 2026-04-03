@@ -39,6 +39,8 @@ import { FeaturedCarousel } from "./featured-carousel";
 import { CatalogueSection } from "./catalogue-section";
 import { CategoryExplorer } from "./category-explorer";
 import { TopSellers } from "./top-sellers";
+import { expandAcronym } from "@renderer/services/game-acronyms";
+import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
 
 const ProtonCompatibilitySection = lazy(async () => {
   const mod = await import("./proton-compatibility-section");
@@ -88,7 +90,8 @@ const protonCompatibilityThresholds: CompatibilityThreshold<
 const areSameValues = (a: string[], b: string[]) =>
   a.length === b.length && a.every((i) => b.includes(i));
 
-const SECTION_SIZE = 10;
+const SECTION_SIZE_DEFAULT = 10;
+const SECTION_SIZE_GAMEPAD = 20;
 
 let globalCachedResults: CatalogueSearchResult[] | null = null;
 let globalCachedCount: number = 0;
@@ -156,12 +159,17 @@ export default function Catalogue() {
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
+        const expandedTitle = expandAcronym(filtersArg.title || "");
+        const resolvedFilters = expandedTitle
+          ? { ...filtersArg, title: expandedTitle }
+          : filtersArg;
+
         const response = await window.electron.hydraApi.post<{
           edges: CatalogueSearchResult[];
           count: number;
         }>("/catalogue/search", {
           data: {
-            ...filtersArg,
+            ...resolvedFilters,
             take,
             skip: offset,
             downloadSourceIds: sources.map((s) => s.id),
@@ -181,7 +189,7 @@ export default function Catalogue() {
 
         setIsLoading(false);
       },
-      500,
+      250,
       { leading: true, trailing: true }
     )
   ).current;
@@ -203,6 +211,8 @@ export default function Catalogue() {
     }
 
     setIsLoading(true);
+    setAllGamesTitle(null);
+    if (hasActiveFilters) setShowAll(false);
     abortControllerRef.current?.abort();
     debouncedSearch(filters, downloadSources, pageSize, (page - 1) * pageSize);
     return () => {
@@ -438,6 +448,11 @@ export default function Catalogue() {
     return copy;
   }, [results]);
 
+  const isGamepadConnected = useGamepadConnected();
+  const sectionSize = isGamepadConnected
+    ? SECTION_SIZE_GAMEPAD
+    : SECTION_SIZE_DEFAULT;
+
   // Home sections from results pool
   const sections = useMemo(() => {
     if (hasActiveFilters || !results.length) return [];
@@ -445,7 +460,7 @@ export default function Catalogue() {
     const used = new Set<string>();
 
     // Destaques do Dia — embaralhado com seed diária
-    const destaques = dailyShuffled.slice(0, SECTION_SIZE);
+    const destaques = dailyShuffled.slice(0, sectionSize);
     destaques.forEach((g) => used.add(g.objectId));
 
     // Mais Populares — jogos com mais fontes de download disponíveis
@@ -455,7 +470,7 @@ export default function Catalogue() {
         (a, b) =>
           (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
       )
-      .slice(0, SECTION_SIZE);
+      .slice(0, sectionSize);
     populares.forEach((g) => used.add(g.objectId));
 
     // Recomendados para Você — pontuados por overlap de gêneros com a biblioteca
@@ -478,7 +493,7 @@ export default function Catalogue() {
           : 0,
       }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, SECTION_SIZE)
+      .slice(0, sectionSize)
       .map(({ game }) => game);
 
     return [
@@ -486,9 +501,11 @@ export default function Catalogue() {
       { title: "Mais Populares", games: populares },
       { title: "Recomendados para Você", games: recomendados },
     ].filter((s) => s.games.length > 0);
-  }, [results, hasActiveFilters, dailyShuffled, library]);
+  }, [results, hasActiveFilters, dailyShuffled, library, sectionSize]);
 
   const [showFilters, setShowFilters] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [allGamesTitle, setAllGamesTitle] = useState<string | null>(null);
   const featuredGames = useMemo(() => results.slice(0, 9), [results]);
 
   return (
@@ -574,6 +591,17 @@ export default function Catalogue() {
           </div>
           <div className="catalogue__filter-bar-toggles">
             <Button
+              theme={showAll ? "primary" : "outline"}
+              onClick={() => {
+                setShowAll((prev) => !prev);
+                setAllGamesTitle(null);
+                if (cataloguePageRef.current)
+                  cataloguePageRef.current.scrollTop = 0;
+              }}
+            >
+              {t("ver_tudo", { defaultValue: "Ver Tudo" })}
+            </Button>
+            <Button
               theme="outline"
               onClick={() => setShowFilters(!showFilters)}
             >
@@ -626,7 +654,7 @@ export default function Catalogue() {
 
       <div className="catalogue__content">
         {/* Home layout */}
-        {!hasActiveFilters && (
+        {!hasActiveFilters && !allGamesTitle && !showAll && (
           <>
             <FeaturedCarousel games={isLoading ? [] : featuredGames} />
             {sections.map((s) => (
@@ -635,6 +663,11 @@ export default function Catalogue() {
                 title={s.title}
                 games={s.games}
                 isLoading={isLoading}
+                onVerMais={() => {
+                  setAllGamesTitle(s.title);
+                  if (cataloguePageRef.current)
+                    cataloguePageRef.current.scrollTop = 0;
+                }}
               />
             ))}
             {isLoading && (
@@ -643,12 +676,65 @@ export default function Catalogue() {
                   title="Destaques do Dia"
                   games={[]}
                   isLoading
+                  skeletonCount={sectionSize}
                 />
-                <CatalogueSection title="Mais Populares" games={[]} isLoading />
+                <CatalogueSection
+                  title="Mais Populares"
+                  games={[]}
+                  isLoading
+                  skeletonCount={sectionSize}
+                />
               </>
             )}
-            <CategoryExplorer onSelectGenre={handleGenreClick} />
-            <TopSellers games={results} isLoading={isLoading} />
+            {!isGamepadConnected && (
+              <>
+                <CategoryExplorer onSelectGenre={handleGenreClick} />
+                <TopSellers games={results} isLoading={isLoading} />
+              </>
+            )}
+          </>
+        )}
+
+        {/* Ver Tudo — full catalogue list with pagination */}
+        {!hasActiveFilters && showAll && (
+          <>
+            <CatalogueSection
+              title={`${formatNumber(itemsCount)} ${t("results", { defaultValue: "jogos" })}`}
+              games={results}
+              isLoading={isLoading}
+            />
+            <div className="catalogue__pagination-container">
+              <Pagination
+                page={page}
+                totalPages={Math.ceil(itemsCount / pageSize)}
+                onPageChange={(p) => {
+                  dispatch(setPage(p));
+                  if (cataloguePageRef.current)
+                    cataloguePageRef.current.scrollTop = 0;
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Ver Mais — full catalogue list */}
+        {!hasActiveFilters && !showAll && allGamesTitle && (
+          <>
+            <div className="catalogue__ver-mais-header">
+              <button
+                type="button"
+                className="catalogue__ver-mais-back"
+                onClick={() => {
+                  setAllGamesTitle(null);
+                  if (cataloguePageRef.current)
+                    cataloguePageRef.current.scrollTop = 0;
+                }}
+              >
+                ← Voltar
+              </button>
+              <span className="catalogue__ver-mais-title">{allGamesTitle}</span>
+            </div>
+            <CatalogueSection title="" games={results} isLoading={isLoading} />
           </>
         )}
 

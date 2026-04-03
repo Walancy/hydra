@@ -1,0 +1,142 @@
+@use "../../scss/globals.scss";
+
+// ── CSS custom props ────────────────────────────────────
+:root {
+  --ds-card-status-ok: #4ade80;
+  --ds-card-status-pending: #fbbf24;
+  --ds-card-status-fail: #f87171;
+}
+
+// ── Card ────────────────────────────────────────────────
+.ds-card {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  &--syncing {
+    opacity: globals.$disabled-opacity;
+    pointer-events: none;
+  }
+
+  &--pending {
+    opacity: 0.75;
+  }
+
+  // Conteúdo principal
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    min-width: 0;
+  }
+
+  // Header: nome + status + botão remover
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+  }
+
+  &__title-icon {
+    margin-right: 6px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+
+    &--spin svg {
+      animation: ds-spin 1s linear infinite;
+    }
+  }
+
+  // URL row
+  &__url-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__url {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: "Courier New", monospace;
+  }
+
+  // Footer: count + navigate
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__count {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.38);
+  }
+
+  &__navigate {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+}
+
+@keyframes ds-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

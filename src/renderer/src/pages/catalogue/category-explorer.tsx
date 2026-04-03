@@ -1,20 +1,34 @@
 import { useRef } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@primer/octicons-react";
+import {
+  Flame,
+  Map as MapIcon,
+  Shield,
+  Crosshair,
+  Monitor,
+  Trophy,
+  Car,
+  Puzzle,
+  Ghost,
+  Globe,
+  Swords,
+  Building,
+} from "lucide-react";
 import "./category-explorer.scss";
 
 const STEAM_GENRES = [
-  { key: "action", label: "Ação" },
-  { key: "adventure", label: "Aventura" },
-  { key: "rpg", label: "RPG" },
-  { key: "strategy", label: "Estratégia" },
-  { key: "simulation", label: "Simulação" },
-  { key: "sports", label: "Esportes" },
-  { key: "racing", label: "Corrida" },
-  { key: "puzzle", label: "Quebra-Cabeça" },
-  { key: "horror", label: "Terror" },
-  { key: "openworld", label: "Mundo Aberto" },
-  { key: "fighting", label: "Luta" },
-  { key: "city", label: "Construção de Cidades" },
+  { key: "action", label: "Ação", icon: Flame },
+  { key: "adventure", label: "Aventura", icon: MapIcon },
+  { key: "rpg", label: "RPG", icon: Shield },
+  { key: "strategy", label: "Estratégia", icon: Crosshair },
+  { key: "simulation", label: "Simulação", icon: Monitor },
+  { key: "sports", label: "Esportes", icon: Trophy },
+  { key: "racing", label: "Corrida", icon: Car },
+  { key: "puzzle", label: "Quebra-Cabeça", icon: Puzzle },
+  { key: "horror", label: "Terror", icon: Ghost },
+  { key: "openworld", label: "Mundo Aberto", icon: Globe },
+  { key: "fighting", label: "Luta", icon: Swords },
+  { key: "city", label: "Construção de Cidades", icon: Building },
 ];
 
 interface CategoryExplorerProps {
@@ -57,8 +71,7 @@ export function CategoryExplorer({
               onClick={() => onSelectGenre(genre.label)}
               aria-label={`Explorar ${genre.label}`}
             >
-              <div className="cat-explorer__bg" />
-              <div className="cat-explorer__gradient" />
+              <genre.icon size={28} className="cat-explorer__icon" />
               <span className="cat-explorer__label">{genre.label}</span>
             </button>
           ))}

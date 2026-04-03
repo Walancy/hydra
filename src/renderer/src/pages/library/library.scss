@@ -47,10 +47,8 @@
   }
 
   &__content {
-    padding: calc(globals.$spacing-unit * 6) 48px
+    padding: calc(globals.$spacing-unit * 6) max(48px, calc(50% - 700px))
       calc(globals.$spacing-unit * 4);
-    max-width: 1400px;
-    align-self: center;
     flex: 1;
     overflow-y: auto;
     scrollbar-width: none; /* Firefox */
@@ -66,11 +64,11 @@
     z-index: 1;
 
     @media (max-width: 1100px) {
-      padding: calc(globals.$spacing-unit * 5) 24px
+      padding: calc(globals.$spacing-unit * 5) max(24px, calc(50% - 700px))
         calc(globals.$spacing-unit * 4);
     }
     @media (max-width: 800px) {
-      padding: calc(globals.$spacing-unit * 4) 12px
+      padding: calc(globals.$spacing-unit * 4) max(12px, calc(50% - 700px))
         calc(globals.$spacing-unit * 3);
     }
   }
@@ -242,64 +240,120 @@
     margin-bottom: calc(globals.$spacing-unit * 2);
   }
 
-  &__collections {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: calc(globals.$spacing-unit);
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  &__collection-item {
+  &__folder-back-nav {
     display: flex;
     align-items: center;
-    gap: calc(globals.$spacing-unit);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    gap: calc(globals.$spacing-unit * 2);
+    margin-bottom: calc(globals.$spacing-unit * 3);
+  }
+
+  &__folder-back-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  &__folder-back-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  &__folders-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: calc(globals.$spacing-unit * 2);
+    margin-bottom: calc(globals.$spacing-unit * 2);
+  }
+
+  &__folder-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 160px;
     background: rgba(255, 255, 255, 0.03);
-    color: rgba(255, 255, 255, 0.8);
-    border-radius: 8px;
-    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
     cursor: pointer;
-    min-width: 0;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    position: relative;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
     }
 
     &--active {
-      border-color: rgba(255, 255, 255, 0.24);
+      border-color: rgba(255, 255, 255, 0.3);
       background: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.95);
-    }
-
-    span:first-of-type {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
   }
 
-  &__collection-count {
-    margin-left: auto;
-    background-color: #fff;
-    color: globals.$background-color;
-    font-size: 10px;
-    font-weight: 700;
-    border-radius: 999px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
-    display: inline-flex;
+  &__folder-card-previews {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  &__folder-preview-img {
+    flex: 1;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  &__folder-preview-empty {
+    flex: 1;
+    height: 100%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
-    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  &__folder-create-icon {
+    font-size: 24px;
+    font-weight: 300;
+  }
+
+  &__folder-card-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__folder-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__folder-card-count {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
   }
 
   &__games-grid {

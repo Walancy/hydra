@@ -45,6 +45,7 @@
     -webkit-backdrop-filter: blur(24px);
     transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 
@@ -67,89 +68,52 @@
     }
   }
 
-  // Se não houver imagem, mostramos um padrão CSS ou gradiente melhorado
-  &__bg {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: brightness(0.7) blur(1px) contrast(1.1);
-    transition:
-      transform 0.4s ease,
-      filter 0.4s ease;
-
-    // Gradiente fallback bonitão caso falte imagem (mesh gradients) transparentes
-    background-color: transparent;
-    background-image:
-      radial-gradient(at 0% 0%, rgba(60, 20, 50, 0.5) 0, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(20, 50, 80, 0.5) 0, transparent 50%);
-  }
-
-  &__card:hover &__bg {
-    transform: scale(1.05);
-    filter: brightness(0.5) blur(2px);
-  }
-
-  // Gradiente fixo colorido conforme o gênero
-  &__gradient {
-    position: absolute;
-    inset: 0;
-    opacity: 0.8;
-    mix-blend-mode: overlay;
-  }
-
-  &__card--action &__gradient {
-    background: linear-gradient(135deg, #e74c3c 0%, transparent 100%);
-  }
-  &__card--adventure &__gradient {
-    background: linear-gradient(135deg, #3498db 0%, transparent 100%);
-  }
-  &__card--rpg &__gradient {
-    background: linear-gradient(135deg, #9b59b6 0%, transparent 100%);
-  }
-  &__card--strategy &__gradient {
-    background: linear-gradient(135deg, #2ecc71 0%, transparent 100%);
-  }
-  &__card--simulation &__gradient {
-    background: linear-gradient(135deg, #34495e 0%, transparent 100%);
-  }
-  &__card--sports &__gradient {
-    background: linear-gradient(135deg, #27ae60 0%, transparent 100%);
-  }
-  &__card--racing &__gradient {
-    background: linear-gradient(135deg, #e67e22 0%, transparent 100%);
-  }
-  &__card--puzzle &__gradient {
-    background: linear-gradient(135deg, #2980b9 0%, transparent 100%);
-  }
-  &__card--horror &__gradient {
-    background: linear-gradient(135deg, #960f0f 0%, transparent 100%);
-  }
-  &__card--openworld &__gradient {
-    background: linear-gradient(135deg, #1abc9c 0%, transparent 100%);
-  }
-  &__card--fighting &__gradient {
-    background: linear-gradient(135deg, #c0392b 0%, transparent 100%);
-  }
-  &__card--city &__gradient {
-    background: linear-gradient(135deg, #f39c12 0%, transparent 100%);
+  &__card {
+    &--action { --cat-color: #ff5e5e; }
+    &--adventure { --cat-color: #5ed1ff; }
+    &--rpg { --cat-color: #c25eff; }
+    &--strategy { --cat-color: #5eff8e; }
+    &--simulation { --cat-color: #ffbe5e; }
+    &--sports { --cat-color: #ffdd5e; }
+    &--racing { --cat-color: #ff5e9c; }
+    &--puzzle { --cat-color: #5eb1ff; }
+    &--horror { --cat-color: #ff3333; }
+    &--openworld { --cat-color: #5effd1; }
+    &--fighting { --cat-color: #ff8c33; }
+    &--city { --cat-color: #f39c12; }
   }
 
   &__label {
     position: relative;
     z-index: 2;
     color: #fff;
-    padding: 8px 16px;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.82);
     transition: transform 0.2s ease;
   }
 
+  &__icon {
+    color: var(--cat-color, rgba(255, 255, 255, 0.6));
+    opacity: 0.8;
+    margin-bottom: 8px;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+  }
+
+  &__card:hover {
+    border-color: color-mix(in srgb, var(--cat-color) 30%, transparent);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
   &__card:hover &__label {
-    transform: scale(1.05);
+    transform: translateY(-2px);
+  }
+
+  &__card:hover &__icon {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.15);
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--cat-color) 60%, transparent));
   }
 
   &__nav {
@@ -157,9 +121,7 @@
     width: 44px;
     height: 44px;
     border-radius: 5px;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.05);
     color: rgba(255, 255, 255, 0.7);
     display: flex;
@@ -172,7 +134,7 @@
     z-index: 5;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.05);
       color: #fff;
     }
 

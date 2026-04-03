@@ -68,7 +68,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: stretch;
     padding: 8px;
     background: linear-gradient(
       to top,
@@ -79,9 +79,16 @@
     );
   }
 
-  // ── Favorite button — top right ───────────────────────
+  // ── Action buttons container — top right ─────────────
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    align-items: center;
+  }
+
+  // ── Favorite button ───────────────────────────────────
   &__fav-btn {
-    align-self: flex-end;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -113,9 +120,39 @@
     }
   }
 
+  &__remove-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      color 0.15s ease,
+      background 0.15s ease;
+    z-index: 3;
+    flex-shrink: 0;
+
+    &:hover {
+      color: #e05c7a;
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+
   &__wrapper:hover &__fav-btn,
   &__wrapper:focus &__fav-btn,
-  &__wrapper:focus-within &__fav-btn {
+  &__wrapper:focus-within &__fav-btn,
+  &__wrapper:hover &__remove-btn,
+  &__wrapper:focus &__remove-btn,
+  &__wrapper:focus-within &__remove-btn {
     opacity: 1;
   }
 

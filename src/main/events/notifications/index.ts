@@ -1,5 +1,6 @@
 import "./publish-new-repacks-notification";
 import "./show-achievement-test-notification";
+import "./show-forza-achievement-test";
 import "./update-achievement-notification-window";
 import "./get-local-notifications";
 import "./get-local-notifications-count";

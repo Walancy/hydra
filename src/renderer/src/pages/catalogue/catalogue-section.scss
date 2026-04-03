@@ -6,6 +6,9 @@
   padding-bottom: 16px;
 
   &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 14px;
   }
 
@@ -14,6 +17,24 @@
     font-weight: 600;
     color: globals.$body-color;
     padding-left: 2px;
+  }
+
+  &__ver-mais {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s ease, background 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.06);
+    }
   }
 
   &__grid {

@@ -8,6 +8,7 @@ import {
   ImageIcon,
   HeartIcon,
   HeartFillIcon,
+  DashIcon,
 } from "@primer/octicons-react";
 import "./library-game-card.scss";
 import { logger } from "@renderer/logger";
@@ -23,6 +24,7 @@ interface LibraryGameCardProps {
   onShowTooltip?: (gameId: string) => void;
   onHideTooltip?: () => void;
   onToggleFavorite?: (game: LibraryGame) => void;
+  onRemoveFromLibrary?: (game: LibraryGame) => void;
 }
 
 export const LibraryGameCard = memo(function LibraryGameCard({
@@ -31,6 +33,7 @@ export const LibraryGameCard = memo(function LibraryGameCard({
   onMouseLeave,
   onContextMenu,
   onToggleFavorite,
+  onRemoveFromLibrary,
 }: Readonly<LibraryGameCardProps>) {
   const { formatPlayTime, handleCardClick, handleContextMenuClick } =
     useGameCard(game, onContextMenu);
@@ -42,6 +45,15 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       onToggleFavorite?.(game);
     },
     [game, onToggleFavorite]
+  );
+
+  const handleRemoveClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onRemoveFromLibrary?.(game);
+    },
+    [game, onRemoveFromLibrary]
   );
 
   const sources = [
@@ -130,22 +142,36 @@ export const LibraryGameCard = memo(function LibraryGameCard({
 
       {/* Gradient overlay with info at bottom */}
       <div className="library-game-card__overlay">
-        {/* Fav button — top right */}
-        {onToggleFavorite && (
-          <button
-            type="button"
-            className={`library-game-card__fav-btn${game.favorite ? " library-game-card__fav-btn--active" : ""}`}
-            onClick={handleFavClick}
-            aria-label={game.favorite ? "Remover dos favoritos" : "Favoritar"}
-            title={game.favorite ? "Remover dos favoritos" : "Favoritar"}
-          >
-            {game.favorite ? (
-              <HeartFillIcon size={11} />
-            ) : (
-              <HeartIcon size={11} />
-            )}
-          </button>
-        )}
+        {/* Action buttons — top right */}
+        <div className="library-game-card__actions">
+          {onToggleFavorite && (
+            <button
+              type="button"
+              className={`library-game-card__fav-btn${game.favorite ? " library-game-card__fav-btn--active" : ""}`}
+              onClick={handleFavClick}
+              aria-label={game.favorite ? "Remover dos favoritos" : "Favoritar"}
+              title={game.favorite ? "Remover dos favoritos" : "Favoritar"}
+            >
+              {game.favorite ? (
+                <HeartFillIcon size={11} />
+              ) : (
+                <HeartIcon size={11} />
+              )}
+            </button>
+          )}
+
+          {onRemoveFromLibrary && (
+            <button
+              type="button"
+              className="library-game-card__remove-btn"
+              onClick={handleRemoveClick}
+              aria-label="Remover da biblioteca"
+              title="Remover da biblioteca"
+            >
+              <DashIcon size={11} />
+            </button>
+          )}
+        </div>
 
         {/* Info strip at bottom */}
         <div className="library-game-card__info">

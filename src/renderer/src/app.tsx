@@ -47,11 +47,13 @@ import {
   getAchievementSoundVolume,
 } from "./helpers";
 import { levelDBService } from "./services/leveldb.service";
-import type { UserPreferences } from "@types";
+import type { AchievementNotificationInfo, UserPreferences } from "@types";
 import cn from "classnames";
 import { BackgroundEffectRenderer } from "./components/react-bits/BackgroundEffectRenderer";
 import { GamepadKeyboard } from "./components/gamepad-keyboard/gamepad-keyboard";
+import { AchievementNotificationItem } from "./components/achievements/notification/achievement-notification";
 import "react-loading-skeleton/dist/skeleton.css";
+import "./components/achievements/notification/achievement-notification.scss";
 import "./app.scss";
 
 export interface AppProps {
@@ -84,6 +86,40 @@ export function App() {
       } else if (e.key === "F10") {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent("hydra:test-splash"));
+      } else if (e.key === "F9") {
+        e.preventDefault();
+        setForzaQueue([
+          {
+            title: "Horizon Beckons",
+            description: "Arrive in Horizon Festival for the first time.",
+            iconUrl:
+              "https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/library_600x900.jpg",
+            isHidden: false,
+            isRare: false,
+            isPlatinum: false,
+            points: 10,
+          },
+          {
+            title: "Speed Demon",
+            description: "Reach 300 km/h for the first time.",
+            iconUrl:
+              "https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/library_600x900.jpg",
+            isHidden: false,
+            isRare: true,
+            isPlatinum: false,
+            points: 50,
+          },
+          {
+            title: "Platinum Racer",
+            description: "Complete all championships with a perfect score.",
+            iconUrl:
+              "https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/library_600x900.jpg",
+            isHidden: false,
+            isRare: false,
+            isPlatinum: true,
+            points: 100,
+          },
+        ]);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -93,6 +129,15 @@ export function App() {
   const [isSidebarForceOpen, setIsSidebarForceOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [forzaQueue, setForzaQueue] = useState<AchievementNotificationInfo[]>(
+    []
+  );
+  const [currentForza, setCurrentForza] =
+    useState<AchievementNotificationInfo | null>(null);
+  const [isForzaClosing, setIsForzaClosing] = useState(false);
+  const forzaAnimRef = useRef(-1);
+  const forzaClosingRef = useRef(-1);
 
   const [keyboardTarget, setKeyboardTarget] = useState<
     HTMLInputElement | HTMLTextAreaElement | null
@@ -161,6 +206,21 @@ export function App() {
       }
     }
   }, [isGamepadConnected]);
+
+  useEffect(() => {
+    let guideWasPressed = false;
+    const interval = setInterval(() => {
+      const pads = navigator.getGamepads();
+      const guidePressed = Array.from(pads).some(
+        (pad) => pad?.buttons[16]?.pressed === true
+      );
+      if (guidePressed && !guideWasPressed) {
+        window.electron.focusMainWindowFullscreen();
+      }
+      guideWasPressed = guidePressed;
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSidebarLeave = useCallback(() => {
     setIsSidebarForceOpen(false);
@@ -621,6 +681,50 @@ export function App() {
     };
   }, [playAudio]);
 
+  useEffect(() => {
+    const unsubscribe = window.electron.onForzaTest((_position, achievements) => {
+      setForzaQueue(achievements);
+      playAudio();
+    });
+    return () => unsubscribe();
+  }, [playAudio]);
+
+
+  const startForzaClosing = useCallback(() => {
+    cancelAnimationFrame(forzaAnimRef.current);
+    cancelAnimationFrame(forzaClosingRef.current);
+    setIsForzaClosing(true);
+    const zero = performance.now();
+    forzaClosingRef.current = requestAnimationFrame(function tick(time) {
+      if (time - zero <= 450) {
+        forzaClosingRef.current = requestAnimationFrame(tick);
+      } else {
+        setCurrentForza(null);
+        setForzaQueue((q) => q.slice(1));
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (forzaQueue.length === 0) return;
+    setCurrentForza(forzaQueue[0]);
+    setIsForzaClosing(false);
+    cancelAnimationFrame(forzaAnimRef.current);
+    cancelAnimationFrame(forzaClosingRef.current);
+    const zero = performance.now();
+    forzaAnimRef.current = requestAnimationFrame(function tick(time) {
+      if (time - zero > 4000) {
+        startForzaClosing();
+        return;
+      }
+      forzaAnimRef.current = requestAnimationFrame(tick);
+    });
+    return () => {
+      cancelAnimationFrame(forzaAnimRef.current);
+      cancelAnimationFrame(forzaClosingRef.current);
+    };
+  }, [forzaQueue, startForzaClosing]);
+
   const handleToastClose = useCallback(() => {
     dispatch(closeToast());
   }, [dispatch]);
@@ -681,6 +785,26 @@ export function App() {
           </section>
         </article>
       </main>
+
+      {currentForza && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 9999,
+          }}
+        >
+          <AchievementNotificationItem
+            achievement={currentForza}
+            isClosing={isForzaClosing}
+            position={
+              userPreferences?.achievementCustomNotificationPosition ??
+              "top-left"
+            }
+          />
+        </div>
+      )}
 
       <BottomPanel />
       <GamepadGuide />

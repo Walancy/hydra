@@ -239,7 +239,7 @@ export function GameInfo({
               onLocateExecutable && (
                 <Button
                   className="home__locate-button"
-                  theme={isBgLight ? "dark" : "outline"}
+                  theme={isBgLight ? "dark" : "primary"}
                   title={t("locate_executable", {
                     defaultValue: "Localizar executável do jogo",
                   })}
@@ -254,7 +254,7 @@ export function GameInfo({
         {onAddToLibrary && (
           <Button
             className="home__add-library-button"
-            theme={isBgLight ? "dark" : "outline"}
+            theme={isBgLight ? "dark" : "primary"}
             title={
               isInLibrary
                 ? t("already_in_library", {
@@ -273,7 +273,7 @@ export function GameInfo({
 
         <Button
           className="home__view-game-button"
-          theme={isBgLight ? "dark" : "outline"}
+          theme={isBgLight ? "dark" : "primary"}
           title={t("see_more", { defaultValue: "Ver página" })}
           onClick={() => navigate(buildGameDetailsPath(game))}
         >

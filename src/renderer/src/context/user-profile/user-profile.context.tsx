@@ -52,6 +52,8 @@ export interface UserProfileContextProviderProps {
   userId: string;
 }
 
+const profileCache = new Map<string, UserProfile>();
+
 export function UserProfileContextProvider({
   children,
   userId,
@@ -60,7 +62,9 @@ export function UserProfileContextProvider({
 
   const [userStats, setUserStats] = useState<UserStats | null>(null);
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(
+    profileCache.get(userId) ?? null
+  );
   const [libraryGames, setLibraryGames] = useState<UserGame[]>([]);
   const [pinnedGames, setPinnedGames] = useState<UserGame[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -207,6 +211,7 @@ export function UserProfileContextProvider({
       .get<UserProfile>(`/users/${userId}`)
       .then((userProfile) => {
         setUserProfile(userProfile);
+        profileCache.set(userId, userProfile);
 
         if (userProfile.profileImageUrl) {
           getHeroBackgroundFromImageUrl(userProfile.profileImageUrl).then(
@@ -232,7 +237,7 @@ export function UserProfileContextProvider({
   }, [i18n]);
 
   useEffect(() => {
-    setUserProfile(null);
+    setUserProfile(profileCache.get(userId) ?? null);
     setLibraryGames([]);
     setPinnedGames([]);
     setHeroBackground(DEFAULT_USER_PROFILE_BACKGROUND);

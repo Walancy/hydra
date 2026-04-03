@@ -115,6 +115,11 @@ export function GameDetailsContextProvider({
   }, [updateGame, isGameDownloading, lastPacket?.gameId]);
 
   useEffect(() => {
+    if (!objectId || !shop) {
+      setIsLoading(false);
+      return;
+    }
+
     if (abortControllerRef.current) abortControllerRef.current.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
@@ -172,7 +177,7 @@ export function GameDetailsContextProvider({
         setIsLoading(false);
       });
 
-    if (userDetails && shop !== "custom") {
+    if (userDetails && objectId && shop && shop !== "custom") {
       window.electron
         .getUnlockedAchievements(objectId, shop)
         .then((achievements) => {

@@ -67,10 +67,9 @@ export default function Achievements() {
       objectId={objectId!}
     >
       <GameDetailsContextConsumer>
-        {({ isLoading, achievements }) => {
+        {({ isLoading }) => {
           const showSkeleton =
             isLoading ||
-            achievements === null ||
             (otherUserId && comparedAchievements === null);
 
           return (

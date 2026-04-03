@@ -700,6 +700,20 @@ contextBridge.exposeInMainWorld("electron", {
     return () =>
       ipcRenderer.removeListener("on-achievement-unlocked", listener);
   },
+  onForzaTest: (
+    cb: (
+      position: AchievementCustomNotificationPosition,
+      achievements: AchievementNotificationInfo[]
+    ) => void
+  ) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      position: AchievementCustomNotificationPosition,
+      achievements: AchievementNotificationInfo[]
+    ) => cb(position, achievements);
+    ipcRenderer.on("on-forza-test", listener);
+    return () => ipcRenderer.removeListener("on-forza-test", listener);
+  },
   onCombinedAchievementsUnlocked: (
     cb: (
       gameCount: number,
@@ -721,6 +735,8 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("updateAchievementCustomNotificationWindow"),
   showAchievementTestNotification: () =>
     ipcRenderer.invoke("showAchievementTestNotification"),
+  showForzaAchievementTestNotification: () =>
+    ipcRenderer.invoke("showForzaAchievementTestNotification"),
 
   /* Themes */
   addCustomTheme: (theme: Theme) => ipcRenderer.invoke("addCustomTheme", theme),
@@ -782,6 +798,8 @@ contextBridge.exposeInMainWorld("electron", {
   showGameLauncherWindow: () => ipcRenderer.invoke("showGameLauncherWindow"),
   closeGameLauncherWindow: () => ipcRenderer.invoke("closeGameLauncherWindow"),
   openMainWindow: () => ipcRenderer.invoke("openMainWindow"),
+  focusMainWindowFullscreen: () =>
+    ipcRenderer.invoke("focusMainWindowFullscreen"),
   isMainWindowOpen: () => ipcRenderer.invoke("isMainWindowOpen"),
 
   /* LevelDB Generic CRUD */

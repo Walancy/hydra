@@ -7,10 +7,14 @@ import { useAppSelector } from "@renderer/hooks";
 import { SettingsDownloadSources } from "./settings-download-sources";
 
 import "./settings-general.scss";
+import "./settings-context-downloads.scss";
+
+type DownloadsTab = "settings" | "sources";
 
 export function SettingsContextDownloads() {
   const { t } = useTranslation("settings");
   const { updateUserPreferences } = useContext(settingsContext);
+  const [activeTab, setActiveTab] = useState<DownloadsTab>("settings");
 
   const userPreferences = useAppSelector(
     (state) => state.userPreferences.value
@@ -37,13 +41,10 @@ export function SettingsContextDownloads() {
     useMegabytes: boolean
   ): number | null | undefined => {
     const trimmed = value.trim();
-
     if (!trimmed) return null;
-
     const parsed = Number.parseFloat(trimmed);
     if (Number.isNaN(parsed)) return undefined;
     if (parsed <= 0) return null;
-
     return useMegabytes
       ? Math.floor(parsed * 1024 * 1024)
       : Math.floor((parsed * 1e6) / 8);
@@ -60,7 +61,6 @@ export function SettingsContextDownloads() {
 
   useEffect(() => {
     if (!userPreferences) return;
-
     setForm({
       useNativeHttpDownloader: userPreferences.useNativeHttpDownloader ?? true,
       seedAfterDownloadComplete:
@@ -91,13 +91,7 @@ export function SettingsContextDownloads() {
       form.showDownloadSpeedInMegabytes
     );
 
-    if (parsedBytesPerSecond === undefined) {
-      setForm((prev) => ({ ...prev, maxDownloadSpeedMegabytes: "" }));
-      updateUserPreferences({ maxDownloadSpeedBytesPerSecond: null });
-      return;
-    }
-
-    if (parsedBytesPerSecond === null) {
+    if (parsedBytesPerSecond === undefined || parsedBytesPerSecond === null) {
       setForm((prev) => ({ ...prev, maxDownloadSpeedMegabytes: "" }));
       updateUserPreferences({ maxDownloadSpeedBytesPerSecond: null });
       return;
@@ -131,99 +125,133 @@ export function SettingsContextDownloads() {
       maxDownloadSpeedMegabytes: nextLimitInput,
     }));
 
-    updateUserPreferences({
-      showDownloadSpeedInMegabytes: nextUseMegabytes,
-    });
+    updateUserPreferences({ showDownloadSpeedInMegabytes: nextUseMegabytes });
   };
 
+  const tabs: { id: DownloadsTab; label: string }[] = [
+    {
+      id: "settings",
+      label: t("download_settings_tab", { defaultValue: "Configurações" }),
+    },
+    {
+      id: "sources",
+      label: t("download_sources_tab", { defaultValue: "Fontes" }),
+    },
+  ];
+
   return (
-    <div className="settings-context-panel">
-      <div className="settings-context-panel__group">
-        <h3>{t("download_behavior")}</h3>
-
-        <CheckboxField
-          label={t("use_native_http_downloader")}
-          checked={form.useNativeHttpDownloader}
-          disabled={hasActiveDownload}
-          onChange={() =>
-            handleChange({
-              useNativeHttpDownloader: !form.useNativeHttpDownloader,
-            })
-          }
-        />
-
-        <TextField
-          type="number"
-          min="0"
-          step="0.1"
-          label={t("max_download_speed", {
-            unit: form.showDownloadSpeedInMegabytes ? "MB/s" : "Mbps",
-          })}
-          hint={t("max_download_speed_hint", {
-            unit: form.showDownloadSpeedInMegabytes
-              ? t("max_download_speed_unit_megabytes")
-              : t("max_download_speed_unit_megabits"),
-          })}
-          value={form.maxDownloadSpeedMegabytes}
-          onChange={(event) => {
-            setForm((prev) => ({
-              ...prev,
-              maxDownloadSpeedMegabytes: event.target.value,
-            }));
-          }}
-          onBlur={handleMaxDownloadSpeedBlur}
-          placeholder={t("max_download_speed_unlimited")}
-        />
-
-        {hasActiveDownload && (
-          <p className="settings-general__disabled-hint">
-            {t("cannot_change_downloader_while_downloading")}
-          </p>
-        )}
-
-        <CheckboxField
-          label={t("seed_after_download_complete")}
-          checked={form.seedAfterDownloadComplete}
-          onChange={() =>
-            handleChange({
-              seedAfterDownloadComplete: !form.seedAfterDownloadComplete,
-            })
-          }
-        />
-
-        <CheckboxField
-          label={t("extract_files_by_default")}
-          checked={form.extractFilesByDefault}
-          onChange={() =>
-            handleChange({
-              extractFilesByDefault: !form.extractFilesByDefault,
-            })
-          }
-        />
-
-        <CheckboxField
-          label={t("show_download_speed_in_megabytes")}
-          checked={form.showDownloadSpeedInMegabytes}
-          onChange={handleSpeedUnitChange}
-        />
-
-        {window.electron.platform === "win32" && (
-          <CheckboxField
-            label={t("create_shortcuts_on_download")}
-            checked={form.createStartMenuShortcut}
-            onChange={() =>
-              handleChange({
-                createStartMenuShortcut: !form.createStartMenuShortcut,
-              })
-            }
-          />
-        )}
+    <div className="downloads-tabs">
+      {/* Tab bar */}
+      <div className="downloads-tabs__bar" role="tablist">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`downloads-tabs__tab${activeTab === tab.id ? " downloads-tabs__tab--active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="settings-context-panel__group">
-        <h3>{t("download_sources")}</h3>
-        <SettingsDownloadSources />
-      </div>
+      {/* Tab: Configurações */}
+      {activeTab === "settings" && (
+        <div className="settings-context-panel">
+          <div className="settings-context-panel__group">
+            <h3>{t("download_behavior")}</h3>
+
+            <CheckboxField
+              label={t("use_native_http_downloader")}
+              checked={form.useNativeHttpDownloader}
+              disabled={hasActiveDownload}
+              onChange={() =>
+                handleChange({
+                  useNativeHttpDownloader: !form.useNativeHttpDownloader,
+                })
+              }
+            />
+
+            <TextField
+              type="number"
+              min="0"
+              step="0.1"
+              label={t("max_download_speed", {
+                unit: form.showDownloadSpeedInMegabytes ? "MB/s" : "Mbps",
+              })}
+              hint={t("max_download_speed_hint", {
+                unit: form.showDownloadSpeedInMegabytes
+                  ? t("max_download_speed_unit_megabytes")
+                  : t("max_download_speed_unit_megabits"),
+              })}
+              value={form.maxDownloadSpeedMegabytes}
+              onChange={(event) => {
+                setForm((prev) => ({
+                  ...prev,
+                  maxDownloadSpeedMegabytes: event.target.value,
+                }));
+              }}
+              onBlur={handleMaxDownloadSpeedBlur}
+              placeholder={t("max_download_speed_unlimited")}
+            />
+
+            {hasActiveDownload && (
+              <p className="settings-general__disabled-hint">
+                {t("cannot_change_downloader_while_downloading")}
+              </p>
+            )}
+
+            <CheckboxField
+              label={t("seed_after_download_complete")}
+              checked={form.seedAfterDownloadComplete}
+              onChange={() =>
+                handleChange({
+                  seedAfterDownloadComplete: !form.seedAfterDownloadComplete,
+                })
+              }
+            />
+
+            <CheckboxField
+              label={t("extract_files_by_default")}
+              checked={form.extractFilesByDefault}
+              onChange={() =>
+                handleChange({
+                  extractFilesByDefault: !form.extractFilesByDefault,
+                })
+              }
+            />
+
+            <CheckboxField
+              label={t("show_download_speed_in_megabytes")}
+              checked={form.showDownloadSpeedInMegabytes}
+              onChange={handleSpeedUnitChange}
+            />
+
+            {window.electron.platform === "win32" && (
+              <CheckboxField
+                label={t("create_shortcuts_on_download")}
+                checked={form.createStartMenuShortcut}
+                onChange={() =>
+                  handleChange({
+                    createStartMenuShortcut: !form.createStartMenuShortcut,
+                  })
+                }
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Fontes */}
+      {activeTab === "sources" && (
+        <div className="settings-context-panel">
+          <div className="settings-context-panel__group">
+            <SettingsDownloadSources />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

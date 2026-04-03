@@ -432,18 +432,78 @@ export class WindowManager {
 
     const language = userPreferences.language ?? "en";
 
+    const achievements = [
+      generateAchievementCustomNotificationTest(t, language),
+      generateAchievementCustomNotificationTest(t, language, {
+        isRare: true,
+        isHidden: true,
+      }),
+      generateAchievementCustomNotificationTest(t, language, {
+        isPlatinum: true,
+      }),
+    ];
+
+    const position =
+      userPreferences.achievementCustomNotificationPosition ?? "top-left";
+
+    if (!app.isPackaged) {
+      // In dev mode notificationWindow doesn't exist — send to main window
+      this.mainWindow?.webContents.send(
+        "on-forza-test",
+        position,
+        achievements
+      );
+      return;
+    }
+
+    this.notificationWindow?.webContents.send(
+      "on-achievement-unlocked",
+      position,
+      achievements
+    );
+  }
+
+
+  public static async showForzaAchievementTestNotification() {
+    const userPreferences = await db.get<string, UserPreferences>(
+      levelKeys.userPreferences,
+      { valueEncoding: "json" }
+    );
+
     this.notificationWindow?.webContents.send(
       "on-achievement-unlocked",
       userPreferences.achievementCustomNotificationPosition ?? "top-left",
       [
-        generateAchievementCustomNotificationTest(t, language),
-        generateAchievementCustomNotificationTest(t, language, {
+        {
+          title: "Horizon Beckons",
+          description: "Arrive in Horizon Festival for the first time.",
+          iconUrl:
+            "https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/capsule_sm_120.jpg",
+          isHidden: false,
+          isRare: false,
+          isPlatinum: false,
+          points: 10,
+        },
+        {
+          title: "Speed Demon",
+          description: "Reach 300 km/h for the first time.",
+          iconUrl:
+            "https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/capsule_sm_120.jpg",
+          isHidden: false,
           isRare: true,
-          isHidden: true,
-        }),
-        generateAchievementCustomNotificationTest(t, language, {
+          isPlatinum: false,
+          points: 50,
+        },
+        {
+          title: "Platinum Racer",
+          description: "Complete all championships with a perfect score.",
+          iconUrl:
+            "https://cdn.cloudflare.steamstatic.com/steam/apps/1551360/capsule_sm_120.jpg",
+          isHidden: false,
+          isRare: false,
           isPlatinum: true,
-        }),
+          points: 100,
+        },
       ]
     );
   }
@@ -594,6 +654,21 @@ export class WindowManager {
       this.mainWindow.show();
       if (this.mainWindow.isMinimized()) {
         this.mainWindow.restore();
+      }
+      this.mainWindow.focus();
+    } else {
+      this.createMainWindow();
+    }
+  }
+
+  public static focusMainWindowFullscreen() {
+    if (this.mainWindow) {
+      this.mainWindow.show();
+      if (this.mainWindow.isMinimized()) {
+        this.mainWindow.restore();
+      }
+      if (!this.mainWindow.isMaximized()) {
+        this.mainWindow.maximize();
       }
       this.mainWindow.focus();
     } else {

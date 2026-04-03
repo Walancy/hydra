@@ -26,7 +26,12 @@ import {
   CreateCollectionModal,
   useGameActions,
 } from "..";
-import { useGameCollections, useToast, useUserDetails } from "@renderer/hooks";
+import {
+  useGameCollections,
+  useToast,
+  useUserDetails,
+  useHomeGroups,
+} from "@renderer/hooks";
 
 interface GameContextMenuProps extends Omit<ContextMenuProps, "items"> {
   game: LibraryGame;
@@ -80,6 +85,12 @@ export function GameContextMenu({
     loadCollections,
     assignGameToCollection,
   } = useGameCollections();
+
+  const {
+    groups: homeGroups,
+    addGameToGroup,
+    removeGameFromGroup,
+  } = useHomeGroups();
   const {
     canPlay,
     isDeleting,
@@ -254,6 +265,32 @@ export function GameContextMenu({
         ]),
   ];
 
+  const foldersSubmenu: ContextMenuItemData[] = [
+    ...homeGroups.map((group) => {
+      const isInGroup = group.gameIds.includes(game.objectId);
+      return {
+        id: `folder-${group.id}`,
+        label: group.name,
+        icon: <FileDirectoryIcon size={16} />,
+        trailingIcon: isInGroup ? (
+          <CheckCircleFillIcon
+            size={16}
+            className="context-menu__success-check"
+          />
+        ) : undefined,
+        onClick: () => {
+          if (isInGroup) {
+            removeGameFromGroup(group.id, game.objectId);
+          } else {
+            addGameToGroup(group.id, game.objectId);
+          }
+        },
+        closeOnClick: false,
+        disabled: isDeleting,
+      };
+    }),
+  ];
+
   const items: ContextMenuItemData[] = [
     {
       id: "play",
@@ -296,6 +333,17 @@ export function GameContextMenu({
             ]
           : collectionSubmenu,
     },
+    ...(homeGroups.length > 0
+      ? [
+          {
+            id: "folders",
+            label: t("folders", { defaultValue: "Pastas" }),
+            icon: <FileDirectoryIcon size={16} />,
+            disabled: isDeleting,
+            submenu: foldersSubmenu,
+          },
+        ]
+      : []),
     ...(game.executablePath
       ? [
           {

@@ -22,7 +22,6 @@ import {
 } from "@renderer/hooks";
 
 import "./header.scss";
-import { AutoUpdateSubHeader } from "./auto-update-sub-header";
 import { ScanGamesModal } from "./scan-games-modal";
 import { setFilters, setLibrarySearchQuery } from "@renderer/features";
 import cn from "classnames";
@@ -172,6 +171,7 @@ export function Header() {
   const isOnLibraryPage = location.pathname.startsWith("/library");
   const isOnCataloguePage = location.pathname.startsWith("/catalogue");
   const isGamePage = location.pathname.startsWith("/game");
+  const isSettingsPage = location.pathname.startsWith("/settings");
 
   const searchValue = isOnLibraryPage
     ? librarySearchValue
@@ -283,7 +283,7 @@ export function Header() {
 
   return (
     <>
-      {!(isHomePage || isGamePage) && (
+      {!(isHomePage || isGamePage || isSettingsPage) && (
         <GradualBlur
           position="top"
           height="130px"
@@ -441,8 +441,6 @@ export function Header() {
       {isOnLibraryPage && window.electron.platform === "win32" && (
         <Tooltip id={scanButtonTooltipId} style={{ zIndex: 9999 }} />
       )}
-
-      <AutoUpdateSubHeader />
 
       <SearchDropdown
         visible={isSearchOpen}

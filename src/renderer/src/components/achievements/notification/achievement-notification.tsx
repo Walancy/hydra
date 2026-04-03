@@ -3,9 +3,10 @@ import {
   AchievementNotificationInfo,
 } from "@types";
 import cn from "classnames";
-import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
 import { EyeClosedIcon } from "@primer/octicons-react";
-import Ellipses from "@renderer/assets/icons/ellipses.png";
+import trophySilver from "@renderer/assets/trophy/silver.png";
+import trophyGold from "@renderer/assets/trophy/gold.png";
+import trophyPlatinum from "@renderer/assets/trophy/platinum.png";
 import "./achievement-notification.scss";
 
 interface AchievementNotificationProps {
@@ -21,6 +22,12 @@ export function AchievementNotificationItem({
 }: Readonly<AchievementNotificationProps>) {
   const baseClassName = "achievement-notification";
 
+  const trophySrc = achievement.isPlatinum
+    ? trophyPlatinum
+    : achievement.isRare
+      ? trophyGold
+      : trophySilver;
+
   return (
     <div
       className={cn("achievement-notification", {
@@ -31,15 +38,6 @@ export function AchievementNotificationItem({
         [`${baseClassName}--platinum`]: achievement.isPlatinum,
       })}
     >
-      {achievement.points !== undefined && (
-        <div className="achievement-notification__chip">
-          <HydraIcon className="achievement-notification__chip__icon" />
-          <span className="achievement-notification__chip__label">
-            +{achievement.points}
-          </span>
-        </div>
-      )}
-
       <div className="achievement-notification__outer-container">
         <div className="achievement-notification__container">
           <div className="achievement-notification__content">
@@ -52,7 +50,7 @@ export function AchievementNotificationItem({
               <p className="achievement-notification__title">
                 {achievement.isHidden && (
                   <span className="achievement-notification__hidden-icon">
-                    <EyeClosedIcon size={16} />
+                    <EyeClosedIcon size={13} />
                   </span>
                 )}
                 {achievement.title}
@@ -61,16 +59,18 @@ export function AchievementNotificationItem({
                 {achievement.description}
               </p>
             </div>
-          </div>
-
-          <div className="achievement-notification__additional-overlay">
-            <div className="achievement-notification__dark-overlay"></div>
-            <img
-              className="achievement-notification__ellipses-overlay"
-              src={Ellipses}
-              alt=""
-            />
-            <div className="achievement-notification__trophy-overlay"></div>
+            <div className="achievement-notification__trophy-wrapper">
+              <img
+                src={trophySrc}
+                alt="trophy"
+                className="achievement-notification__trophy"
+              />
+              {achievement.points !== undefined && (
+                <span className="achievement-notification__chip">
+                  +{achievement.points}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

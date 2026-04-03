@@ -507,6 +507,12 @@ declare global {
         achievements?: AchievementNotificationInfo[]
       ) => void
     ) => () => Electron.IpcRenderer;
+    onForzaTest: (
+      cb: (
+        position: AchievementCustomNotificationPosition,
+        achievements: AchievementNotificationInfo[]
+      ) => void
+    ) => () => Electron.IpcRenderer;
     onCombinedAchievementsUnlocked: (
       cb: (
         gameCount: number,
@@ -516,6 +522,7 @@ declare global {
     ) => () => Electron.IpcRenderer;
     updateAchievementCustomNotificationWindow: () => Promise<void>;
     showAchievementTestNotification: () => Promise<void>;
+    showForzaAchievementTestNotification: () => Promise<void>;
 
     /* Themes */
     addCustomTheme: (theme: Theme) => Promise<void>;
@@ -548,6 +555,7 @@ declare global {
     showGameLauncherWindow: () => Promise<void>;
     closeGameLauncherWindow: () => Promise<void>;
     openMainWindow: () => Promise<void>;
+    focusMainWindowFullscreen: () => Promise<void>;
     isMainWindowOpen: () => Promise<boolean>;
 
     /* Download Options */

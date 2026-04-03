@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, TextField, Button } from "@renderer/components";
 import type { ShopAssets } from "@types";
-import { CheckCircleFillIcon } from "@primer/octicons-react";
+import {
+  CheckCircleFillIcon,
+  SearchIcon,
+  FilterIcon,
+} from "@primer/octicons-react";
 
 export interface CreateFolderModalProps {
   visible: boolean;
@@ -24,6 +28,8 @@ export function CreateFolderModal({
   const { t } = useTranslation("home");
   const [name, setName] = useState(initialName);
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -43,9 +49,21 @@ export function CreateFolderModal({
       onCreate(name.trim(), selectedIds);
       setName("");
       setSelectedIds([]);
+      setSearchQuery("");
+      setShowSelectedOnly(false);
       onClose();
     }
   };
+
+  const filteredGames = games.filter((game) => {
+    if (showSelectedOnly && !selectedIds.includes(game.objectId)) return false;
+    if (searchQuery.trim()) {
+      return game.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase().trim());
+    }
+    return true;
+  });
 
   return (
     <Modal
@@ -78,65 +96,125 @@ export function CreateFolderModal({
           />
         )}
 
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <TextField
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("search_game", { defaultValue: "Buscar jogo..." })}
+              rightContent={<SearchIcon size={16} />}
+            />
+          </div>
+          <Button
+            theme={showSelectedOnly ? "primary" : "outline"}
+            onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+            title="Mostrar selecionados"
+          >
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <FilterIcon size={16} />
+              <span>{t("selected", { defaultValue: "Selecionados" })}</span>
+            </div>
+          </Button>
+        </div>
+
         <div
           style={{
             flex: 1,
             overflowY: "auto",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-            gap: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
             paddingRight: 8,
           }}
         >
-          {games.map((game) => (
-            <button
+          {filteredGames.map((game) => (
+            <div
+              role="button"
+              tabIndex={0}
               key={game.objectId}
               onClick={() => toggleGame(game.objectId)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  toggleGame(game.objectId);
+                }
+              }}
               style={{
-                position: "relative",
-                display: "block",
+                display: "flex",
+                flexShrink: 0,
+                alignItems: "center",
                 width: "100%",
-                aspectRatio: "2/3",
+                height: 100,
+                minHeight: 100,
                 borderRadius: 8,
                 overflow: "hidden",
                 border: selectedIds.includes(game.objectId)
-                  ? "2px solid #5227ff"
-                  : "2px solid transparent",
-                background: "rgba(255, 255, 255, 0.05)",
+                  ? "1px solid rgba(255, 255, 255, 0.4)"
+                  : "1px solid rgba(255, 255, 255, 0.05)",
+                background: selectedIds.includes(game.objectId)
+                  ? "rgba(255, 255, 255, 0.08)"
+                  : "rgba(255, 255, 255, 0.03)",
                 cursor: "pointer",
                 padding: 0,
+                paddingRight: 16,
+                transition: "all 0.2s ease",
               }}
             >
               <img
                 src={
-                  game.shop === "steam"
-                    ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-                    : (game.libraryImageUrl ?? undefined)
+                  (game as any).coverImageUrl ||
+                  (game.shop === "steam"
+                    ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/header.jpg`
+                    : "") ||
+                  (game as any).customIconUrl ||
+                  game.libraryImageUrl
                 }
                 alt={game.title}
                 style={{
-                  width: "100%",
+                  width: 156,
                   height: "100%",
                   objectFit: "cover",
-                  transition: "opacity 0.2s ease",
-                  opacity: selectedIds.includes(game.objectId) ? 0.35 : 1,
+                  objectPosition: "center",
+                  borderRadius: "8px 0 0 8px",
+                  opacity: selectedIds.includes(game.objectId) ? 1 : 0.6,
+                  maskImage:
+                    "linear-gradient(to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0))",
+                  WebkitMaskImage:
+                    "linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0))",
                 }}
               />
-              {selectedIds.includes(game.objectId) && (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                  }}
-                >
-                  <CheckCircleFillIcon size={48} />
-                </div>
-              )}
-            </button>
+
+              <span
+                style={{
+                  flex: 1,
+                  paddingLeft: 16,
+                  fontWeight: 600,
+                  fontSize: 15,
+                  color: selectedIds.includes(game.objectId)
+                    ? "#fff"
+                    : "rgba(255, 255, 255, 0.7)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {game.title}
+              </span>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: selectedIds.includes(game.objectId)
+                    ? "#5227ff"
+                    : "rgba(255, 255, 255, 0.1)",
+                  width: 24,
+                  height: 24,
+                }}
+              >
+                <CheckCircleFillIcon size={20} />
+              </div>
+            </div>
           ))}
         </div>
 

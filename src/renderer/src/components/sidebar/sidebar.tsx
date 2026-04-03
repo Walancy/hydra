@@ -37,15 +37,14 @@ import {
   TrophyIcon,
   PeopleIcon,
   CloudIcon,
-  BookIcon,
 } from "@primer/octicons-react";
-import {
-  Paintbrush as PaintbrushIcon,
-  ArrowRightLeft as ArrowRightLeftIcon,
-} from "lucide-react";
+import { ArrowRightLeft as ArrowRightLeftIcon } from "lucide-react";
 
 import { SidebarAddingCustomGameModal } from "./sidebar-adding-custom-game-modal";
 import { SidebarFavoriteCard } from "./sidebar-favorite-card";
+import { SidebarGameRunning } from "./sidebar-game-running";
+import { SidebarActiveDownload } from "./sidebar-active-download";
+import { SidebarOnlineFriends } from "./sidebar-online-friends";
 import { setFriendRequestCount } from "@renderer/features/user-details-slice";
 import { setCollections } from "@renderer/features";
 import { useDispatch } from "react-redux";
@@ -499,19 +498,21 @@ export function Sidebar() {
         <div className="sidebar__content">
           {/* ── Nav·Links rápidos ── */}
           <nav className="sidebar__nav-links">
-            <button
-              type="button"
-              className="sidebar__nav-link"
-              onClick={() => navigate("/achievements")}
-            >
-              <TrophyIcon size={14} />
-              <span>Conquistas</span>
-              {totalAchievements > 0 && (
-                <small className="sidebar__nav-link-badge">
-                  {totalAchievements}
-                </small>
-              )}
-            </button>
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                className="sidebar__nav-link"
+                onClick={() => navigate("/achievements")}
+              >
+                <TrophyIcon size={14} />
+                <span>Conquistas</span>
+                {totalAchievements > 0 && (
+                  <small className="sidebar__nav-link-badge">
+                    {totalAchievements}
+                  </small>
+                )}
+              </button>
+            )}
             <button
               type="button"
               className="sidebar__nav-link"
@@ -543,31 +544,13 @@ export function Sidebar() {
               <CloudIcon size={14} />
               <span>Hydra Cloud</span>
             </button>
-            <button
-              type="button"
-              className="sidebar__nav-link"
-              onClick={() =>
-                window.electron.openExternal("https://hydrathemes.shop")
-              }
-            >
-              <PaintbrushIcon size={14} />
-              <span>Loja de Temas</span>
-            </button>
-            <button
-              type="button"
-              className="sidebar__nav-link"
-              onClick={() =>
-                window.electron.openExternal(
-                  "https://library.hydra.wiki/sources"
-                )
-              }
-            >
-              <BookIcon size={14} />
-              <span>Fontes</span>
-            </button>
           </nav>
 
           <div className="sidebar__divider" />
+
+          <SidebarGameRunning />
+          <SidebarActiveDownload />
+          <SidebarOnlineFriends />
 
           {/* ── Toggle Favoritos / Instalados ── */}
           <div className="sidebar__game-toggle">
