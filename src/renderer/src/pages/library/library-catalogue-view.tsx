@@ -40,7 +40,7 @@ const LibraryCatCard = memo(function LibraryCatCard({
   // Landscape image priority
   // For Steam games: libraryImageUrl is the landscape grid capsule (460x215)
   // For custom games: we don't upload a dedicated grid capsule, so use the Hero (landscape) before falling back to others.
-  let defaultCover =
+  const defaultCover =
     game.shop === "custom"
       ? game.customHeroImageUrl ||
         game.libraryHeroImageUrl ||
