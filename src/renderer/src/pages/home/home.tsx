@@ -188,6 +188,25 @@ export default function Home() {
 
   const categories = Object.values(CatalogueCategory);
 
+  const resolveImageSource = (imageUrl: string | null | undefined): string | null => {
+    if (!imageUrl) return null;
+    const trimmed = imageUrl.trim();
+    if (!trimmed) return null;
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    )
+      return trimmed;
+    if (trimmed.startsWith("local:"))
+      return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+    const normalized = trimmed.replaceAll("\\", "/");
+    if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+      return `local:${normalized}`;
+    return normalized;
+  };
+
   const libraryAsGames = useMemo<
     (ShopAssets & {
       executablePath?: string | null;
@@ -213,10 +232,10 @@ export default function Home() {
           libraryImageUrl: g.libraryImageUrl ?? null,
           logoImageUrl: g.logoImageUrl ?? null,
           logoPosition: null,
-          coverImageUrl: null,
+          coverImageUrl: g.coverImageUrl ?? null,
           downloadSources: [],
           executablePath: g.executablePath,
-          lastTimePlayed: g.lastTimePlayed ?? null,
+          lastTimePlayed: (g.lastTimePlayed as any) ?? null,
         })),
     [library]
   );
@@ -742,7 +761,7 @@ export default function Home() {
                           src={
                             game!.shop === "steam"
                               ? `https://steamcdn-a.akamaihd.net/steam/apps/${game!.objectId}/library_600x900_2x.jpg`
-                              : (game!.libraryImageUrl ?? undefined)
+                              : (resolveImageSource(game!.iconUrl) ?? resolveImageSource(game!.coverImageUrl) ?? resolveImageSource(game!.libraryImageUrl) ?? undefined)
                           }
                           alt={game!.title}
                           className="home__card-image"
@@ -752,9 +771,9 @@ export default function Home() {
                             const img = e.currentTarget;
                             if (
                               game!.libraryImageUrl &&
-                              img.src !== game!.libraryImageUrl
+                              img.src !== resolveImageSource(game!.libraryImageUrl)
                             ) {
-                              img.src = game!.libraryImageUrl;
+                              img.src = resolveImageSource(game!.libraryImageUrl) ?? "";
                             }
                           }}
                         />

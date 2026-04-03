@@ -117,6 +117,22 @@
     z-index: 3;
   }
 
+  // Logo overlay
+  &__logo {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    max-width: 65%;
+    max-height: 45%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    object-position: right top;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+    pointer-events: none;
+    z-index: 2;
+  }
+
   // Favorite toggle button
   &__fav-btn {
     width: 24px;

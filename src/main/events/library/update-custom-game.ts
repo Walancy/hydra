@@ -11,6 +11,7 @@ interface UpdateCustomGameParams {
   iconUrl?: string;
   logoImageUrl?: string;
   libraryHeroImageUrl?: string;
+  coverImageUrl?: string;
   originalIconPath?: string;
   originalLogoPath?: string;
   originalHeroPath?: string;
@@ -27,6 +28,7 @@ const updateCustomGame = async (
     iconUrl,
     logoImageUrl,
     libraryHeroImageUrl,
+    coverImageUrl,
     originalIconPath,
     originalLogoPath,
     originalHeroPath,
@@ -72,9 +74,9 @@ const updateCustomGame = async (
       title,
       iconUrl: iconUrl || null,
       libraryHeroImageUrl: libraryHeroImageUrl || "",
-      libraryImageUrl: iconUrl || "",
+      libraryImageUrl: libraryHeroImageUrl || coverImageUrl || existingAssets.libraryImageUrl || "",
       logoImageUrl: logoImageUrl || "",
-      coverImageUrl: iconUrl || "",
+      coverImageUrl: coverImageUrl !== undefined ? coverImageUrl : (existingAssets.coverImageUrl || ""),
     };
 
     await gamesShopAssetsSublevel.put(gameKey, updatedAssets);

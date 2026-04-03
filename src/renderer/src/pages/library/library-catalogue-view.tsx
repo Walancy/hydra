@@ -37,14 +37,36 @@ const LibraryCatCard = memo(function LibraryCatCard({
 
   const [imgError, setImgError] = useState(false);
 
-  // Landscape image priority (same as catalogue)
-  const coverSrc = !imgError
-    ? game.libraryImageUrl ||
-      game.coverImageUrl ||
-      game.customIconUrl ||
-      game.iconUrl ||
-      ""
-    : "";
+  // Landscape image priority
+  // For Steam games: libraryImageUrl is the landscape grid capsule (460x215)
+  // For custom games: we don't upload a dedicated grid capsule, so use the Hero (landscape) before falling back to others.
+  let defaultCover = game.shop === "custom" 
+    ? game.customHeroImageUrl || game.libraryHeroImageUrl || game.libraryImageUrl || game.coverImageUrl || game.iconUrl
+    : game.libraryImageUrl || game.coverImageUrl || game.iconUrl;
+
+  const coverSrc = !imgError ? defaultCover || "" : "";
+
+  const resolveImageSource = (imageUrl: string | null | undefined): string => {
+    if (!imageUrl) return "";
+    const trimmed = imageUrl.trim();
+    if (!trimmed) return "";
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    )
+      return trimmed;
+    if (trimmed.startsWith("local:"))
+      return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+    const normalized = trimmed.replaceAll("\\", "/");
+    if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+      return `local:${normalized}`;
+    return normalized;
+  };
+
+  const rawLogoUrl = game.customLogoImageUrl ?? game.logoImageUrl ?? null;
+  const logoUrl = rawLogoUrl ? resolveImageSource(rawLogoUrl) : null;
 
   const handleClick = () => {
     navigate(
@@ -107,6 +129,16 @@ const LibraryCatCard = memo(function LibraryCatCard({
           <div className="lib-cat-card__placeholder">
             <QuestionIcon size={24} />
           </div>
+        )}
+
+        {/* Logo overlay */}
+        {game.shop === "custom" && logoUrl && (
+          <img
+            src={logoUrl}
+            alt={`${game.title} logo`}
+            className="lib-cat-card__logo"
+            draggable={false}
+          />
         )}
 
         {/* Favorite + Remove buttons */}

@@ -9,57 +9,56 @@ const addCustomGameToLibrary = async (
   executablePath: string,
   iconUrl?: string,
   logoImageUrl?: string,
-  libraryHeroImageUrl?: string
+  libraryHeroImageUrl?: string,
+  coverImageUrl?: string
 ) => {
   const objectId = randomUUID();
   const shop: GameShop = "custom";
-  const gameKey = levelKeys.game(shop, objectId);
+
 
   const existingGames = await gamesSublevel.iterator().all();
-  const existingGame = existingGames.find(
+  const existingEntry = existingGames.find(
     ([_key, game]) => game.executablePath === executablePath && !game.isDeleted
   );
 
-  if (existingGame) {
-    throw new Error(
-      "A game with this executable path already exists in your library"
-    );
-  }
+  const finalObjectId = existingEntry ? existingEntry[1].objectId : objectId;
+  const finalGameKey = levelKeys.game(shop, finalObjectId);
 
   const assets = {
     updatedAt: Date.now(),
-    objectId,
+    objectId: finalObjectId,
     shop,
     title,
     iconUrl: iconUrl || null,
     libraryHeroImageUrl: libraryHeroImageUrl || "",
-    libraryImageUrl: iconUrl || "",
+    libraryImageUrl: libraryHeroImageUrl || coverImageUrl || "",
     logoImageUrl: logoImageUrl || "",
     logoPosition: null,
-    coverImageUrl: iconUrl || "",
+    coverImageUrl: coverImageUrl || "",
     downloadSources: [],
   };
-  await gamesShopAssetsSublevel.put(gameKey, assets);
+  await gamesShopAssetsSublevel.put(finalGameKey, assets);
 
   const game = {
+    ...(existingEntry ? existingEntry[1] : {}),
     title,
     iconUrl: iconUrl || null,
     logoImageUrl: logoImageUrl || null,
     libraryHeroImageUrl: libraryHeroImageUrl || null,
-    objectId,
+    objectId: finalObjectId,
     shop,
     remoteId: null,
     isDeleted: false,
-    playTimeInMilliseconds: 0,
-    lastTimePlayed: null,
+    playTimeInMilliseconds: existingEntry ? existingEntry[1].playTimeInMilliseconds : 0,
+    lastTimePlayed: existingEntry ? existingEntry[1].lastTimePlayed : null,
     executablePath,
-    launchOptions: null,
-    favorite: false,
+    favorite: existingEntry ? existingEntry[1].favorite : false,
     automaticCloudSync: false,
     hasManuallyUpdatedPlaytime: false,
+    hidden: false,
   };
 
-  await gamesSublevel.put(gameKey, game);
+  await gamesSublevel.put(finalGameKey, game as any);
 
   return game;
 };

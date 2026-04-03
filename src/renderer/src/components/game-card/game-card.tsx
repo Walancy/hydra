@@ -29,10 +29,33 @@ export function GameCard({ game, ...props }: GameCardProps) {
 
   const [stats, setStats] = useState<GameStats | null>(null);
 
+  const resolveImageSource = (imageUrl: string | null | undefined): string | null => {
+    if (!imageUrl) return null;
+    const trimmed = imageUrl.trim();
+    if (!trimmed) return null;
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    )
+      return trimmed;
+    if (trimmed.startsWith("local:"))
+      return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+    const normalized = trimmed.replaceAll("\\", "/");
+    if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+      return `local:${normalized}`;
+    return normalized;
+  };
+
+  const customCover = resolveImageSource(game.coverImageUrl);
+  const customLibrary = resolveImageSource(game.libraryImageUrl);
+  const customIcon = resolveImageSource(game.iconUrl);
+
   const initialPrimarySrc =
     game.shop === "steam"
       ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-      : (game.libraryImageUrl ?? game.iconUrl ?? null);
+      : (customCover ?? customLibrary ?? customIcon ?? null);
 
   const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
 
@@ -47,10 +70,10 @@ export function GameCard({ game, ...props }: GameCardProps) {
   const primarySrc =
     game.shop === "steam"
       ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-      : (game.libraryImageUrl ?? game.iconUrl ?? null);
+      : (customCover ?? customLibrary ?? customIcon ?? null);
 
   const activeSrc = primaryFailed
-    ? (steamGridUrl ?? game.libraryImageUrl ?? game.iconUrl ?? null)
+    ? (steamGridUrl ?? customCover ?? customLibrary ?? customIcon ?? null)
     : primarySrc;
 
   const handleHover = useCallback(() => {

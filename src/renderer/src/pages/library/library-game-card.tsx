@@ -63,9 +63,6 @@ export const LibraryGameCard = memo(function LibraryGameCard({
     game.iconUrl,
   ].filter((url) => url && url.trim() !== "");
 
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-  const [imageError, setImageError] = useState(false);
-
   const resolveImageSource = (imageUrl: string | null | undefined): string => {
     if (!imageUrl) return "";
     const trimmed = imageUrl.trim();
@@ -84,6 +81,12 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       return `local:${normalized}`;
     return normalized;
   };
+
+  const rawLogoUrl = game.customLogoImageUrl ?? game.logoImageUrl ?? null;
+  const logoUrl = rawLogoUrl ? resolveImageSource(rawLogoUrl) : null;
+
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const activeImageSource = resolveImageSource(sources[fallbackIndex]);
 
@@ -142,6 +145,16 @@ export const LibraryGameCard = memo(function LibraryGameCard({
 
       {/* Gradient overlay with info at bottom */}
       <div className="library-game-card__overlay">
+        {/* Logo — top right, above action buttons */}
+        {game.shop === "custom" && logoUrl && (
+          <img
+            src={logoUrl}
+            alt={`${game.title} logo`}
+            className="library-game-card__logo"
+            draggable={false}
+          />
+        )}
+
         {/* Action buttons — top right */}
         <div className="library-game-card__actions">
           {onToggleFavorite && (

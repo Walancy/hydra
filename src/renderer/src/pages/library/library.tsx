@@ -42,6 +42,7 @@ import {
 } from "@renderer/services/game-acronyms";
 import { useHomeGroups } from "@renderer/hooks/use-home-groups";
 import { CreateFolderModal } from "../home/create-folder-modal";
+import { AddCustomGameModal } from "./add-custom-game-modal";
 
 const FAVORITES_COLLECTION_ID = "__favorites__";
 const SORT_OPTIONS: SortOption[] = [
@@ -118,6 +119,7 @@ export default function Library() {
   >(null);
   const [gameToRemove, setGameToRemove] = useState<LibraryGame | null>(null);
   const [isRemovingGame, setIsRemovingGame] = useState(false);
+  const [showAddCustomGameModal, setShowAddCustomGameModal] = useState(false);
 
   const searchQuery = useAppSelector((state) => state.library.searchQuery);
   const dispatch = useAppDispatch();
@@ -673,6 +675,17 @@ export default function Library() {
                 <button
                   type="button"
                   className="library__favorites-btn"
+                  onClick={() => setShowAddCustomGameModal(true)}
+                  title={t("add_custom_game", {
+                    defaultValue: "Adicionar jogo personalizado",
+                  })}
+                  aria-label="Adicionar jogo personalizado"
+                >
+                  <PlusIcon size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="library__favorites-btn"
                   onClick={handleImportFromFolder}
                   title={t("import_from_folder", {
                     defaultValue: "Importar jogos de uma pasta",
@@ -1068,6 +1081,11 @@ export default function Library() {
           }}
         />
       )}
+
+      <AddCustomGameModal
+        visible={showAddCustomGameModal}
+        onClose={() => setShowAddCustomGameModal(false)}
+      />
     </section>
   );
 }
