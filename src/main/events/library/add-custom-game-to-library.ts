@@ -15,7 +15,6 @@ const addCustomGameToLibrary = async (
   const objectId = randomUUID();
   const shop: GameShop = "custom";
 
-
   const existingGames = await gamesSublevel.iterator().all();
   const existingEntry = existingGames.find(
     ([_key, game]) => game.executablePath === executablePath && !game.isDeleted
@@ -49,7 +48,9 @@ const addCustomGameToLibrary = async (
     shop,
     remoteId: null,
     isDeleted: false,
-    playTimeInMilliseconds: existingEntry ? existingEntry[1].playTimeInMilliseconds : 0,
+    playTimeInMilliseconds: existingEntry
+      ? existingEntry[1].playTimeInMilliseconds
+      : 0,
     lastTimePlayed: existingEntry ? existingEntry[1].lastTimePlayed : null,
     executablePath,
     favorite: existingEntry ? existingEntry[1].favorite : false,

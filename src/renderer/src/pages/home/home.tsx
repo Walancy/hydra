@@ -188,7 +188,9 @@ export default function Home() {
 
   const categories = Object.values(CatalogueCategory);
 
-  const resolveImageSource = (imageUrl: string | null | undefined): string | null => {
+  const resolveImageSource = (
+    imageUrl: string | null | undefined
+  ): string | null => {
     if (!imageUrl) return null;
     const trimmed = imageUrl.trim();
     if (!trimmed) return null;
@@ -761,7 +763,10 @@ export default function Home() {
                           src={
                             game!.shop === "steam"
                               ? `https://steamcdn-a.akamaihd.net/steam/apps/${game!.objectId}/library_600x900_2x.jpg`
-                              : (resolveImageSource(game!.iconUrl) ?? resolveImageSource(game!.coverImageUrl) ?? resolveImageSource(game!.libraryImageUrl) ?? undefined)
+                              : (resolveImageSource(game!.iconUrl) ??
+                                resolveImageSource(game!.coverImageUrl) ??
+                                resolveImageSource(game!.libraryImageUrl) ??
+                                undefined)
                           }
                           alt={game!.title}
                           className="home__card-image"
@@ -771,9 +776,11 @@ export default function Home() {
                             const img = e.currentTarget;
                             if (
                               game!.libraryImageUrl &&
-                              img.src !== resolveImageSource(game!.libraryImageUrl)
+                              img.src !==
+                                resolveImageSource(game!.libraryImageUrl)
                             ) {
-                              img.src = resolveImageSource(game!.libraryImageUrl) ?? "";
+                              img.src =
+                                resolveImageSource(game!.libraryImageUrl) ?? "";
                             }
                           }}
                         />

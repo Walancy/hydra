@@ -29,7 +29,9 @@ export function GameCard({ game, ...props }: GameCardProps) {
 
   const [stats, setStats] = useState<GameStats | null>(null);
 
-  const resolveImageSource = (imageUrl: string | null | undefined): string | null => {
+  const resolveImageSource = (
+    imageUrl: string | null | undefined
+  ): string | null => {
     if (!imageUrl) return null;
     const trimmed = imageUrl.trim();
     if (!trimmed) return null;

@@ -74,9 +74,16 @@ const updateCustomGame = async (
       title,
       iconUrl: iconUrl || null,
       libraryHeroImageUrl: libraryHeroImageUrl || "",
-      libraryImageUrl: libraryHeroImageUrl || coverImageUrl || existingAssets.libraryImageUrl || "",
+      libraryImageUrl:
+        libraryHeroImageUrl ||
+        coverImageUrl ||
+        existingAssets.libraryImageUrl ||
+        "",
       logoImageUrl: logoImageUrl || "",
-      coverImageUrl: coverImageUrl !== undefined ? coverImageUrl : (existingAssets.coverImageUrl || ""),
+      coverImageUrl:
+        coverImageUrl !== undefined
+          ? coverImageUrl
+          : existingAssets.coverImageUrl || "",
     };
 
     await gamesShopAssetsSublevel.put(gameKey, updatedAssets);

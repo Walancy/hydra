@@ -148,9 +148,7 @@ export function AddCustomGameModal({
 
     setIsSaving(true);
     try {
-      const copyAsset = async (
-        key: AssetKey
-      ): Promise<string | undefined> => {
+      const copyAsset = async (key: AssetKey): Promise<string | undefined> => {
         const p = assetPaths[key];
         if (!p) return undefined;
         // If it's a base64 string (like the extracted executable icon), we don't save it as a local file,
@@ -217,10 +215,7 @@ export function AddCustomGameModal({
           />
 
           <div className="add-custom-game__executable">
-            <label
-              className="add-custom-game__label"
-              htmlFor="exec-path-input"
-            >
+            <label className="add-custom-game__label" htmlFor="exec-path-input">
               Executável
             </label>
             <div className="add-custom-game__executable-row">
@@ -305,7 +300,9 @@ export function AddCustomGameModal({
                   </div>
                 )}
               </div>
-              <span className="add-custom-game__asset-label">Capa Vertical</span>
+              <span className="add-custom-game__asset-label">
+                Capa Vertical
+              </span>
               <span className="add-custom-game__asset-hint">
                 Tela inicial e detalhes
               </span>

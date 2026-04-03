@@ -32,7 +32,9 @@
     cursor: pointer;
     background: rgba(255, 255, 255, 0.04);
     border: 1.5px dashed rgba(255, 255, 255, 0.15);
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
     outline: none;
     display: flex;
     align-items: center;
@@ -196,7 +198,9 @@
     cursor: pointer;
     background: rgba(255, 255, 255, 0.03);
     border: 1.5px dashed rgba(255, 255, 255, 0.12);
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
     outline: none;
 
     &:hover,

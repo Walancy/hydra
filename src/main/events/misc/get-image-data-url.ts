@@ -59,7 +59,7 @@ const getImageDataUrl = async (
     const mimeType =
       contentType && contentType.startsWith("image/")
         ? contentType
-        : mimeTypesByExtension[extension] ?? "image/png";
+        : (mimeTypesByExtension[extension] ?? "image/png");
 
     const arrayBuffer = await response.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString("base64");
