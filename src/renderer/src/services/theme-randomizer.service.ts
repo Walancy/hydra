@@ -145,9 +145,6 @@ function generateBackgroundConfig(
   }
 }
 
-
-
-
 function hslToHex(h: number, s: number, l: number): string {
   const sl = s / 100;
   const ll = l / 100;
@@ -182,7 +179,9 @@ export function generateRandomTheme(): RandomTheme {
   const accentHue = (primaryHue + rand(90, 210, 30)) % 360;
   const saturation = rand(55, 90, 5);
   const borderRadius =
-    BORDER_RADIUS_PRESETS[Math.floor(Math.random() * BORDER_RADIUS_PRESETS.length)];
+    BORDER_RADIUS_PRESETS[
+      Math.floor(Math.random() * BORDER_RADIUS_PRESETS.length)
+    ];
   const effect = BG_EFFECTS[Math.floor(Math.random() * BG_EFFECTS.length)];
   const font = FONTS[Math.floor(Math.random() * FONTS.length)];
 
@@ -193,7 +192,12 @@ export function generateRandomTheme(): RandomTheme {
     saturation,
     borderRadius,
     backgroundEffect: effect,
-    backgroundConfig: generateBackgroundConfig(effect, primaryHue, accentHue, saturation),
+    backgroundConfig: generateBackgroundConfig(
+      effect,
+      primaryHue,
+      accentHue,
+      saturation
+    ),
     fontFamily: font,
     glassOpacity: parseFloat((Math.random() * 0.08 + 0.04).toFixed(3)),
     cardBlur: rand(8, 20, 4),
@@ -256,10 +260,19 @@ export function applyRandomTheme(theme: RandomTheme): void {
   const { primaryHue: ph, accentHue: ah, saturation: s } = theme;
 
   root.style.setProperty(`--${CSS_VAR_PREFIX}-primary`, hslToHex(ph, s, 55));
-  root.style.setProperty(`--${CSS_VAR_PREFIX}-primary-dim`, hslToHex(ph, s - 10, 35));
+  root.style.setProperty(
+    `--${CSS_VAR_PREFIX}-primary-dim`,
+    hslToHex(ph, s - 10, 35)
+  );
   root.style.setProperty(`--${CSS_VAR_PREFIX}-accent`, hslToHex(ah, s, 60));
-  root.style.setProperty(`--${CSS_VAR_PREFIX}-accent-dim`, hslToHex(ah, s - 10, 30));
-  root.style.setProperty(`--${CSS_VAR_PREFIX}-radius`, `${theme.borderRadius}px`);
+  root.style.setProperty(
+    `--${CSS_VAR_PREFIX}-accent-dim`,
+    hslToHex(ah, s - 10, 30)
+  );
+  root.style.setProperty(
+    `--${CSS_VAR_PREFIX}-radius`,
+    `${theme.borderRadius}px`
+  );
   root.style.setProperty(`--${CSS_VAR_PREFIX}-glass`, `${theme.glassOpacity}`);
   root.style.setProperty(`--${CSS_VAR_PREFIX}-blur`, `${theme.cardBlur}px`);
   root.style.setProperty(`--${CSS_VAR_PREFIX}-font`, theme.fontFamily);
@@ -270,15 +283,24 @@ export function applyRandomTheme(theme: RandomTheme): void {
 
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(theme));
   localStorage.setItem("hydra_background_effect", theme.backgroundEffect);
-  localStorage.setItem("hydra_background_config", JSON.stringify(theme.backgroundConfig));
+  localStorage.setItem(
+    "hydra_background_config",
+    JSON.stringify(theme.backgroundConfig)
+  );
   window.dispatchEvent(new Event("background_effect_update"));
 }
 
 export function clearRandomTheme(): void {
   const root = document.documentElement;
   const vars = [
-    "primary", "primary-dim", "accent", "accent-dim",
-    "radius", "glass", "blur", "font",
+    "primary",
+    "primary-dim",
+    "accent",
+    "accent-dim",
+    "radius",
+    "glass",
+    "blur",
+    "font",
   ];
   vars.forEach((v) => root.style.removeProperty(`--${CSS_VAR_PREFIX}-${v}`));
   document.body.style.removeProperty("--app-font");
@@ -289,7 +311,11 @@ export function clearRandomTheme(): void {
   try {
     const raw = localStorage.getItem(ORIGINAL_STATE_KEY);
     if (raw) {
-      const original = JSON.parse(raw) as { effect: string; config: string; font: string };
+      const original = JSON.parse(raw) as {
+        effect: string;
+        config: string;
+        font: string;
+      };
       localStorage.setItem("hydra_background_effect", original.effect);
       localStorage.setItem("hydra_background_config", original.config);
       if (original.font) {

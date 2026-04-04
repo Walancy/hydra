@@ -110,8 +110,13 @@
     background: transparent;
     cursor: pointer;
 
-    &::-webkit-color-swatch-wrapper { padding: 0; }
-    &::-webkit-color-swatch { border: none; border-radius: 4px; }
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    &::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
   }
 
   &__url-input {
@@ -126,8 +131,12 @@
     outline: none;
     transition: border-color 0.15s;
 
-    &::placeholder { color: rgba(255, 255, 255, 0.25); }
-    &:focus { border-color: rgba(255, 255, 255, 0.25); }
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+    &:focus {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
   }
 
   &__media-or {
@@ -142,10 +151,10 @@
     justify-content: space-between;
     align-items: center;
 
-    .cz__prop-label { flex: 1; }
+    .cz__prop-label {
+      flex: 1;
+    }
   }
-
-
 
   // ── Options row (linha única: randomize | save) ─────────────────
   &__options-row {
@@ -162,7 +171,10 @@
     gap: 8px;
     margin-left: auto;
 
-    .text-field { flex: 1; min-width: 140px; }
+    .text-field {
+      flex: 1;
+      min-width: 140px;
+    }
   }
 
   // ── Randomizer row (legado – mantido para compatibilidade) ───────
@@ -192,9 +204,13 @@
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
 
-    &:hover { color: rgba(255, 255, 255, 0.8); }
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
     &--active {
       background: rgba(255, 255, 255, 0.12);
       color: rgba(255, 255, 255, 0.95);
@@ -245,7 +261,9 @@
     font-size: 12.5px;
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
 
     &:hover {
       border-color: rgba(255, 255, 255, 0.3);
@@ -263,7 +281,9 @@
     align-items: flex-end;
     gap: 8px !important;
 
-    .text-field { flex: 1; }
+    .text-field {
+      flex: 1;
+    }
   }
 
   &__saved-list {
@@ -282,7 +302,9 @@
     background: rgba(255, 255, 255, 0.03);
     transition: background 0.12s;
 
-    &:hover { background: rgba(255, 255, 255, 0.06); }
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
   }
 
   &__saved-name {
@@ -295,7 +317,9 @@
     cursor: pointer;
     padding: 0;
 
-    &:hover { color: #fff; }
+    &:hover {
+      color: #fff;
+    }
   }
 
   &__saved-delete {
@@ -308,6 +332,8 @@
     align-items: center;
     transition: color 0.12s;
 
-    &:hover { color: rgba(200, 60, 60, 0.9); }
+    &:hover {
+      color: rgba(200, 60, 60, 0.9);
+    }
   }
 }

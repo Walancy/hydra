@@ -22,7 +22,11 @@ const EFFECT_LABELS: Record<string, string> = {
   lightpillar: "Light Pillar",
 };
 
-function hslPreviewColor(hue: number, saturation: number, lightness: number): string {
+function hslPreviewColor(
+  hue: number,
+  saturation: number,
+  lightness: number
+): string {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
@@ -33,7 +37,12 @@ interface ThemePreviewCardProps {
   readonly onDelete?: () => void;
 }
 
-function ThemePreviewCard({ theme, isActive, onApply, onDelete }: ThemePreviewCardProps) {
+function ThemePreviewCard({
+  theme,
+  isActive,
+  onApply,
+  onDelete,
+}: ThemePreviewCardProps) {
   const primary = hslPreviewColor(theme.primaryHue, theme.saturation, 55);
   const accent = hslPreviewColor(theme.accentHue, theme.saturation, 60);
 
@@ -52,16 +61,20 @@ function ThemePreviewCard({ theme, isActive, onApply, onDelete }: ThemePreviewCa
       <div className="theme-rnd__card-preview">
         <div
           className="theme-rnd__card-bar"
-          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+          style={{
+            background: `linear-gradient(135deg, ${primary}, ${accent})`,
+          }}
         />
         <div className="theme-rnd__card-stripes">
-          {[primary, accent, `hsl(${theme.primaryHue}, 30%, 25%)`].map((c, i) => (
-            <div
-              key={i}
-              className="theme-rnd__card-stripe"
-              style={{ background: c, borderRadius: theme.borderRadius / 2 }}
-            />
-          ))}
+          {[primary, accent, `hsl(${theme.primaryHue}, 30%, 25%)`].map(
+            (c, i) => (
+              <div
+                key={i}
+                className="theme-rnd__card-stripe"
+                style={{ background: c, borderRadius: theme.borderRadius / 2 }}
+              />
+            )
+          )}
         </div>
         <div
           className="theme-rnd__card-radius-badge"
@@ -74,7 +87,8 @@ function ThemePreviewCard({ theme, isActive, onApply, onDelete }: ThemePreviewCa
       <div className="theme-rnd__card-info">
         <span className="theme-rnd__card-name">{theme.name}</span>
         <span className="theme-rnd__card-meta">
-          {theme.fontFamily} · {EFFECT_LABELS[theme.backgroundEffect] ?? theme.backgroundEffect}
+          {theme.fontFamily} ·{" "}
+          {EFFECT_LABELS[theme.backgroundEffect] ?? theme.backgroundEffect}
         </span>
       </div>
 
@@ -136,8 +150,8 @@ export function ThemeRandomizer() {
         <div className="theme-rnd__hero-text">
           <h3 className="theme-rnd__title">Randomizador de Tema</h3>
           <p className="theme-rnd__desc">
-            Gere uma combinação aleatória de cores, fontes, bordas e efeito de fundo.
-            Salve os que você gostar.
+            Gere uma combinação aleatória de cores, fontes, bordas e efeito de
+            fundo. Salve os que você gostar.
           </p>
         </div>
 
@@ -178,7 +192,10 @@ export function ThemeRandomizer() {
               <ThemePreviewCard
                 key={t.savedAt}
                 theme={t}
-                isActive={current?.name === t.name && current?.primaryHue === t.primaryHue}
+                isActive={
+                  current?.name === t.name &&
+                  current?.primaryHue === t.primaryHue
+                }
                 onApply={() => handleApplySaved(t)}
                 onDelete={() => handleDeleteSaved(i)}
               />
@@ -189,7 +206,9 @@ export function ThemeRandomizer() {
 
       {!current && saved.length === 0 && (
         <div className="theme-rnd__empty">
-          <p>Clique em <strong>Randomizar</strong> para gerar um tema único.</p>
+          <p>
+            Clique em <strong>Randomizar</strong> para gerar um tema único.
+          </p>
         </div>
       )}
     </div>

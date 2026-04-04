@@ -1,6 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./settings-appearance.scss";
-import { ThemeActions, ThemeCard, ThemePlaceholder, ThemeCustomizer } from "./index";
+import {
+  ThemeActions,
+  ThemeCard,
+  ThemePlaceholder,
+  ThemeCustomizer,
+} from "./index";
 import type { Theme } from "@types";
 import { ImportThemeModal } from "./modals/import-theme-modal";
 import { settingsContext } from "@renderer/context";
@@ -30,7 +35,9 @@ export function SettingsAppearance({
   appearance,
 }: Readonly<SettingsAppearanceProps>) {
   const [themes, setThemes] = useState<Theme[]>([]);
-  const [savedCustomThemes, setSavedCustomThemes] = useState<SavedCustomTheme[]>([]);
+  const [savedCustomThemes, setSavedCustomThemes] = useState<
+    SavedCustomTheme[]
+  >([]);
   const [activeTab, setActiveTab] = useState<ThemeTab>("themes");
   const [isImportThemeModalVisible, setIsImportThemeModalVisible] =
     useState(false);
@@ -103,10 +110,13 @@ export function SettingsAppearance({
     applyCustomTheme(t.config);
   }, []);
 
-  const handleDeleteSaved = useCallback((i: number) => {
-    deleteSavedCustomTheme(i);
-    loadSavedCustomThemes();
-  }, [loadSavedCustomThemes]);
+  const handleDeleteSaved = useCallback(
+    (i: number) => {
+      deleteSavedCustomTheme(i);
+      loadSavedCustomThemes();
+    },
+    [loadSavedCustomThemes]
+  );
 
   const sortedThemes = [...themes].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()

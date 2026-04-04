@@ -102,7 +102,9 @@
     border-radius: 10px;
     transition: background 0.15s;
 
-    &:hover { background: rgba(255, 255, 255, 0.07); }
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
   }
 
   &__saved-custom-name {
@@ -131,7 +133,9 @@
     font-weight: 500;
     padding: 3px 10px;
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+    transition:
+      background 0.12s,
+      color 0.12s;
 
     &:hover {
       background: rgba(255, 255, 255, 0.18);
@@ -149,9 +153,10 @@
     align-items: center;
     transition: color 0.12s;
 
-    &:hover { color: rgba(200, 60, 60, 0.9); }
+    &:hover {
+      color: rgba(200, 60, 60, 0.9);
+    }
   }
-
 }
 
 .appearance-tabs {

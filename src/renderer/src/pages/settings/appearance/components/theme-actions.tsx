@@ -36,7 +36,6 @@ export const ThemeActions = ({
 
       <div className="settings-appearance__actions">
         <div className="settings-appearance__actions-left">
-
           <Button
             theme="outline"
             className="settings-appearance__button"

@@ -12,7 +12,11 @@ import {
 import { generateRandomTheme } from "@renderer/services/theme-randomizer.service";
 import { Button } from "@renderer/components";
 import { TextField } from "@renderer/components";
-import { GlobalSection, ElementSection, BackgroundSection } from "./customizer-sections";
+import {
+  GlobalSection,
+  ElementSection,
+  BackgroundSection,
+} from "./customizer-sections";
 import "./theme-customizer.scss";
 
 interface ThemeCustomizerProps {
@@ -52,7 +56,11 @@ export function ThemeCustomizer({ onSaved }: ThemeCustomizerProps) {
   const handleRandomize = useCallback(() => {
     const rnd = generateRandomTheme();
     const next: CustomThemeConfig = {
-      global: { borderRadius: rnd.borderRadius, font: rnd.fontFamily, useGameBackground: config.global.useGameBackground ?? true },
+      global: {
+        borderRadius: rnd.borderRadius,
+        font: rnd.fontFamily,
+        useGameBackground: config.global.useGameBackground ?? true,
+      },
       buttons: generateRandomElementStyle("button"),
       cards: generateRandomElementStyle("card"),
       background: { type: "effect", mediaUrl: "" },
@@ -60,7 +68,10 @@ export function ThemeCustomizer({ onSaved }: ThemeCustomizerProps) {
     setConfig(next);
     applyCustomTheme(next);
     localStorage.setItem("hydra_background_effect", rnd.backgroundEffect);
-    localStorage.setItem("hydra_background_config", JSON.stringify(rnd.backgroundConfig));
+    localStorage.setItem(
+      "hydra_background_config",
+      JSON.stringify(rnd.backgroundConfig)
+    );
     window.dispatchEvent(new Event("background_effect_update"));
   }, [config.global.useGameBackground]);
 
@@ -85,7 +96,11 @@ export function ThemeCustomizer({ onSaved }: ThemeCustomizerProps) {
               value={themeName}
               onChange={(e) => setThemeName(e.target.value)}
             />
-            <Button theme="primary" onClick={handleSave} disabled={!themeName.trim()}>
+            <Button
+              theme="primary"
+              onClick={handleSave}
+              disabled={!themeName.trim()}
+            >
               Salvar
             </Button>
           </div>

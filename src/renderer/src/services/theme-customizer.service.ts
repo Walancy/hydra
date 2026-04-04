@@ -74,15 +74,22 @@ function rand(min: number, max: number, step = 1): number {
 }
 
 function randomHex(): string {
-  return `#${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0")}`;
+  return `#${Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, "0")}`;
 }
 
 const BG_IMAGE_ID = "hydra-bg-image";
 
 const BG_ELEMENT_STYLE = [
-  "position:fixed", "inset:0", "z-index:-2",
-  "width:100%", "height:100%", "object-fit:cover",
-  "pointer-events:none", "display:block",
+  "position:fixed",
+  "inset:0",
+  "z-index:-2",
+  "width:100%",
+  "height:100%",
+  "object-fit:cover",
+  "pointer-events:none",
+  "display:block",
 ].join(";");
 
 function injectBgImage(src: string): void {
@@ -93,7 +100,9 @@ function injectBgImage(src: string): void {
   img.alt = "";
   img.style.cssText = BG_ELEMENT_STYLE;
   // Melhor qualidade de renderização no Chromium/Electron
-  (img.style as CSSStyleDeclaration & { imageRendering: string }).imageRendering = "high-quality";
+  (
+    img.style as CSSStyleDeclaration & { imageRendering: string }
+  ).imageRendering = "high-quality";
   document.body.appendChild(img);
 }
 
@@ -101,7 +110,9 @@ function removeBgMedia(): void {
   document.getElementById(BG_IMAGE_ID)?.remove();
 }
 
-export function generateRandomElementStyle(type: "button" | "card"): ElementStyle {
+export function generateRandomElementStyle(
+  type: "button" | "card"
+): ElementStyle {
   return {
     borderRadius: type === "button" ? rand(0, 100, 4) : rand(0, 24, 4),
     borderWidth: rand(0, 2),
@@ -318,9 +329,6 @@ function buildCSS(c: CustomThemeConfig): string {
   ${gameBgCss}`;
 }
 
-
-
-
 function inject(css: string): void {
   let tag = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   if (!tag) {
@@ -337,8 +345,14 @@ export function applyCustomTheme(config: CustomThemeConfig): void {
   if (config.background.type === "effect") {
     removeBgMedia();
     if (config.background.effectName) {
-      localStorage.setItem("hydra_background_effect", config.background.effectName);
-      localStorage.setItem("hydra_background_config", config.background.effectConfig ?? "{}");
+      localStorage.setItem(
+        "hydra_background_effect",
+        config.background.effectName
+      );
+      localStorage.setItem(
+        "hydra_background_config",
+        config.background.effectConfig ?? "{}"
+      );
       window.dispatchEvent(new Event("background_effect_update"));
     }
   } else {
@@ -415,7 +429,10 @@ export function saveCustomTheme(name: string, config: CustomThemeConfig): void {
     },
   };
   const list = getSavedCustomThemes();
-  const updated = [{ name, config: enriched, savedAt: Date.now() }, ...list].slice(0, 20);
+  const updated = [
+    { name, config: enriched, savedAt: Date.now() },
+    ...list,
+  ].slice(0, 20);
   localStorage.setItem(SAVED_KEY, JSON.stringify(updated));
 }
 

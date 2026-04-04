@@ -1,18 +1,39 @@
 import { useState } from "react";
-import type { ElementStyle, CustomThemeConfig } from "@renderer/services/theme-customizer.service";
+import type {
+  ElementStyle,
+  CustomThemeConfig,
+} from "@renderer/services/theme-customizer.service";
 import { BackgroundEffectSettings } from "../background-effect-settings";
 import { SelectField } from "@renderer/components";
 import { Toggle } from "@renderer/components";
 
 const FONTS = [
   // Sans-serif modernas
-  "Poppins", "Inter", "Outfit", "Raleway", "Nunito",
-  "DM Sans", "Space Grotesk", "Syne", "Manrope", "Plus Jakarta Sans",
-  "Urbanist", "Figtree", "Mulish", "Quicksand", "Jost",
+  "Poppins",
+  "Inter",
+  "Outfit",
+  "Raleway",
+  "Nunito",
+  "DM Sans",
+  "Space Grotesk",
+  "Syne",
+  "Manrope",
+  "Plus Jakarta Sans",
+  "Urbanist",
+  "Figtree",
+  "Mulish",
+  "Quicksand",
+  "Jost",
   // Display
-  "Bebas Neue", "Righteous", "Exo 2", "Orbitron", "Russo One",
+  "Bebas Neue",
+  "Righteous",
+  "Exo 2",
+  "Orbitron",
+  "Russo One",
   // Mono
-  "JetBrains Mono", "Fira Code", "IBM Plex Mono",
+  "JetBrains Mono",
+  "Fira Code",
+  "IBM Plex Mono",
 ];
 
 interface SliderProps {
@@ -25,7 +46,15 @@ interface SliderProps {
   readonly onChange: (v: number) => void;
 }
 
-export function CtrlSlider({ label, value, min, max, step = 1, unit = "", onChange }: SliderProps) {
+export function CtrlSlider({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  unit = "",
+  onChange,
+}: SliderProps) {
   return (
     <div className="cz__prop">
       <label className="cz__prop-label">{label}</label>
@@ -39,7 +68,10 @@ export function CtrlSlider({ label, value, min, max, step = 1, unit = "", onChan
           onChange={(e) => onChange(parseFloat(e.target.value))}
           aria-label={label}
         />
-        <span className="cz__prop-val">{value}{unit}</span>
+        <span className="cz__prop-val">
+          {value}
+          {unit}
+        </span>
       </div>
     </div>
   );
@@ -85,7 +117,9 @@ export function GlobalSection({ value, onChange }: GlobalProps) {
         <CtrlSlider
           label="Border Radius"
           value={value.borderRadius}
-          min={0} max={24} unit="px"
+          min={0}
+          max={24}
+          unit="px"
           onChange={(v) => onChange({ ...value, borderRadius: v })}
         />
         <div className="cz__prop">
@@ -109,17 +143,53 @@ interface ElementProps {
 }
 
 export function ElementSection({ title, value, onChange }: ElementProps) {
-  const set = (patch: Partial<ElementStyle>) => onChange({ ...value, ...patch });
+  const set = (patch: Partial<ElementStyle>) =>
+    onChange({ ...value, ...patch });
   return (
     <div className="cz__section">
       <p className="cz__section-title">{title}</p>
       <div className="cz__section-grid">
-        <CtrlSlider label="Border Radius" value={value.borderRadius} min={0} max={100} unit="px" onChange={(v) => set({ borderRadius: v })} />
-        <CtrlSlider label="Borda (px)" value={value.borderWidth} min={0} max={4} onChange={(v) => set({ borderWidth: v })} />
-        <CtrlSlider label="Opacidade fundo" value={value.bgOpacity} min={0} max={1} step={0.01} onChange={(v) => set({ bgOpacity: v })} />
-        <CtrlSlider label="Blur (px)" value={value.blur} min={0} max={32} unit="px" onChange={(v) => set({ blur: v })} />
-        <CtrlColor label="Cor da borda" value={value.borderColor} onChange={(v) => set({ borderColor: v })} />
-        <CtrlColor label="Cor do fundo" value={value.bgColor} onChange={(v) => set({ bgColor: v })} />
+        <CtrlSlider
+          label="Border Radius"
+          value={value.borderRadius}
+          min={0}
+          max={100}
+          unit="px"
+          onChange={(v) => set({ borderRadius: v })}
+        />
+        <CtrlSlider
+          label="Borda (px)"
+          value={value.borderWidth}
+          min={0}
+          max={4}
+          onChange={(v) => set({ borderWidth: v })}
+        />
+        <CtrlSlider
+          label="Opacidade fundo"
+          value={value.bgOpacity}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={(v) => set({ bgOpacity: v })}
+        />
+        <CtrlSlider
+          label="Blur (px)"
+          value={value.blur}
+          min={0}
+          max={32}
+          unit="px"
+          onChange={(v) => set({ blur: v })}
+        />
+        <CtrlColor
+          label="Cor da borda"
+          value={value.borderColor}
+          onChange={(v) => set({ borderColor: v })}
+        />
+        <CtrlColor
+          label="Cor do fundo"
+          value={value.bgColor}
+          onChange={(v) => set({ bgColor: v })}
+        />
       </div>
     </div>
   );
@@ -133,8 +203,15 @@ interface BgProps {
   readonly onGlobalChange: (v: CustomThemeConfig["global"]) => void;
 }
 
-export function BackgroundSection({ value, onChange, globalValue, onGlobalChange }: BgProps) {
-  const [urlDraft, setUrlDraft] = useState(value.mediaUrl?.startsWith("http") ? value.mediaUrl : "");
+export function BackgroundSection({
+  value,
+  onChange,
+  globalValue,
+  onGlobalChange,
+}: BgProps) {
+  const [urlDraft, setUrlDraft] = useState(
+    value.mediaUrl?.startsWith("http") ? value.mediaUrl : ""
+  );
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,7 +221,8 @@ export function BackgroundSection({ value, onChange, globalValue, onGlobalChange
       onChange({ ...value, mediaUrl: `local:${path}` });
     } else {
       const reader = new FileReader();
-      reader.onload = (ev) => onChange({ ...value, mediaUrl: ev.target?.result as string });
+      reader.onload = (ev) =>
+        onChange({ ...value, mediaUrl: ev.target?.result as string });
       reader.readAsDataURL(file);
     }
     setUrlDraft("");
@@ -159,13 +237,25 @@ export function BackgroundSection({ value, onChange, globalValue, onGlobalChange
     }
   };
 
-  const hasPreview = value.mediaUrl && (value.mediaUrl.startsWith("http") || value.mediaUrl.startsWith("data:") || value.mediaUrl.startsWith("local:"));
+  const hasPreview =
+    value.mediaUrl &&
+    (value.mediaUrl.startsWith("http") ||
+      value.mediaUrl.startsWith("data:") ||
+      value.mediaUrl.startsWith("local:"));
 
   return (
     <div className="cz__section">
       <p className="cz__section-title">Fundo</p>
       <div className="cz__section-body">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "16px",
+          }}
+        >
           <div className="cz__bg-toggle">
             {(["effect", "media"] as const).map((t) => (
               <button
@@ -179,11 +269,21 @@ export function BackgroundSection({ value, onChange, globalValue, onGlobalChange
             ))}
           </div>
 
-          <div className="cz__prop cz__prop-row cz__prop-toggle" style={{ margin: 0, padding: 0 }}>
-            <label className="cz__prop-label" style={{ margin: 0, fontSize: "14px" }}>Usar fundo no Início</label>
+          <div
+            className="cz__prop cz__prop-row cz__prop-toggle"
+            style={{ margin: 0, padding: 0 }}
+          >
+            <label
+              className="cz__prop-label"
+              style={{ margin: 0, fontSize: "14px" }}
+            >
+              Usar fundo no Início
+            </label>
             <Toggle
               checked={globalValue.useGameBackground === false}
-              onChange={(enabled) => onGlobalChange({ ...globalValue, useGameBackground: !enabled })}
+              onChange={(enabled) =>
+                onGlobalChange({ ...globalValue, useGameBackground: !enabled })
+              }
             />
           </div>
         </div>
@@ -211,7 +311,9 @@ export function BackgroundSection({ value, onChange, globalValue, onGlobalChange
 
             {/* File picker */}
             <label className="cz__media-label" htmlFor="cz-media-file">
-              {hasPreview && !urlDraft ? "Trocar arquivo" : "Selecionar imagem ou GIF"}
+              {hasPreview && !urlDraft
+                ? "Trocar arquivo"
+                : "Selecionar imagem ou GIF"}
               <input
                 id="cz-media-file"
                 type="file"
@@ -228,7 +330,10 @@ export function BackgroundSection({ value, onChange, globalValue, onGlobalChange
                 <button
                   type="button"
                   className="cz__media-clear"
-                  onClick={() => { onChange({ ...value, mediaUrl: "" }); setUrlDraft(""); }}
+                  onClick={() => {
+                    onChange({ ...value, mediaUrl: "" });
+                    setUrlDraft("");
+                  }}
                   aria-label="Remover mídia"
                 >
                   Remover
