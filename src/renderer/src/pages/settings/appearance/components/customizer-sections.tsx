@@ -273,12 +273,12 @@ export function BackgroundSection({
             className="cz__prop cz__prop-row cz__prop-toggle"
             style={{ margin: 0, padding: 0 }}
           >
-            <label
+            <span
               className="cz__prop-label"
-              style={{ margin: 0, fontSize: "14px" }}
+              style={{ margin: 0, fontSize: "14px", display: "inline-block" }}
             >
               Usar fundo no Início
-            </label>
+            </span>
             <Toggle
               checked={globalValue.useGameBackground === false}
               onChange={(enabled) =>

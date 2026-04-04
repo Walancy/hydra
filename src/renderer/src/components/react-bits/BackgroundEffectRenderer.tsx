@@ -25,7 +25,7 @@ export const BackgroundEffectRenderer = memo(
         setEffect(currentEffect);
         try {
           const confStr = localStorage.getItem("hydra_background_config");
-          let parsed = confStr ? JSON.parse(confStr) : {};
+          const parsed = confStr ? JSON.parse(confStr) : {};
 
           const defaultConf = effectsInfo[currentEffect]?.defaults || {};
 

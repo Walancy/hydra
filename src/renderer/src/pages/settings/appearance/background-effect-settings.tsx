@@ -251,7 +251,7 @@ export function BackgroundEffectSettings() {
       setEffect(ef);
       try {
         const confStr = localStorage.getItem("hydra_background_config");
-        let parsed = confStr ? JSON.parse(confStr) : {};
+        const parsed = confStr ? JSON.parse(confStr) : {};
         const defaultConf = effectsInfo[ef]?.defaults || {};
 
         if (Object.keys(parsed).length === 0) {
