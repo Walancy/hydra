@@ -212,7 +212,10 @@ function useHeroPanelActions() {
       <ConfirmationModal
         visible={showUninstallModal}
         title={t("uninstall_modal_title", { defaultValue: "Desinstalar jogo" })}
-        descriptionText={t("uninstall_modal_description", { defaultValue: "Tem certeza que deseja desinstalar e remover os arquivos deste jogo?" })}
+        descriptionText={t("uninstall_modal_description", {
+          defaultValue:
+            "Tem certeza que deseja desinstalar e remover os arquivos deste jogo?",
+        })}
         confirmButtonLabel={t("uninstall", { defaultValue: "Desinstalar" })}
         cancelButtonLabel={t("cancel", { defaultValue: "Cancelar" })}
         onConfirm={async () => {
@@ -241,7 +244,10 @@ function useHeroPanelActions() {
           } else {
             setToggleLibraryGameDisabled(true);
             try {
-              await window.electron.removeGameFromLibrary(game.shop, game.objectId);
+              await window.electron.removeGameFromLibrary(
+                game.shop,
+                game.objectId
+              );
               updateLibrary();
               updateGame();
             } finally {
@@ -250,7 +256,12 @@ function useHeroPanelActions() {
           }
         }}
       >
-        {((game?.executablePath && executableExists !== false) || game?.download?.progress === 1) ? <TrashIcon /> : <DashIcon />}
+        {(game?.executablePath && executableExists !== false) ||
+        game?.download?.progress === 1 ? (
+          <TrashIcon />
+        ) : (
+          <DashIcon />
+        )}
       </Button>
     </>
   ) : null;

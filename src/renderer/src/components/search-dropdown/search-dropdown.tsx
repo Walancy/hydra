@@ -96,7 +96,9 @@ export function SearchDropdown({
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      containerRef.current?.querySelector<HTMLElement>(".search-dropdown__card")?.focus();
+      containerRef.current
+        ?.querySelector<HTMLElement>(".search-dropdown__card")
+        ?.focus();
     }
   };
 
@@ -117,7 +119,7 @@ export function SearchDropdown({
           onExecuteSearch();
         }
         return true;
-      }
+      },
     },
   });
 

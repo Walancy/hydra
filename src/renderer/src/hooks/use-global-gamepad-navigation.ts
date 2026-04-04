@@ -50,9 +50,9 @@ function getCandidates(): Element[] {
   // 1. Procurar dropdown de busca primeiro (prioridade máxima)
   const searchDropdown = document.querySelector(".search-dropdown");
   if (searchDropdown && isVisible(searchDropdown)) {
-    return Array.from(searchDropdown.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
-      (el) => !isIgnored(el) && isVisible(el)
-    );
+    return Array.from(
+      searchDropdown.querySelectorAll(FOCUSABLE_SELECTOR)
+    ).filter((el) => !isIgnored(el) && isVisible(el));
   }
 
   // 2. Procurar modais abertos

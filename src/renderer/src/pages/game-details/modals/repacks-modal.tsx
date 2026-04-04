@@ -1,9 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@primer/octicons-react";
+import { ChevronDownIcon, ChevronUpIcon } from "@primer/octicons-react";
 import { Tooltip } from "react-tooltip";
 
 import {

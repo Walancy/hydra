@@ -827,7 +827,11 @@ export function App() {
           onSubmit={() => {
             if (keyboardTarget) {
               keyboardTarget.dispatchEvent(
-                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })
+                new KeyboardEvent("keydown", {
+                  key: "Enter",
+                  bubbles: true,
+                  cancelable: true,
+                })
               );
               handleKeyboardClose();
             }

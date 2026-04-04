@@ -977,9 +977,12 @@ export function DownloadGroup({
         <ul className="download-group__simple-list">
           {downloadInfo.map(({ game, size, progress, isSeeding: seeding }) => {
             const isGameExtracting = extraction?.visibleId === game.id;
-            const isGameDownloading = isGameDownloadingMap[game.id] && !isGameExtracting;
-            const downloadSpeed = isGameDownloading ? (lastPacket?.downloadSpeed ?? 0) : 0;
-            
+            const isGameDownloading =
+              isGameDownloadingMap[game.id] && !isGameExtracting;
+            const downloadSpeed = isGameDownloading
+              ? (lastPacket?.downloadSpeed ?? 0)
+              : 0;
+
             let currentProgress = progress;
             if (isGameExtracting && extraction) {
               currentProgress = extraction.progress;
@@ -987,30 +990,53 @@ export function DownloadGroup({
               currentProgress = lastPacket.progress;
             }
 
-            const isDownloadingItem = isDownloadingGroup && (isGameDownloading || isGameExtracting);
+            const isDownloadingItem =
+              isDownloadingGroup && (isGameDownloading || isGameExtracting);
 
             return (
-              <li key={game.id} className="download-group__simple-card" style={{ padding: '16px 24px', alignItems: 'center' }}>
+              <li
+                key={game.id}
+                className="download-group__simple-card"
+                style={{ padding: "16px 24px", alignItems: "center" }}
+              >
                 <button
                   type="button"
                   onClick={() => navigate(buildGameDetailsPath(game))}
                   className="download-group__simple-thumbnail"
-                  style={{ width: '80px', height: '80px', borderRadius: '8px' }}
+                  style={{ width: "80px", height: "80px", borderRadius: "8px" }}
                 >
-                  <img src={game.logoImageUrl || game.libraryImageUrl || ""} alt={game.title} style={{ objectFit: 'cover' }} />
+                  <img
+                    src={game.logoImageUrl || game.libraryImageUrl || ""}
+                    alt={game.title}
+                    style={{ objectFit: "cover" }}
+                  />
                 </button>
 
-                <div className="download-group__simple-info" style={{ flex: 1 }}>
+                <div
+                  className="download-group__simple-info"
+                  style={{ flex: 1 }}
+                >
                   <button
                     type="button"
                     onClick={() => navigate(buildGameDetailsPath(game))}
                     className="download-group__simple-title-button"
                   >
-                    <h3 className="download-group__simple-title" style={{ fontSize: '18px' }}>
+                    <h3
+                      className="download-group__simple-title"
+                      style={{ fontSize: "18px" }}
+                    >
                       {game.title}
                     </h3>
                   </button>
-                  <div className="download-group__simple-meta" style={{ flexDirection: 'row', gap: '16px', opacity: 0.7, marginTop: '4px' }}>
+                  <div
+                    className="download-group__simple-meta"
+                    style={{
+                      flexDirection: "row",
+                      gap: "16px",
+                      opacity: 0.7,
+                      marginTop: "4px",
+                    }}
+                  >
                     <div className="download-group__simple-meta-row">
                       <span className="download-group__simple-meta-icon">
                         <DownloadIcon size={12} />
@@ -1033,22 +1059,65 @@ export function DownloadGroup({
                 </div>
 
                 {(isQueuedGroup || isDownloadingItem) && (
-                  <div className="download-group__simple-progress-container" style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '180px', maxWidth: '350px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.7)' }}>
-                        {isDownloadingItem && !isGameExtracting && lastPacket ? (
-                          <>{formatBytes(lastPacket.download.bytesDownloaded)} / {size} • {calculateETA() || tGameDetails("calculating_eta")} • {formatSpeed(downloadSpeed)}</>
+                  <div
+                    className="download-group__simple-progress-container"
+                    style={{
+                      flex: 1.5,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                      minWidth: "180px",
+                      maxWidth: "350px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      >
+                        {isDownloadingItem &&
+                        !isGameExtracting &&
+                        lastPacket ? (
+                          <>
+                            {formatBytes(lastPacket.download.bytesDownloaded)} /{" "}
+                            {size} •{" "}
+                            {calculateETA() || tGameDetails("calculating_eta")}{" "}
+                            • {formatSpeed(downloadSpeed)}
+                          </>
                         ) : isGameExtracting && extraction ? (
-                          <>{t("extracting")} ({Math.round(extraction.progress * 100)}%)</>
+                          <>
+                            {t("extracting")} (
+                            {Math.round(extraction.progress * 100)}%)
+                          </>
                         ) : isQueuedGroup ? (
-                           <>{size}</>
+                          <>{size}</>
                         ) : null}
                       </span>
-                      <span className="download-group__simple-progress-text" style={{ fontSize: '14px', fontWeight: '600' }}>
+                      <span
+                        className="download-group__simple-progress-text"
+                        style={{ fontSize: "14px", fontWeight: "600" }}
+                      >
                         {formatDownloadProgress(currentProgress)}
                       </span>
                     </div>
-                    <div className="download-group__progress-bar" style={{ marginTop: 0, height: '6px', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                    <div
+                      className="download-group__progress-bar"
+                      style={{
+                        marginTop: 0,
+                        height: "6px",
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                      }}
+                    >
                       <div
                         className="download-group__progress-fill"
                         style={{
@@ -1060,7 +1129,10 @@ export function DownloadGroup({
                   </div>
                 )}
 
-                <div className="download-group__simple-actions" style={{ marginLeft: '16px' }}>
+                <div
+                  className="download-group__simple-actions"
+                  style={{ marginLeft: "16px" }}
+                >
                   {isDownloadingItem && !isGameExtracting && (
                     <Button
                       theme="primary"

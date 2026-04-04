@@ -107,11 +107,11 @@ export function GameInfo({
     null
   );
   const { library } = useLibrary();
-  const libraryGame = library.find((g) => g.objectId === game.objectId && g.shop === game.shop);
-  const executablePath = ((game as any).executablePath ?? libraryGame?.executablePath) as
-    | string
-    | null
-    | undefined;
+  const libraryGame = library.find(
+    (g) => g.objectId === game.objectId && g.shop === game.shop
+  );
+  const executablePath = ((game as any).executablePath ??
+    libraryGame?.executablePath) as string | null | undefined;
 
   useEffect(() => {
     const key = game.objectId;
@@ -237,7 +237,10 @@ export function GameInfo({
             >
               <DownloadIcon size={16} />
               {isDownloading
-                ? t("downloading_progress", { defaultValue: `Baixando - ${progress}`, progress })
+                ? t("downloading_progress", {
+                    defaultValue: `Baixando - ${progress}`,
+                    progress,
+                  })
                 : t("install", { defaultValue: "Instalar" })}
             </Button>
 

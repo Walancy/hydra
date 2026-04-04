@@ -4,7 +4,11 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@renderer/hooks";
-import { setCatalogueCategory, setIsMyGames, setCurrentCategory } from "@renderer/features";
+import {
+  setCatalogueCategory,
+  setIsMyGames,
+  setCurrentCategory,
+} from "@renderer/features";
 import { useTranslation } from "react-i18next";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
@@ -29,7 +33,12 @@ import {
   DownloadGameModal,
 } from "@renderer/components";
 import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
-import { PlusCircleIcon, StackIcon, TrashIcon, GiftIcon } from "@primer/octicons-react";
+import {
+  PlusCircleIcon,
+  StackIcon,
+  TrashIcon,
+  GiftIcon,
+} from "@primer/octicons-react";
 import { CreateFolderModal } from "./create-folder-modal";
 import { setOpenedFolderName } from "@renderer/features";
 import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
@@ -856,13 +865,17 @@ export default function Home() {
                     theme="outline"
                     className="home__surprise-button"
                     onClick={() => {
-                      const pool = libraryAsGames.length > 0 && isMyGames 
-                        ? libraryAsGames 
-                        : catalogue[currentCatalogueCategory];
-                        
+                      const pool =
+                        libraryAsGames.length > 0 && isMyGames
+                          ? libraryAsGames
+                          : catalogue[currentCatalogueCategory];
+
                       if (pool && pool.length > 0) {
-                        const randomGame = pool[Math.floor(Math.random() * pool.length)];
-                        navigate(buildGameDetailsPath(randomGame as ShopAssets));
+                        const randomGame =
+                          pool[Math.floor(Math.random() * pool.length)];
+                        navigate(
+                          buildGameDetailsPath(randomGame as ShopAssets)
+                        );
                       }
                     }}
                   >
