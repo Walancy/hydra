@@ -478,11 +478,7 @@ export function Header() {
         onClose={() => setDownloadsModalOpen(false)}
         large
       >
-        <div
-          style={{ height: "60vh", overflowY: "auto", position: "relative" }}
-        >
-          {downloadsModalOpen && <Downloads />}
-        </div>
+        {downloadsModalOpen && <Downloads />}
       </Modal>
     </>
   );

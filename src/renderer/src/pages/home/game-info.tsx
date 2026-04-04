@@ -12,6 +12,7 @@ import {
 import type { DownloadSource, ShopAssets, ShopDetailsWithAssets } from "@types";
 import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
 import { Button } from "@renderer/components";
+import { useDownload, useLibrary } from "@renderer/hooks";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
 import "./home.scss";
@@ -95,6 +96,8 @@ export function GameInfo({
 }: Readonly<GameInfoProps>) {
   const { i18n, t } = useTranslation("home");
   const navigate = useNavigate();
+  const { lastPacket, progress } = useDownload();
+  const isDownloading = lastPacket?.gameId === `${game.shop}:${game.objectId}`;
   const [details, setDetails] = useState<ShopDetailsWithAssets | null>(
     detailsCache.get(game.objectId) ?? null
   );
@@ -103,7 +106,9 @@ export function GameInfo({
   const [executableExists, setExecutableExists] = useState<boolean | null>(
     null
   );
-  const executablePath = (game as any).executablePath as
+  const { library } = useLibrary();
+  const libraryGame = library.find((g) => g.objectId === game.objectId && g.shop === game.shop);
+  const executablePath = ((game as any).executablePath ?? libraryGame?.executablePath) as
     | string
     | null
     | undefined;
@@ -231,7 +236,9 @@ export function GameInfo({
               }}
             >
               <DownloadIcon size={16} />
-              {t("install", { defaultValue: "Instalar" })}
+              {isDownloading
+                ? t("downloading_progress", { defaultValue: `Baixando - ${progress}`, progress })
+                : t("install", { defaultValue: "Instalar" })}
             </Button>
 
             {executablePath &&

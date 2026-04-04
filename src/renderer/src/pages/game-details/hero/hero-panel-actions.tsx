@@ -9,8 +9,9 @@ import {
   PlayIcon,
   PlusCircleIcon,
   FileDirectoryIcon,
+  TrashIcon,
 } from "@primer/octicons-react";
-import { Button } from "@renderer/components";
+import { Button, ConfirmationModal } from "@renderer/components";
 import {
   useDownload,
   useLibrary,
@@ -26,11 +27,12 @@ import "./hero-panel-actions.scss";
 function useHeroPanelActions() {
   const [toggleLibraryGameDisabled, setToggleLibraryGameDisabled] =
     useState(false);
+  const [showUninstallModal, setShowUninstallModal] = useState(false);
   const [executableExists, setExecutableExists] = useState<boolean | null>(
     null
   );
 
-  const { isGameDeleting } = useDownload();
+  const { isGameDeleting, removeGameInstaller, pauseSeeding } = useDownload();
   const { userDetails } = useUserDetails();
 
   const {
@@ -206,22 +208,51 @@ function useHeroPanelActions() {
   const deleting = game ? isGameDeleting(game?.id) : false;
 
   const removeGameFromLibraryButton = game ? (
-    <Button
-      theme="primary"
-      disabled={toggleLibraryGameDisabled}
-      onClick={async () => {
-        setToggleLibraryGameDisabled(true);
-        try {
-          await window.electron.removeGameFromLibrary(game.shop, game.objectId);
-          updateLibrary();
-          updateGame();
-        } finally {
-          setToggleLibraryGameDisabled(false);
-        }
-      }}
-    >
-      <DashIcon />
-    </Button>
+    <>
+      <ConfirmationModal
+        visible={showUninstallModal}
+        title={t("uninstall_modal_title", { defaultValue: "Desinstalar jogo" })}
+        descriptionText={t("uninstall_modal_description", { defaultValue: "Tem certeza que deseja desinstalar e remover os arquivos deste jogo?" })}
+        confirmButtonLabel={t("uninstall", { defaultValue: "Desinstalar" })}
+        cancelButtonLabel={t("cancel", { defaultValue: "Cancelar" })}
+        onConfirm={async () => {
+          setShowUninstallModal(false);
+          setToggleLibraryGameDisabled(true);
+          try {
+            await pauseSeeding(game.shop, game.objectId);
+            await removeGameInstaller(game.shop, game.objectId);
+          } finally {
+            setToggleLibraryGameDisabled(false);
+          }
+        }}
+        onClose={() => setShowUninstallModal(false)}
+      />
+      <Button
+        theme="primary"
+        disabled={toggleLibraryGameDisabled}
+        onClick={async () => {
+          const isInstalled = Boolean(
+            (game?.executablePath && executableExists !== false) ||
+              game?.download?.progress === 1
+          );
+
+          if (isInstalled) {
+            setShowUninstallModal(true);
+          } else {
+            setToggleLibraryGameDisabled(true);
+            try {
+              await window.electron.removeGameFromLibrary(game.shop, game.objectId);
+              updateLibrary();
+              updateGame();
+            } finally {
+              setToggleLibraryGameDisabled(false);
+            }
+          }
+        }}
+      >
+        {((game?.executablePath && executableExists !== false) || game?.download?.progress === 1) ? <TrashIcon /> : <DashIcon />}
+      </Button>
+    </>
   ) : null;
 
   const addGameToLibraryButton = (

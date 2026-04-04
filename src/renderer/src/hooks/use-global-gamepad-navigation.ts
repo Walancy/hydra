@@ -47,7 +47,15 @@ function isIgnored(el: Element): boolean {
  * Isso exclui automaticamente header, sidebar, title-bar e bottom-panel.
  */
 function getCandidates(): Element[] {
-  // 1. Procurar modais abertos primeiro (prioridade máxima)
+  // 1. Procurar dropdown de busca primeiro (prioridade máxima)
+  const searchDropdown = document.querySelector(".search-dropdown");
+  if (searchDropdown && isVisible(searchDropdown)) {
+    return Array.from(searchDropdown.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+      (el) => !isIgnored(el) && isVisible(el)
+    );
+  }
+
+  // 2. Procurar modais abertos
   const openModal = Array.from(document.querySelectorAll(".modal")).find(
     isVisible
   );
@@ -124,7 +132,6 @@ function moveFocus(dir: Dir): void {
   if (candidates.length === 0) return;
 
   const active = document.activeElement;
-  const mainEl = document.querySelector("main");
 
   // Sem foco, foco no body/html, foco fora do main, ou em zona ignorada
   // → focar no primeiro candidato dentro do main
@@ -133,7 +140,7 @@ function moveFocus(dir: Dir): void {
     active === document.body ||
     active === document.documentElement ||
     isIgnored(active) ||
-    (mainEl && !mainEl.contains(active));
+    !candidates.includes(active);
 
   if (activeIsOutside) {
     (candidates[0] as HTMLElement).focus({ preventScroll: false });

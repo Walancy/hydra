@@ -4,7 +4,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@renderer/hooks";
-import { setCatalogueCategory } from "@renderer/features";
+import { setCatalogueCategory, setIsMyGames, setCurrentCategory } from "@renderer/features";
 import { useTranslation } from "react-i18next";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
@@ -29,7 +29,7 @@ import {
   DownloadGameModal,
 } from "@renderer/components";
 import { useHomeGroups, type HomeGroup } from "@renderer/hooks/use-home-groups";
-import { PlusCircleIcon, StackIcon, TrashIcon } from "@primer/octicons-react";
+import { PlusCircleIcon, StackIcon, TrashIcon, GiftIcon } from "@primer/octicons-react";
 import { CreateFolderModal } from "./create-folder-modal";
 import { setOpenedFolderName } from "@renderer/features";
 import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
@@ -46,7 +46,6 @@ export default function Home() {
   const [downloadGame, setDownloadGame] = useState<ShopAssets | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isMyGames, setIsMyGames] = useState(true);
   const sliderRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -94,10 +93,10 @@ export default function Home() {
     } | null;
   } | null>(null);
 
-  const [currentCatalogueCategory, setCurrentCatalogueCategory] = useState(
-    CatalogueCategory.Hot
+  const isMyGames = useAppSelector((state) => state.homeCatalogue.isMyGames);
+  const currentCatalogueCategory = useAppSelector(
+    (state) => state.homeCatalogue.currentCategory
   );
-
   const catalogue = useAppSelector((state) => state.homeCatalogue.catalogue);
 
   const getCatalogue = useCallback(
@@ -105,7 +104,7 @@ export default function Home() {
       const hasCached = catalogue[category] && catalogue[category].length > 0;
 
       try {
-        setCurrentCatalogueCategory(category);
+        dispatch(setCurrentCategory(category));
         // Only show skeleton if we have no cached data yet
         if (forceLoadingState && !hasCached) setIsLoading(true);
 
@@ -143,14 +142,14 @@ export default function Home() {
 
   const handleMyGamesClick = () => {
     setIsTransitioning(true);
-    setIsMyGames(true);
+    dispatch(setIsMyGames(true));
     setOpenedGroup(null);
     setSelectedIndex(0);
     requestAnimationFrame(() => setIsTransitioning(false));
   };
 
   const handleCatTabClick = (category: CatalogueCategory) => {
-    setIsMyGames(false);
+    dispatch(setIsMyGames(false));
     setOpenedGroup(null);
     handleCategoryClick(category);
   };
@@ -850,7 +849,28 @@ export default function Home() {
             {!selectedGame && !selectedFolder && <div />}
 
             {catalogue[CatalogueCategory.Hot]?.length > 0 && (
-              <HeroCarousel games={catalogue[CatalogueCategory.Hot]} />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <HeroCarousel games={catalogue[CatalogueCategory.Hot]} />
+                <div className="home__surprise-container">
+                  <Button
+                    theme="outline"
+                    className="home__surprise-button"
+                    onClick={() => {
+                      const pool = libraryAsGames.length > 0 && isMyGames 
+                        ? libraryAsGames 
+                        : catalogue[currentCatalogueCategory];
+                        
+                      if (pool && pool.length > 0) {
+                        const randomGame = pool[Math.floor(Math.random() * pool.length)];
+                        navigate(buildGameDetailsPath(randomGame as ShopAssets));
+                      }
+                    }}
+                  >
+                    <GiftIcon size={16} />
+                    {t("surprise_me", { defaultValue: "Surpreenda-me" })}
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

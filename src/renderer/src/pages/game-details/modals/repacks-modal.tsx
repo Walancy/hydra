@@ -1,7 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  PlusCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
 } from "@primer/octicons-react";
@@ -325,16 +324,6 @@ export function RepacksModal({
                   {isFilterDrawerOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
                 </Button>
               )}
-              <Button
-                type="button"
-                theme="primary"
-                onClick={() =>
-                  window.electron.openExternal("https://hydralinks.cloud")
-                }
-              >
-                <PlusCircleIcon />
-                Adicionar fonte
-              </Button>
             </div>
           </div>
 
@@ -378,18 +367,6 @@ export function RepacksModal({
               <div className="repacks-modal__no-results-content">
                 <div className="repacks-modal__no-results-text">
                   {t("no_repacks_found")}
-                </div>
-                <div className="repacks-modal__no-results-button">
-                  <Button
-                    type="button"
-                    theme="primary"
-                    onClick={() => {
-                      window.electron.openExternal("https://hydralinks.cloud");
-                    }}
-                  >
-                    <PlusCircleIcon />
-                    Instalar fontes
-                  </Button>
                 </div>
               </div>
             </div>

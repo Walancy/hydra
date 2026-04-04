@@ -146,19 +146,22 @@ export function SettingsDownloadSources() {
 
       <p>{t("download_sources_description")}</p>
 
-      {/* Action bar */}
       <div className="settings-download-sources__header">
-        <Button
-          type="button"
-          theme="outline"
-          disabled={!downloadSources.length || isSyncing || isRemoving}
-          onClick={handleSync}
-        >
-          <SyncIcon />
-          {t("sync_download_sources")}
-        </Button>
-
         <div className="settings-download-sources__buttons-container">
+          <Button
+            theme="outline"
+            onClick={handleSync}
+            disabled={isSyncing || downloadSources.length === 0}
+          >
+            <SyncIcon size={16} />
+            {t("sync")}
+          </Button>
+
+          <Button theme="primary" onClick={() => setShowAddModal(true)}>
+            <PlusCircleIcon size={16} />
+            {t("add_source")}
+          </Button>
+
           <Button
             type="button"
             theme="danger"
@@ -168,16 +171,7 @@ export function SettingsDownloadSources() {
             <TrashIcon />
             {t("button_delete_all_sources")}
           </Button>
-
-          <Button
-            type="button"
-            theme="outline"
-            onClick={() => setShowAddModal(true)}
-            disabled={isSyncing || isRemoving}
-          >
-            <PlusCircleIcon />
-            {t("add_download_source")}
-          </Button>
+          {/* Add download source button removed by user request */}
         </div>
       </div>
 

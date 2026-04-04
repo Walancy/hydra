@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import type { SearchHistoryEntry } from "@renderer/hooks/use-search-history";
 import type { SearchSuggestion } from "@renderer/hooks/use-search-suggestions";
 import { useGamepad } from "@renderer/hooks";
+import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
 import { GradualBlur } from "../ui/gradual-blur";
 import "./search-dropdown.scss";
 
@@ -45,12 +46,19 @@ export function SearchDropdown({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation("header");
+  const isGamepadConnected = useGamepadConnected();
 
   useEffect(() => {
     if (visible && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        if (isGamepadConnected) {
+          window.electron.showVirtualKeyboard();
+          window.dispatchEvent(new CustomEvent("hydra:open-keyboard"));
+        }
+      }, 50);
     }
-  }, [visible]);
+  }, [visible, isGamepadConnected]);
 
   useEffect(() => {
     if (!visible) return;
@@ -76,16 +84,40 @@ export function SearchDropdown({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      onExecuteSearch();
+      e.preventDefault();
+      const firstCard = containerRef.current?.querySelector<HTMLElement>(
+        ".search-dropdown__card, .search-dropdown__tag"
+      );
+      if (isGamepadConnected && firstCard) {
+        firstCard.focus();
+      } else {
+        onExecuteSearch();
+      }
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      containerRef.current?.querySelector<HTMLElement>(".search-dropdown__card")?.focus();
     }
   };
 
   useGamepad({
+    priority: 15,
     onButton: {
       B: () => {
         onClose();
         return true;
       },
+      START: () => {
+        const firstCard = containerRef.current?.querySelector<HTMLElement>(
+          ".search-dropdown__card, .search-dropdown__tag"
+        );
+        if (firstCard) {
+          firstCard.focus();
+        } else {
+          onExecuteSearch();
+        }
+        return true;
+      }
     },
   });
 

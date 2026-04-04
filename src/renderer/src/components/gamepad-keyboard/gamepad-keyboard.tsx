@@ -24,6 +24,7 @@ interface GamepadKeyboardProps {
   col: number;
   onRowChange: (r: number) => void;
   onColChange: (c: number) => void;
+  onSubmit?: () => void;
 }
 
 export function GamepadKeyboard({
@@ -34,6 +35,7 @@ export function GamepadKeyboard({
   col,
   onRowChange,
   onColChange,
+  onSubmit,
 }: GamepadKeyboardProps) {
   const currentRow = ROWS[row];
   const safeCol = Math.min(col, currentRow.length - 1);
@@ -42,8 +44,10 @@ export function GamepadKeyboard({
     (key: string) => {
       if (key === "⌫") {
         onChange(value.slice(0, -1));
-      } else if (key === "↵" || key === "SPACE") {
-        onChange(value + (key === "SPACE" ? " " : "\n"));
+      } else if (key === "↵") {
+        onSubmit?.();
+      } else if (key === "SPACE") {
+        onChange(value + " ");
       } else {
         onChange(value + key.toLowerCase());
       }
@@ -80,6 +84,10 @@ export function GamepadKeyboard({
       },
       X: () => {
         onChange(value.slice(0, -1));
+        return true;
+      },
+      START: () => {
+        onSubmit?.();
         return true;
       },
     },
@@ -125,11 +133,15 @@ export function GamepadKeyboard({
         </span>
         <span>
           <GamepadHint label="B" position="left" />
-          apagar
+          fechar
         </span>
         <span>
           <GamepadHint label="X" position="left" />
-          confirmar
+          apagar
+        </span>
+        <span>
+          <GamepadHint label="START" position="left" />
+          buscar
         </span>
       </div>
     </div>

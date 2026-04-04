@@ -160,7 +160,12 @@ export function App() {
 
   useEffect(() => {
     registerOpenKeyboardCallback(openKeyboardForFocusedInput);
-    return () => registerOpenKeyboardCallback(null);
+    const handleEvent = () => openKeyboardForFocusedInput();
+    window.addEventListener("hydra:open-keyboard", handleEvent);
+    return () => {
+      registerOpenKeyboardCallback(null);
+      window.removeEventListener("hydra:open-keyboard", handleEvent);
+    };
   }, [openKeyboardForFocusedInput]);
 
   const handleKeyboardChange = useCallback(
@@ -819,6 +824,14 @@ export function App() {
           col={keyboardCol}
           onRowChange={setKeyboardRow}
           onColChange={setKeyboardCol}
+          onSubmit={() => {
+            if (keyboardTarget) {
+              keyboardTarget.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })
+              );
+              handleKeyboardClose();
+            }
+          }}
         />
       )}
     </>

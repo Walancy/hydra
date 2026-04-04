@@ -63,7 +63,7 @@ export function useHomeGamepad({
 
     const isOverlayOpen =
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       ) !== null;
     if (isOverlayOpen) return false; // Delegate navigation entirely if an overlay is active
 
@@ -100,7 +100,7 @@ export function useHomeGamepad({
     if (!isEnabled) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -124,7 +124,7 @@ export function useHomeGamepad({
     if (!isEnabled) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -149,7 +149,7 @@ export function useHomeGamepad({
     if (!isEnabled) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -180,7 +180,7 @@ export function useHomeGamepad({
     if (!isEnabled) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -209,7 +209,7 @@ export function useHomeGamepad({
     if (!isEnabled || openedGroup) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -222,7 +222,7 @@ export function useHomeGamepad({
     if (!isEnabled || openedGroup) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -236,7 +236,7 @@ export function useHomeGamepad({
     if (!isEnabled) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;
@@ -263,7 +263,7 @@ export function useHomeGamepad({
     if (!isEnabled) return;
     if (
       document.querySelector(
-        ".modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
+        ".search-dropdown, .modal, .notifications-sidebar-wrapper--open, .sidebar-wrapper--force-open"
       )
     )
       return;

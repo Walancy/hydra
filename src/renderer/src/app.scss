@@ -16,7 +16,8 @@ select:focus-visible,
 .gamepad-active a:focus,
 .gamepad-active textarea:focus,
 .gamepad-active select:focus {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: -2px;
 }
 
 :focus-visible,
@@ -25,7 +26,9 @@ select:focus-visible,
 }
 
 .home__card:focus-visible,
-.gamepad-active .home__card:focus {
+.gamepad-active .home__card:focus,
+.search-dropdown__card:focus-visible,
+.gamepad-active .search-dropdown__card:focus {
   box-shadow: none !important;
   outline: none;
 }

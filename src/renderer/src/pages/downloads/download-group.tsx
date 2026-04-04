@@ -953,66 +953,6 @@ export function DownloadGroup({
   const isQueuedGroup = title === t("queued_downloads");
   const isCompletedGroup = title === t("downloads_completed");
 
-  if (isDownloadingGroup && library.length > 0) {
-    const game = library[0];
-    const isGameExtracting = extraction?.visibleId === game.id;
-    const isGameDownloading =
-      isGameDownloadingMap[game.id] && !isGameExtracting;
-    const downloadSpeed = isGameDownloading
-      ? (lastPacket?.downloadSpeed ?? 0)
-      : 0;
-    const finalDownloadSize = getFinalDownloadSize(game);
-    // Use lastPacket.gameId for lookup since that's the key used to store the data
-    // Fall back to game.id if lastPacket is not available
-    const dataKey = lastPacket?.gameId ?? game.id;
-    const gameSpeedHistory = speedHistory[dataKey] ?? [];
-    const storedPeak = peakSpeeds[dataKey];
-    // Use stored peak if available and > 0, otherwise use current speed as initial value
-    const peakSpeed =
-      storedPeak !== undefined && storedPeak > 0 ? storedPeak : downloadSpeed;
-
-    let currentProgress = game.download?.progress || 0;
-    if (isGameExtracting) {
-      currentProgress = extraction.progress;
-    } else if (isGameDownloading && lastPacket) {
-      currentProgress = lastPacket.progress;
-    }
-
-    const dominantColor = pickChartColor(dominantColors[game.id]);
-
-    return (
-      <>
-        <ConfirmationModal
-          visible={cancelModalVisible}
-          title={t("cancel_download")}
-          descriptionText={t("cancel_download_description")}
-          confirmButtonLabel={t("yes_cancel")}
-          cancelButtonLabel={t("keep_downloading")}
-          onConfirm={handleConfirmCancel}
-          onClose={handleCancelModalClose}
-        />
-        <HeroDownloadView
-          game={game}
-          isGameDownloading={isGameDownloading}
-          isGameExtracting={isGameExtracting}
-          downloadSpeed={downloadSpeed}
-          finalDownloadSize={finalDownloadSize}
-          peakSpeed={peakSpeed}
-          currentProgress={currentProgress}
-          dominantColor={dominantColor}
-          lastPacket={lastPacket}
-          speedHistory={gameSpeedHistory}
-          formatSpeed={formatSpeed}
-          calculateETA={calculateETA}
-          pauseDownload={pauseDownload}
-          resumeDownload={resumeDownload}
-          onCancelClick={handleCancelClick}
-          t={t}
-        />
-      </>
-    );
-  }
-
   return (
     <>
       <ConfirmationModal
@@ -1036,84 +976,83 @@ export function DownloadGroup({
 
         <ul className="download-group__simple-list">
           {downloadInfo.map(({ game, size, progress, isSeeding: seeding }) => {
+            const isGameExtracting = extraction?.visibleId === game.id;
+            const isGameDownloading = isGameDownloadingMap[game.id] && !isGameExtracting;
+            const downloadSpeed = isGameDownloading ? (lastPacket?.downloadSpeed ?? 0) : 0;
+            
+            let currentProgress = progress;
+            if (isGameExtracting && extraction) {
+              currentProgress = extraction.progress;
+            } else if (isGameDownloading && lastPacket) {
+              currentProgress = lastPacket.progress;
+            }
+
+            const isDownloadingItem = isDownloadingGroup && (isGameDownloading || isGameExtracting);
+
             return (
-              <li key={game.id} className="download-group__simple-card">
+              <li key={game.id} className="download-group__simple-card" style={{ padding: '16px 24px', alignItems: 'center' }}>
                 <button
                   type="button"
                   onClick={() => navigate(buildGameDetailsPath(game))}
                   className="download-group__simple-thumbnail"
+                  style={{ width: '80px', height: '80px', borderRadius: '8px' }}
                 >
-                  <img src={game.libraryImageUrl || ""} alt={game.title} />
+                  <img src={game.logoImageUrl || game.libraryImageUrl || ""} alt={game.title} style={{ objectFit: 'cover' }} />
                 </button>
 
-                <div className="download-group__simple-info">
+                <div className="download-group__simple-info" style={{ flex: 1 }}>
                   <button
                     type="button"
                     onClick={() => navigate(buildGameDetailsPath(game))}
                     className="download-group__simple-title-button"
                   >
-                    <h3 className="download-group__simple-title">
+                    <h3 className="download-group__simple-title" style={{ fontSize: '18px' }}>
                       {game.title}
                     </h3>
                   </button>
-                  <div className="download-group__simple-meta">
+                  <div className="download-group__simple-meta" style={{ flexDirection: 'row', gap: '16px', opacity: 0.7, marginTop: '4px' }}>
                     <div className="download-group__simple-meta-row">
                       <span className="download-group__simple-meta-icon">
                         <DownloadIcon size={12} />
                       </span>
-                      <Badge>
+                      <span>
                         {DOWNLOADER_NAME[Number(game.download!.downloader)]}
-                      </Badge>
+                      </span>
                     </div>
-                    {game.download?.timestamp ? (
+                    {isDownloadingItem ? null : (
                       <div className="download-group__simple-meta-row">
                         <span className="download-group__simple-meta-icon">
-                          <CalendarIcon size={12} />
+                          <FileDirectoryIcon size={12} />
                         </span>
-                        <span>
-                          {formatDateTime(new Date(game.download.timestamp))}
+                        <span className="download-group__simple-meta-path">
+                          {game.download?.downloadPath ?? "—"}
                         </span>
                       </div>
-                    ) : null}
-                    <div className="download-group__simple-meta-row">
-                      <span className="download-group__simple-meta-icon">
-                        <FileDirectoryIcon size={12} />
-                      </span>
-                      <span className="download-group__simple-meta-path">
-                        {game.download?.downloadPath ?? "—"}
-                      </span>
-                    </div>
-                    <div className="download-group__simple-meta-row">
-                      {extraction?.visibleId === game.id ? (
-                        <span className="download-group__simple-extracting">
-                          {t("extracting")} (
-                          {Math.round(extraction.progress * 100)}%)
-                        </span>
-                      ) : (
-                        <span className="download-group__simple-size">
-                          <DownloadIcon size={14} />
-                          {size}
-                        </span>
-                      )}
-                      {game.download?.progress === 1 && seeding && (
-                        <span className="download-group__simple-seeding">
-                          {t("seeding")}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {isQueuedGroup && (
-                  <div className="download-group__simple-progress">
-                    <span className="download-group__simple-progress-text">
-                      {formatDownloadProgress(progress)}
-                    </span>
-                    <div className="download-group__progress-bar download-group__progress-bar--small">
+                {(isQueuedGroup || isDownloadingItem) && (
+                  <div className="download-group__simple-progress-container" style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '180px', maxWidth: '350px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.7)' }}>
+                        {isDownloadingItem && !isGameExtracting && lastPacket ? (
+                          <>{formatBytes(lastPacket.download.bytesDownloaded)} / {size} • {calculateETA() || tGameDetails("calculating_eta")} • {formatSpeed(downloadSpeed)}</>
+                        ) : isGameExtracting && extraction ? (
+                          <>{t("extracting")} ({Math.round(extraction.progress * 100)}%)</>
+                        ) : isQueuedGroup ? (
+                           <>{size}</>
+                        ) : null}
+                      </span>
+                      <span className="download-group__simple-progress-text" style={{ fontSize: '14px', fontWeight: '600' }}>
+                        {formatDownloadProgress(currentProgress)}
+                      </span>
+                    </div>
+                    <div className="download-group__progress-bar" style={{ marginTop: 0, height: '6px', backgroundColor: 'rgba(255,255,255,0.1)' }}>
                       <div
                         className="download-group__progress-fill"
                         style={{
-                          width: `${progress * 100}%`,
+                          width: `${currentProgress * 100}%`,
                           backgroundColor: "#fff",
                         }}
                       />
@@ -1121,7 +1060,17 @@ export function DownloadGroup({
                   </div>
                 )}
 
-                <div className="download-group__simple-actions">
+                <div className="download-group__simple-actions" style={{ marginLeft: '16px' }}>
+                  {isDownloadingItem && !isGameExtracting && (
+                    <Button
+                      theme="primary"
+                      onClick={() => pauseDownload(game.shop, game.objectId)}
+                      className="download-group__simple-menu-btn"
+                      tooltip={t("pause")}
+                    >
+                      <ColumnsIcon size={16} />
+                    </Button>
+                  )}
                   {game.download?.progress === 1 &&
                     (() => {
                       const actionType =
