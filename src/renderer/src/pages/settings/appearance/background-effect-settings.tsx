@@ -201,7 +201,7 @@ interface ToggleProps {
 }
 function Toggle({ id, checked, onChange }: ToggleProps) {
   return (
-    <label className="bg-effect__toggle" htmlFor={id}>
+    <label className="bg-effect__toggle" htmlFor={id} aria-label="toggle">
       <input
         id={id}
         type="checkbox"
@@ -245,17 +245,29 @@ export function BackgroundEffectSettings() {
   const [config, setConfig] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
-    const ef =
-      localStorage.getItem("hydra_background_effect") || "floatinglines";
-    setEffect(ef);
-    try {
-      const confStr = localStorage.getItem("hydra_background_config");
-      setConfig(
-        confStr ? JSON.parse(confStr) : effectsInfo["floatinglines"].defaults
-      );
-    } catch {
-      setConfig({});
-    }
+    const sync = () => {
+      const ef =
+        localStorage.getItem("hydra_background_effect") || "floatinglines";
+      setEffect(ef);
+      try {
+        const confStr = localStorage.getItem("hydra_background_config");
+        let parsed = confStr ? JSON.parse(confStr) : {};
+        const defaultConf = effectsInfo[ef]?.defaults || {};
+        
+        if (Object.keys(parsed).length === 0) {
+          setConfig(defaultConf);
+        } else {
+          setConfig({ ...defaultConf, ...parsed });
+        }
+      } catch {
+        setConfig(effectsInfo[ef]?.defaults || {});
+      }
+    };
+
+    sync(); // leitura inicial
+
+    window.addEventListener("background_effect_update", sync);
+    return () => window.removeEventListener("background_effect_update", sync);
   }, []);
 
   const handleEffectChange = (newEffect: string) => {

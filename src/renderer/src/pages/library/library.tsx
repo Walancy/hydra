@@ -1043,7 +1043,7 @@ export default function Library() {
                 placeholder={t("folder_name", {
                   defaultValue: "Nome da pasta",
                 })}
-                autoFocus
+                label={t("folder_name", { defaultValue: "Nome da pasta" })}
               />
 
               <div className="library__collection-modal-actions">

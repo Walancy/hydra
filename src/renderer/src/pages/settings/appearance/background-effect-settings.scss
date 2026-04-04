@@ -44,7 +44,7 @@
       height: 34px;
       min-width: 34px;
       border-radius: 8px;
-      background: rgba(82, 39, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -161,7 +161,7 @@
       -webkit-appearance: none;
       width: 14px;
       height: 14px;
-      background: #5227ff;
+      background: rgba(255, 255, 255, 0.55);
       border-radius: 50%;
       cursor: pointer;
       transition:
@@ -170,7 +170,7 @@
 
       &:hover {
         transform: scale(1.2);
-        box-shadow: 0 0 0 3px rgba(82, 39, 255, 0.25);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
       }
     }
   }
@@ -215,7 +215,7 @@
     }
 
     input:checked + &-track {
-      background: #5227ff;
+      background: rgba(255, 255, 255, 0.28);
 
       &::after {
         transform: translateX(14px);
@@ -326,8 +326,8 @@
     }
 
     &--active {
-      background: rgba(82, 39, 255, 0.2);
-      border-color: rgba(82, 39, 255, 0.5);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
       color: #fff;
     }
   }

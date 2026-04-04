@@ -20,18 +20,21 @@ export const BackgroundEffectRenderer = memo(
 
     useEffect(() => {
       const handleUpdate = () => {
-        setEffect(
-          localStorage.getItem("hydra_background_effect") || "floatinglines"
-        );
+        const currentEffect = localStorage.getItem("hydra_background_effect") || "floatinglines";
+        setEffect(currentEffect);
         try {
           const confStr = localStorage.getItem("hydra_background_config");
-          if (confStr) {
-            setConfig(JSON.parse(confStr));
+          let parsed = confStr ? JSON.parse(confStr) : {};
+          
+          const defaultConf = effectsInfo[currentEffect]?.defaults || {};
+          
+          if (Object.keys(parsed).length === 0) {
+            setConfig(defaultConf);
           } else {
-            setConfig(effectsInfo["floatinglines"].defaults);
+            setConfig({ ...defaultConf, ...parsed });
           }
         } catch (e) {
-          setConfig(effectsInfo["floatinglines"].defaults);
+          setConfig(effectsInfo[currentEffect]?.defaults || {});
         }
       };
 

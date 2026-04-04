@@ -19,6 +19,7 @@
     height: 100%;
     display: flex;
     align-self: stretch;
+    overflow: hidden;
   }
 
   &__content {
@@ -42,7 +43,7 @@
     margin: -12px;
     border-right: none;
     background: transparent;
-    overflow-y: auto;
+    overflow-y: visible;
     scrollbar-width: none;
 
     &::-webkit-scrollbar {
@@ -96,8 +97,12 @@
     flex-direction: column;
     gap: calc(globals.$spacing-unit * 2.5);
     min-width: 0;
-    padding: 0;
-    overflow-y: visible;
+    padding: 0 16px 24px 0;
+    overflow-y: auto;
+    
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
   }
 
   @media (max-width: 860px) {

@@ -1,14 +1,20 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./settings-appearance.scss";
-import { ThemeActions, ThemeCard, ThemePlaceholder } from "./index";
+import { ThemeActions, ThemeCard, ThemePlaceholder, ThemeCustomizer } from "./index";
 import type { Theme } from "@types";
 import { ImportThemeModal } from "./modals/import-theme-modal";
 import { settingsContext } from "@renderer/context";
 import { useNavigate } from "react-router-dom";
 import { levelDBService } from "@renderer/services/leveldb.service";
-import { THEME_WEB_STORE_URL } from "@renderer/constants";
 import { useTranslation } from "react-i18next";
-import { BackgroundEffectSettings } from "./background-effect-settings";
+import { restoreCustomThemeOnBoot } from "@renderer/services/theme-customizer.service";
+import {
+  getSavedCustomThemes,
+  deleteSavedCustomTheme,
+  applyCustomTheme,
+  type SavedCustomTheme,
+} from "@renderer/services/theme-customizer.service";
+import { TrashIcon } from "@primer/octicons-react";
 
 interface SettingsAppearanceProps {
   appearance: {
@@ -18,13 +24,14 @@ interface SettingsAppearanceProps {
   };
 }
 
-type ThemeTab = "mine" | "installed" | "effects";
+type ThemeTab = "themes" | "customize";
 
 export function SettingsAppearance({
   appearance,
 }: Readonly<SettingsAppearanceProps>) {
   const [themes, setThemes] = useState<Theme[]>([]);
-  const [activeTab, setActiveTab] = useState<ThemeTab>("mine");
+  const [savedCustomThemes, setSavedCustomThemes] = useState<SavedCustomTheme[]>([]);
+  const [activeTab, setActiveTab] = useState<ThemeTab>("themes");
   const [isImportThemeModalVisible, setIsImportThemeModalVisible] =
     useState(false);
   const [importTheme, setImportTheme] = useState<{
@@ -43,15 +50,20 @@ export function SettingsAppearance({
     setThemes(themesList);
   }, []);
 
+  const loadSavedCustomThemes = useCallback(() => {
+    setSavedCustomThemes(getSavedCustomThemes());
+  }, []);
+
   useEffect(() => {
     loadThemes();
-  }, [loadThemes]);
+    loadSavedCustomThemes();
+    restoreCustomThemeOnBoot();
+  }, [loadThemes, loadSavedCustomThemes]);
 
   useEffect(() => {
     const unsubscribe = window.electron.onCustomThemeUpdated(() => {
       loadThemes();
     });
-
     return () => unsubscribe();
   }, [loadThemes]);
 
@@ -69,7 +81,6 @@ export function SettingsAppearance({
         authorName: appearance.authorName,
       });
       setHasShownModal(true);
-
       navigate("/settings", { replace: true });
       clearTheme();
     }
@@ -88,31 +99,30 @@ export function SettingsAppearance({
     loadThemes();
   }, [loadThemes]);
 
-  const isInstalledTheme = (theme: Theme) =>
-    theme.code.startsWith(THEME_WEB_STORE_URL);
+  const handleApplySaved = useCallback((t: SavedCustomTheme) => {
+    applyCustomTheme(t.config);
+  }, []);
+
+  const handleDeleteSaved = useCallback((i: number) => {
+    deleteSavedCustomTheme(i);
+    loadSavedCustomThemes();
+  }, [loadSavedCustomThemes]);
 
   const sortedThemes = [...themes].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
-  const myThemes = sortedThemes.filter((th) => !isInstalledTheme(th));
-  const installedThemes = sortedThemes.filter((th) => isInstalledTheme(th));
-  const visibleThemes = activeTab === "mine" ? myThemes : installedThemes;
+  const totalCount = sortedThemes.length + savedCustomThemes.length;
 
   const tabs: { id: ThemeTab; label: string; count: number }[] = [
     {
-      id: "mine",
-      label: t("my_themes", { defaultValue: "Meus Temas" }),
-      count: myThemes.length,
+      id: "themes",
+      label: t("my_themes", { defaultValue: "Temas" }),
+      count: totalCount,
     },
     {
-      id: "installed",
-      label: t("installed_themes", { defaultValue: "Instalados" }),
-      count: installedThemes.length,
-    },
-    {
-      id: "effects",
-      label: "Fundos Animados",
+      id: "customize",
+      label: "Personalizar",
       count: 0,
     },
   ];
@@ -137,42 +147,72 @@ export function SettingsAppearance({
 
       <div className="settings-context-panel">
         <div className="settings-context-panel__group settings-appearance">
-          {activeTab === "effects" ? null : (
+          {activeTab === "themes" && (
             <ThemeActions
               onListUpdated={loadThemes}
               themesCount={themes.length}
             />
           )}
 
-          {activeTab === "effects" ? (
+          {activeTab === "customize" ? (
             <div className="settings-appearance__effects-container">
-              <BackgroundEffectSettings />
+              <ThemeCustomizer onSaved={loadSavedCustomThemes} />
             </div>
           ) : (
-            <div className="settings-appearance__themes">
-              {!visibleThemes.length ? (
-                activeTab === "mine" ? (
-                  <ThemePlaceholder onListUpdated={loadThemes} />
-                ) : (
-                  <div className="settings-appearance__empty-state">
-                    <p>
-                      {t("no_installed_themes", {
-                        defaultValue:
-                          "Nenhum tema instalado. Visite a loja para instalar temas.",
-                      })}
-                    </p>
+            <>
+              {/* ── Temas personalizados salvos ─────────────────── */}
+              {savedCustomThemes.length > 0 && (
+                <div className="settings-appearance__saved-custom">
+                  <p className="settings-appearance__saved-custom-title">
+                    Personalizados
+                  </p>
+                  <div className="settings-appearance__saved-custom-grid">
+                    {savedCustomThemes.map((t, i) => (
+                      <div
+                        key={t.savedAt}
+                        className="settings-appearance__saved-custom-card"
+                      >
+                        <span className="settings-appearance__saved-custom-name">
+                          {t.name}
+                        </span>
+                        <div className="settings-appearance__saved-custom-actions">
+                          <button
+                            type="button"
+                            className="settings-appearance__saved-apply-btn"
+                            onClick={() => handleApplySaved(t)}
+                          >
+                            Aplicar
+                          </button>
+                          <button
+                            type="button"
+                            className="settings-appearance__saved-delete-btn"
+                            aria-label="Remover tema"
+                            onClick={() => handleDeleteSaved(i)}
+                          >
+                            <TrashIcon size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )
-              ) : (
-                visibleThemes.map((theme) => (
-                  <ThemeCard
-                    key={theme.id}
-                    theme={theme}
-                    onListUpdated={loadThemes}
-                  />
-                ))
+                </div>
               )}
-            </div>
+
+              {/* ── Temas CSS (LevelDB) ────────────────────────── */}
+              <div className="settings-appearance__themes">
+                {!sortedThemes.length && !savedCustomThemes.length ? (
+                  <ThemePlaceholder onListUpdated={loadThemes} />
+                ) : !sortedThemes.length ? null : (
+                  sortedThemes.map((theme) => (
+                    <ThemeCard
+                      key={theme.id}
+                      theme={theme}
+                      onListUpdated={loadThemes}
+                    />
+                  ))
+                )}
+              </div>
+            </>
           )}
         </div>
 
