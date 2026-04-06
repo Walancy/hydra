@@ -30,7 +30,7 @@ export function SettingsEpicImport() {
           game.appName,
           game.title
         );
-        
+
         await window.electron.updateExecutablePath(
           "epic",
           game.appName,
