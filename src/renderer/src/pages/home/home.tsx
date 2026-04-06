@@ -895,7 +895,9 @@ export default function Home() {
                               )
                             );
                           }
-                        } catch (err) {}
+                        } catch (err) {
+                          console.error("Failed to fetch random game", err);
+                        }
                       }
                     }}
                   >

@@ -232,6 +232,7 @@ export function SearchDropdown({
                   </span>
                   <div
                     className="search-dropdown__cards-scroll"
+                    role="presentation"
                     onMouseDown={(e) => {
                       dragRef.current.isDragging = true;
                       dragRef.current.startX =
