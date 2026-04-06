@@ -18,7 +18,15 @@ const addGameToLibrary = async (
   const gameKey = levelKeys.game(shop, objectId);
   let game = await gamesSublevel.get(gameKey);
 
-  const gameAssets = await gamesShopAssetsSublevel.get(gameKey);
+  let gameAssets = await gamesShopAssetsSublevel.get(gameKey);
+
+  if (!gameAssets && shop !== "custom") {
+    const { getGameAssets } = await import("../catalogue/get-game-assets");
+    const result = await getGameAssets(objectId, shop);
+    if (result) {
+      gameAssets = { ...result, updatedAt: Date.now() };
+    }
+  }
 
   if (game) {
     await downloadsSublevel.del(gameKey);
@@ -27,11 +35,27 @@ const addGameToLibrary = async (
 
     await gamesSublevel.put(gameKey, game);
   } else {
+    let iconUrl = gameAssets?.iconUrl ?? null;
+    let libraryHeroImageUrl = gameAssets?.libraryHeroImageUrl ?? null;
+    let logoImageUrl = gameAssets?.logoImageUrl ?? null;
+
+    if (shop === "steam") {
+      iconUrl =
+        iconUrl ||
+        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/library_600x900.jpg`;
+      libraryHeroImageUrl =
+        libraryHeroImageUrl ||
+        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/library_hero.jpg`;
+      logoImageUrl =
+        logoImageUrl ||
+        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/logo.png`;
+    }
+
     game = {
       title,
-      iconUrl: gameAssets?.iconUrl ?? null,
-      libraryHeroImageUrl: gameAssets?.libraryHeroImageUrl ?? null,
-      logoImageUrl: gameAssets?.logoImageUrl ?? null,
+      iconUrl,
+      libraryHeroImageUrl,
+      logoImageUrl,
       objectId,
       shop,
       remoteId: null,

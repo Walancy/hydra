@@ -136,6 +136,7 @@ contextBridge.exposeInMainWorld("electron", {
   /* Library */
   importSteamGames: (customPath?: string) =>
     ipcRenderer.invoke("importSteamGames", customPath),
+  importEpicGames: () => ipcRenderer.invoke("importEpicGames"),
   importGamesFromFolder: (folderPath: string) =>
     ipcRenderer.invoke("importGamesFromFolder", folderPath),
   checkFileExists: (filePath: string) =>

@@ -22,6 +22,9 @@ import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { gameDetailsContext } from "@renderer/context";
 
+import SteamIcon from "@renderer/assets/launcher-icons/steam.svg?react";
+import EpicGamesIcon from "@renderer/assets/launcher-icons/epic-games.svg?react";
+
 import "./hero-panel-actions.scss";
 
 function useHeroPanelActions() {
@@ -288,6 +291,45 @@ function useHeroPanelActions() {
     </Button>
   );
 
+  const installViaSteamButton =
+    shop === "steam" ? (
+      <Button
+        theme={game ? "primary" : "outline"}
+        onClick={() =>
+          window.electron.openExternal(`steam://install/${objectId}`)
+        }
+        disabled={deleting || isGameDownloading}
+        title={t("install_via_steam_tooltip", {
+          defaultValue: "Baixar e instalar via cliente original Steam",
+        })}
+        style={{ minWidth: 200 }}
+      >
+        <SteamIcon style={{ width: 14, height: 14, fill: "currentColor" }} />
+        {t("install_via_steam", { defaultValue: "Instalar" })}
+      </Button>
+    ) : null;
+
+  const searchOnEpicButton =
+    shop === "steam" && gameTitle ? (
+      <Button
+        theme="outline"
+        onClick={() =>
+          window.electron.openExternal(
+            `https://store.epicgames.com/en-US/browse?q=${encodeURIComponent(gameTitle)}`
+          )
+        }
+        disabled={deleting}
+        title={t("search_epic_tooltip", {
+          defaultValue: "Pesquisar este jogo na Epic Games Store",
+        })}
+        style={{ minWidth: 200 }}
+      >
+        <EpicGamesIcon
+          style={{ width: 14, height: 14, fill: "currentColor" }}
+        />
+      </Button>
+    ) : null;
+
   const locateButton = (
     <Button
       theme="primary"
@@ -328,15 +370,39 @@ function useHeroPanelActions() {
 
     return (
       <>
-        <Button
-          onClick={() => setShowRepacksModal(true)}
-          theme="primary"
-          disabled={isGameDownloading}
-          style={{ minWidth: 200 }}
-        >
-          <DownloadIcon />
-          {t("download")}
-        </Button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {shop === "steam" ? (
+            <>
+              <div style={{ display: "flex", gap: 8 }}>
+                {installViaSteamButton}
+                {/* Epic install button could go here when implemented */}
+              </div>
+              <Button
+                onClick={() => setShowRepacksModal(true)}
+                theme="outline"
+                disabled={isGameDownloading}
+                style={{ width: "100%" }}
+              >
+                <DownloadIcon />
+                {t("download_via_hydra", {
+                  defaultValue: "Baixar alternativo",
+                })}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={() => setShowRepacksModal(true)}
+                theme="primary"
+                disabled={isGameDownloading}
+                style={{ minWidth: 200 }}
+              >
+                <DownloadIcon />
+                {t("download")}
+              </Button>
+            </>
+          )}
+        </div>
         {game?.executablePath && executableExists === false && locateButton}
       </>
     );
@@ -345,11 +411,17 @@ function useHeroPanelActions() {
   if (repacks.length && !game) {
     return {
       primary: (
-        <>
-          {addGameToLibraryButton}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {addGameToLibraryButton}
+            {locateButton}
+          </div>
           {showDownloadOptionsButton}
-          {locateButton}
-        </>
+          <div style={{ display: "flex", gap: 8 }}>
+            {installViaSteamButton}
+            {searchOnEpicButton}
+          </div>
+        </div>
       ),
       secondary: null,
     };
@@ -399,10 +471,16 @@ function useHeroPanelActions() {
 
   return {
     primary: (
-      <>
-        {addGameToLibraryButton}
-        {locateButton}
-      </>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {addGameToLibraryButton}
+          {locateButton}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {installViaSteamButton}
+          {searchOnEpicButton}
+        </div>
+      </div>
     ),
     secondary: null,
   };

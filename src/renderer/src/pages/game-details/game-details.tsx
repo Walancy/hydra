@@ -5,8 +5,7 @@ import type { GameRepack, GameShop, Steam250Game } from "@types";
 
 import { Button, ConfirmationModal } from "@renderer/components";
 import { buildGameDetailsPath } from "@renderer/helpers";
-
-import starsIconAnimated from "@renderer/assets/icons/stars-animated.gif";
+import { GiftIcon } from "@primer/octicons-react";
 
 import { useTranslation } from "react-i18next";
 import { SkeletonTheme } from "react-loading-skeleton";
@@ -199,16 +198,10 @@ export default function GameDetails() {
                   <Button
                     className="game-details__randomizer-button"
                     onClick={handleRandomizerClick}
-                    theme="outline"
+                    theme="primary"
                     disabled={!randomGame || randomizerLocked}
                   >
-                    <div className="game-details__stars-icon-container">
-                      <img
-                        src={starsIconAnimated}
-                        alt=""
-                        className="game-details__stars-icon"
-                      />
-                    </div>
+                    <GiftIcon size={16} />
                     {t("next_suggestion")}
                   </Button>
                 )}

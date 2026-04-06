@@ -10,6 +10,9 @@ import {
   HeartFillIcon,
   DashIcon,
 } from "@primer/octicons-react";
+import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
+import SteamIcon from "@renderer/assets/launcher-icons/steam.svg?react";
+import EpicGamesIcon from "@renderer/assets/launcher-icons/epic-games.svg?react";
 import "./library-game-card.scss";
 import { logger } from "@renderer/logger";
 
@@ -116,6 +119,9 @@ export const LibraryGameCard = memo(function LibraryGameCard({
         )
       : null;
 
+  const isSteam = game.executablePath?.startsWith("steam://");
+  const isEpic = game.executablePath?.startsWith("com.epicgames.launcher://");
+
   return (
     <button
       type="button"
@@ -145,6 +151,23 @@ export const LibraryGameCard = memo(function LibraryGameCard({
 
       {/* Gradient overlay with info at bottom */}
       <div className="library-game-card__overlay">
+        {/* Platform badge — top left */}
+        <div className="library-game-card__platform-badge">
+          {isSteam ? (
+            <SteamIcon
+              style={{ width: 14, height: 14, fill: "currentColor" }}
+            />
+          ) : isEpic ? (
+            <EpicGamesIcon
+              style={{ width: 14, height: 14, fill: "currentColor" }}
+            />
+          ) : (
+            <HydraIcon
+              style={{ width: 14, height: 14, fill: "currentColor" }}
+            />
+          )}
+        </div>
+
         {/* Logo — top right, above action buttons */}
         {game.shop === "custom" && logoUrl && (
           <img

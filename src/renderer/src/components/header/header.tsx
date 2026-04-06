@@ -23,7 +23,11 @@ import {
 
 import "./header.scss";
 import { ScanGamesModal } from "./scan-games-modal";
-import { setFilters, setLibrarySearchQuery } from "@renderer/features";
+import {
+  setFilters,
+  setLibrarySearchQuery,
+  triggerCloseFolder,
+} from "@renderer/features";
 import cn from "classnames";
 import { SearchDropdown, Modal } from "@renderer/components";
 import { buildGameDetailsPath } from "@renderer/helpers";
@@ -177,6 +181,10 @@ export function Header() {
     ? librarySearchValue
     : catalogueSearchValue;
 
+  const openedFolderName = useAppSelector(
+    (state) => state.window.openedFolderName
+  );
+
   const dispatch = useAppDispatch();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -204,7 +212,11 @@ export function Header() {
   );
 
   const handleBackButtonClick = () => {
-    navigate(-1);
+    if (openedFolderName) {
+      dispatch(triggerCloseFolder());
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleSearch = (value: string) => {

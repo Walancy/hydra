@@ -244,7 +244,7 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
                 </button>
               )}
 
-              {achievements.map((achievement) => (
+              {achievements.slice(0, 5).map((achievement) => (
                 <li key={achievement.displayName}>
                   <Link
                     to={buildGameAchievementPath({
@@ -273,6 +273,30 @@ export function Sidebar({ activeTab }: { activeTab: string }) {
                 </li>
               ))}
             </ul>
+            {achievements.length > 5 && (
+              <div style={{ marginTop: 16 }}>
+                <Link
+                  to={buildGameAchievementPath({
+                    shop: shop,
+                    objectId: objectId!,
+                    title: gameTitle,
+                  })}
+                  className="achievements-preview-view-all"
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.7)",
+                    textDecoration: "underline",
+                    fontSize: 14,
+                    cursor: "pointer",
+                  }}
+                >
+                  {t("view_all_results", {
+                    defaultValue: `Ver as outras ${achievements.length - 5} conquistas`,
+                  })}
+                </Link>
+              </div>
+            )}
           </div>
         )}
 

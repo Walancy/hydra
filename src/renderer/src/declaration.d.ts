@@ -103,6 +103,7 @@ declare global {
     importSteamGames: (
       customPath?: string
     ) => Promise<{ title: string; appId: string }[]>;
+    importEpicGames: () => Promise<{ title: string; appName: string }[]>;
     toggleAutomaticCloudSync: (
       shop: GameShop,
       objectId: string,

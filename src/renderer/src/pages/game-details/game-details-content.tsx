@@ -180,7 +180,7 @@ export function GameDetailsContent() {
     if (videoTimerRef.current) clearTimeout(videoTimerRef.current);
     videoTimerRef.current = setTimeout(() => {
       if (isAtTopRef.current) setShowVideo(true);
-    }, 3000);
+    }, 1000);
   }, [heroVideoSrc]);
 
   const stopVideo = useCallback(() => {

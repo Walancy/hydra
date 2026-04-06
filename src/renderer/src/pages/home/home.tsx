@@ -123,7 +123,7 @@ export default function Home() {
         const downloadSources = orderBy(sources, "createdAt", "desc");
 
         const params = {
-          take: 20,
+          take: category === CatalogueCategory.Achievements ? 60 : 20,
           skip: 0,
           downloadSourceIds: downloadSources.map((source) => source.id),
         };
@@ -627,18 +627,24 @@ export default function Home() {
               dragRef.current.startX = e.pageX - e.currentTarget.offsetLeft;
               dragRef.current.scrollLeft = e.currentTarget.scrollLeft;
               dragRef.current.hasDragged = false;
+              e.currentTarget.style.scrollBehavior = "auto";
+              e.currentTarget.style.cursor = "grabbing";
             }}
-            onMouseLeave={() => {
+            onMouseLeave={(e) => {
               dragRef.current.isDragging = false;
+              e.currentTarget.style.scrollBehavior = "";
+              e.currentTarget.style.cursor = "";
             }}
-            onMouseUp={() => {
+            onMouseUp={(e) => {
               dragRef.current.isDragging = false;
+              e.currentTarget.style.scrollBehavior = "";
+              e.currentTarget.style.cursor = "";
             }}
             onMouseMove={(e) => {
               if (!dragRef.current.isDragging) return;
               e.preventDefault();
               const x = e.pageX - e.currentTarget.offsetLeft;
-              const walk = (x - dragRef.current.startX) * 2;
+              const walk = x - dragRef.current.startX;
               if (Math.abs(walk) > 5) dragRef.current.hasDragged = true;
               e.currentTarget.scrollLeft = dragRef.current.scrollLeft - walk;
             }}
@@ -864,18 +870,32 @@ export default function Home() {
                   <Button
                     theme="outline"
                     className="home__surprise-button"
-                    onClick={() => {
-                      const pool =
-                        libraryAsGames.length > 0 && isMyGames
-                          ? libraryAsGames
-                          : catalogue[currentCatalogueCategory];
-
-                      if (pool && pool.length > 0) {
+                    onClick={async () => {
+                      if (libraryAsGames.length > 0 && isMyGames) {
                         const randomGame =
-                          pool[Math.floor(Math.random() * pool.length)];
+                          libraryAsGames[
+                            Math.floor(Math.random() * libraryAsGames.length)
+                          ];
                         navigate(
                           buildGameDetailsPath(randomGame as ShopAssets)
                         );
+                      } else {
+                        try {
+                          const randomGame =
+                            await window.electron.getRandomGame();
+                          if (randomGame) {
+                            navigate(
+                              buildGameDetailsPath(
+                                {
+                                  shop: "steam",
+                                  objectId: randomGame.objectId,
+                                  title: randomGame.title,
+                                } as unknown as ShopAssets,
+                                { fromRandomizer: "1" }
+                              )
+                            );
+                          }
+                        } catch (err) {}
                       }
                     }}
                   >

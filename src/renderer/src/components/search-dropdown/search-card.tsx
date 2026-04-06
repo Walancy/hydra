@@ -46,6 +46,7 @@ export function SearchCard({ item, isActive, onClick }: SearchCardProps) {
           <img
             src={activeSrc}
             alt={item.title}
+            draggable={false}
             onError={() => {
               if (!primaryFailed) {
                 setPrimaryFailed(true);

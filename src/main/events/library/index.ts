@@ -1,5 +1,7 @@
 import "./add-custom-game-to-library";
 import "./import-games-from-folder";
+import "./import-steam-games";
+import "./import-epic-games";
 import "./add-game-to-favorites";
 import "./add-game-to-library";
 import "./assign-game-to-collection";

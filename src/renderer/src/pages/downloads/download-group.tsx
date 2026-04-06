@@ -28,17 +28,14 @@ import {
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-
   ColumnsIcon,
   DownloadIcon,
   FileDirectoryIcon,
-
   LinkIcon,
   PlayIcon,
   TrashIcon,
   UnlinkIcon,
   XCircleIcon,
-
 } from "@primer/octicons-react";
 import { MoreVertical, Folder } from "lucide-react";
 import { average } from "color.js";

@@ -34,6 +34,11 @@ const launchNatively = (
   useMangohud = false,
   useGamemode = false
 ) => {
+  if (/^[a-zA-Z]+:\/\//.test(executablePath)) {
+    shell.openExternal(executablePath);
+    return;
+  }
+
   const workingDirectory = path.dirname(executablePath);
   const resolvedLaunchCommand = resolveLaunchCommand({
     baseCommand: executablePath,

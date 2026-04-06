@@ -79,6 +79,25 @@
     );
   }
 
+  // ── Platform badge — top left ─────────────────────────
+  &__platform-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: rgba(255, 255, 255, 0.9);
+    z-index: 3;
+    pointer-events: none;
+  }
+
   // ── Action buttons container — top right ─────────────
   &__actions {
     display: flex;

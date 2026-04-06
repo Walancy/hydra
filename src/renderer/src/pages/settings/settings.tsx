@@ -20,7 +20,8 @@ import { SettingsContextContentGameplay } from "./settings-context-content-gamep
 import { SettingsContextIntegrations } from "./settings-context-integrations";
 import { SettingsContextCompatibility } from "./settings-context-compatibility";
 import { SettingsAppearance } from "./appearance/settings-appearance";
-import { PaintbrushIcon } from "@primer/octicons-react";
+import { PaintbrushIcon, PersonIcon } from "@primer/octicons-react";
+import { SettingsAccount } from "./settings-account";
 
 export default function Settings() {
   const { t } = useTranslation("settings");
@@ -64,6 +65,11 @@ export default function Settings() {
         label: t("compatibility", { defaultValue: "Compatibility" }),
         icon: <Wrench size={16} />,
       },
+      {
+        id: "account_privacy" as const,
+        label: t("account_privacy", { defaultValue: "Account & privacy" }),
+        icon: <PersonIcon size={16} />,
+      },
     ],
     [t]
   );
@@ -104,6 +110,10 @@ export default function Settings() {
 
             if (selectedCategoryId === "compatibility") {
               return <SettingsContextCompatibility />;
+            }
+
+            if (selectedCategoryId === "account_privacy") {
+              return <SettingsAccount />;
             }
 
             return null;

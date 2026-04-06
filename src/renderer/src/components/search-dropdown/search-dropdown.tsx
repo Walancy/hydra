@@ -48,6 +48,13 @@ export function SearchDropdown({
   const { t } = useTranslation("header");
   const isGamepadConnected = useGamepadConnected();
 
+  const dragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0,
+    hasDragged: false,
+  });
+
   useEffect(() => {
     if (visible && inputRef.current) {
       setTimeout(() => {
@@ -223,13 +230,46 @@ export function SearchDropdown({
                   >
                     {t("suggestions")}
                   </span>
-                  <div className="search-dropdown__cards-scroll">
+                  <div
+                    className="search-dropdown__cards-scroll"
+                    onMouseDown={(e) => {
+                      dragRef.current.isDragging = true;
+                      dragRef.current.startX =
+                        e.pageX - e.currentTarget.offsetLeft;
+                      dragRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                      dragRef.current.hasDragged = false;
+                      e.currentTarget.style.scrollBehavior = "auto";
+                      e.currentTarget.style.cursor = "grabbing";
+                    }}
+                    onMouseLeave={(e) => {
+                      dragRef.current.isDragging = false;
+                      e.currentTarget.style.scrollBehavior = "";
+                      e.currentTarget.style.cursor = "";
+                    }}
+                    onMouseUp={(e) => {
+                      dragRef.current.isDragging = false;
+                      e.currentTarget.style.scrollBehavior = "";
+                      e.currentTarget.style.cursor = "";
+                    }}
+                    onMouseMove={(e) => {
+                      if (!dragRef.current.isDragging) return;
+                      e.preventDefault();
+                      const x = e.pageX - e.currentTarget.offsetLeft;
+                      const walk = x - dragRef.current.startX;
+                      if (Math.abs(walk) > 5) dragRef.current.hasDragged = true;
+                      e.currentTarget.scrollLeft =
+                        dragRef.current.scrollLeft - walk;
+                    }}
+                  >
                     {suggestions.map((item) => (
                       <SearchCard
                         key={`${item.objectId}-${item.shop}`}
                         item={item}
                         isActive={false}
-                        onClick={() => onSelectSuggestion(item)}
+                        onClick={() => {
+                          if (dragRef.current.hasDragged) return;
+                          onSelectSuggestion(item);
+                        }}
                       />
                     ))}
                   </div>

@@ -43,6 +43,7 @@ import {
 import { useHomeGroups } from "@renderer/hooks/use-home-groups";
 import { CreateFolderModal } from "../home/create-folder-modal";
 import { AddCustomGameModal } from "./add-custom-game-modal";
+import { PlatformFilter, PlatformTab } from "./platform-filter";
 
 const FAVORITES_COLLECTION_ID = "__favorites__";
 const SORT_OPTIONS: SortOption[] = [
@@ -80,6 +81,8 @@ export default function Library() {
     hasLoaded: hasLoadedCollections,
   } = useGameCollections();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const [platformTab, setPlatformTab] = useState<PlatformTab>("all");
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const savedViewMode = localStorage.getItem("library-view-mode");
@@ -480,6 +483,20 @@ export default function Library() {
   const filteredLibrary = useMemo(() => {
     let filtered = library;
 
+    if (platformTab !== "all") {
+      filtered = filtered.filter((game) => {
+        const isSteam = game.executablePath?.startsWith("steam://");
+        const isEpic = game.executablePath?.startsWith(
+          "com.epicgames.launcher://"
+        );
+
+        if (platformTab === "steam") return isSteam;
+        if (platformTab === "epic") return isEpic;
+        if (platformTab === "hydra") return !isSteam && !isEpic;
+        return true;
+      });
+    }
+
     if (selectedCollectionId) {
       if (selectedCollectionId === FAVORITES_COLLECTION_ID) {
         filtered = filtered.filter((game) => game.favorite);
@@ -526,7 +543,7 @@ export default function Library() {
 
       return queryIndex === compareTarget.length;
     });
-  }, [library, searchQuery, selectedCollectionId]);
+  }, [library, searchQuery, selectedCollectionId, platformTab]);
 
   const sortedLibrary = useMemo(() => {
     return [...filteredLibrary].sort((a, b) => {
@@ -668,6 +685,10 @@ export default function Library() {
                 </div>
               </div>
               <div className="library__controls-right">
+                <PlatformFilter
+                  platform={platformTab}
+                  onPlatformChange={setPlatformTab}
+                />
                 <FilterOptions
                   sortBy={sortBy}
                   onSortChange={handleSortChange}
@@ -721,6 +742,7 @@ export default function Library() {
           </div>
         </>
       )}
+
       <div className="library__content">
         {hasGames && !selectedCollectionId && (
           <div className="library__folders-grid">
