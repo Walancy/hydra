@@ -479,9 +479,7 @@ export function TopSellers({
                     className="top-sellers__detail-block"
                     style={{ marginTop: "16px" }}
                   >
-                    <span className="top-sellers__detail-label">
-                      Fontes:
-                    </span>
+                    <span className="top-sellers__detail-label">Fontes:</span>
                     <div className="top-sellers__detail-sources">
                       {activeGame.downloadSources?.map((source) => (
                         <span
