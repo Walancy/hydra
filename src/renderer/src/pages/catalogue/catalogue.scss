@@ -101,11 +101,10 @@
   &__filter-bar-options {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap; /* Prevent wrapping so it slides horizontally */
+    flex-wrap: wrap;
     gap: 8px;
     justify-content: flex-end;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: visible;
     transition:
       max-width 0.4s cubic-bezier(0.2, 0, 0.2, 1),
       opacity 0.3s ease;

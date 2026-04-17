@@ -726,7 +726,7 @@
     "genres": "Géneros",
     "tags": "Marcadores",
     "publishers": "Distribuidoras",
-    "download_sources": "Fontes de download",
+    "download_sources": "Fontes",
     "result_count": "{{resultCount}} resultados",
     "filter_count": "{{filterCount}} disponíveis",
     "clear_filters": "Limpar {{filterCount}} selecionados"
