@@ -12,6 +12,7 @@ const STEAM_DEFAULT_PATH = String.raw`C:\Program Files (x86)\Steam`;
 
 // Add known steam app ids that are not games (e.g., redistributables, proton) to filter out
 const IGNORED_STEAM_APP_IDS = new Set([
+  "480", // Spacewar
   "228980", // Steamworks Common Redistributables
   "1493710", // Proton Experimental
   "1887720", // Proton 7.0

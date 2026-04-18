@@ -1,4 +1,5 @@
 import { registerEvent } from "../register-event";
+import axios from "axios";
 import type { GameShop } from "@types";
 import { createGame } from "@main/services/library-sync";
 import {
@@ -28,29 +29,48 @@ const addGameToLibrary = async (
     }
   }
 
+  let iconUrl = gameAssets?.iconUrl ?? null;
+  let libraryHeroImageUrl = gameAssets?.libraryHeroImageUrl ?? null;
+  let logoImageUrl = gameAssets?.logoImageUrl ?? null;
+
+  if (shop === "steam") {
+    iconUrl =
+      iconUrl ||
+      `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/library_600x900.jpg`;
+    libraryHeroImageUrl =
+      libraryHeroImageUrl ||
+      `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/library_hero.jpg`;
+    logoImageUrl =
+      logoImageUrl ||
+      `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/logo.png`;
+  } else if (shop === "epic" && (!iconUrl || (game && !game.iconUrl))) {
+    try {
+      const titleCleaned = title.replace(/[™®©]/g, "").trim();
+      const res = await axios.get(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(titleCleaned)}&l=english&cc=US`);
+      const data = res.data;
+      if (data && data.items && data.items.length > 0) {
+        const steamAppId = data.items[0].id;
+        iconUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900.jpg`;
+        libraryHeroImageUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_hero.jpg`;
+        logoImageUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/logo.png`;
+      }
+    } catch (err) {
+      // ignore errors
+    }
+  }
+
   if (game) {
     await downloadsSublevel.del(gameKey);
 
     game.isDeleted = false;
+    
+    // Patch in assets if they were missing (e.g. older imports)
+    if (!game.iconUrl && iconUrl) game.iconUrl = iconUrl;
+    if (!game.libraryHeroImageUrl && libraryHeroImageUrl) game.libraryHeroImageUrl = libraryHeroImageUrl;
+    if (!game.logoImageUrl && logoImageUrl) game.logoImageUrl = logoImageUrl;
 
     await gamesSublevel.put(gameKey, game);
   } else {
-    let iconUrl = gameAssets?.iconUrl ?? null;
-    let libraryHeroImageUrl = gameAssets?.libraryHeroImageUrl ?? null;
-    let logoImageUrl = gameAssets?.logoImageUrl ?? null;
-
-    if (shop === "steam") {
-      iconUrl =
-        iconUrl ||
-        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/library_600x900.jpg`;
-      libraryHeroImageUrl =
-        libraryHeroImageUrl ||
-        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/library_hero.jpg`;
-      logoImageUrl =
-        logoImageUrl ||
-        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${objectId}/logo.png`;
-    }
-
     game = {
       title,
       iconUrl,

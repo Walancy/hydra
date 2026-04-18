@@ -96,12 +96,14 @@
     align-items: center;
     gap: 8px;
     flex-wrap: nowrap;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   &__filter-bar-options {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     justify-content: flex-end;
     overflow: visible;
@@ -111,6 +113,7 @@
     max-width: 0;
     min-width: 0; /* CRUCIAL for flex item to obey max-width < min-content */
     opacity: 0;
+    pointer-events: none;
 
     // Hide scrollbar but keep functionality
     &::-webkit-scrollbar {
@@ -125,6 +128,7 @@
     &--open {
       max-width: 1000px;
       opacity: 1;
+      pointer-events: auto;
     }
   }
 

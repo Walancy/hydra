@@ -64,7 +64,8 @@ export const LibraryGameCard = memo(function LibraryGameCard({
     game.coverImageUrl,
     game.libraryImageUrl,
     game.iconUrl,
-  ].filter((url) => url && url.trim() !== "");
+    game.shop === "steam" ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/header.jpg` : null,
+  ].filter((url) => url && typeof url === "string" && url.trim() !== "");
 
   const resolveImageSource = (imageUrl: string | null | undefined): string => {
     if (!imageUrl) return "";
