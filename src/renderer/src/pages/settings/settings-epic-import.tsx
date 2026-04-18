@@ -15,7 +15,11 @@ export function SettingsEpicImport() {
     setProgress(null);
 
     try {
-      setProgress(t("Scanning Epic manifests...", { defaultValue: "Escaneando jogos Epic..." }));
+      setProgress(
+        t("Scanning Epic manifests...", {
+          defaultValue: "Escaneando jogos Epic...",
+        })
+      );
       const games = await window.electron.importEpicGames();
 
       if (games.length === 0) {
@@ -39,7 +43,11 @@ export function SettingsEpicImport() {
         );
 
         try {
-          await window.electron.addGameToLibrary("epic", game.appName, game.title);
+          await window.electron.addGameToLibrary(
+            "epic",
+            game.appName,
+            game.title
+          );
           await window.electron.updateExecutablePath(
             "epic",
             game.appName,

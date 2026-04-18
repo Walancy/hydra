@@ -19,8 +19,12 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
         results
           .filter(([_key, game]) => game.isDeleted === false)
           .map(async ([key, game]) => {
-            const download = await downloadsSublevel.get(key).catch(() => undefined);
-            const gameAssets = await gamesShopAssetsSublevel.get(key).catch(() => undefined);
+            const download = await downloadsSublevel
+              .get(key)
+              .catch(() => undefined);
+            const gameAssets = await gamesShopAssetsSublevel
+              .get(key)
+              .catch(() => undefined);
             const achievements = await gameAchievementsSublevel
               .get(key)
               .catch(() => null);

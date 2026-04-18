@@ -71,12 +71,18 @@ const importEpicGames = async (
               ? String(manifest.InstallLocation)
               : undefined,
           });
-          logger.info(`[ImportEpicGames] Found game: ${manifest.DisplayName} (${manifest.AppName})`);
+          logger.info(
+            `[ImportEpicGames] Found game: ${manifest.DisplayName} (${manifest.AppName})`
+          );
         } else {
-          logger.info(`[ImportEpicGames] Skipping non-game: ${manifest.AppName}`);
+          logger.info(
+            `[ImportEpicGames] Skipping non-game: ${manifest.AppName}`
+          );
         }
       } catch (err) {
-        logger.warn(`[ImportEpicGames] Failed to parse Epic manifest ${file}: ${err}`);
+        logger.warn(
+          `[ImportEpicGames] Failed to parse Epic manifest ${file}: ${err}`
+        );
       }
     }
 

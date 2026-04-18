@@ -23,7 +23,9 @@ const addGameToLibrary = async (
   const gameKey = levelKeys.game(shop, objectId);
   let game = await gamesSublevel.get(gameKey).catch(() => undefined);
 
-  let gameAssets = await gamesShopAssetsSublevel.get(gameKey).catch(() => undefined);
+  let gameAssets = await gamesShopAssetsSublevel
+    .get(gameKey)
+    .catch(() => undefined);
 
   if (!gameAssets && shop !== "custom" && shop !== "epic") {
     const { getGameAssets } = await import("../catalogue/get-game-assets");

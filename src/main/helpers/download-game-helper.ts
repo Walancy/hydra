@@ -19,7 +19,9 @@ export const prepareGameEntry = async ({
   shop,
 }: PrepareGameEntryParams): Promise<void> => {
   const game = await gamesSublevel.get(gameKey).catch(() => undefined);
-  const gameAssets = await gamesShopAssetsSublevel.get(gameKey).catch(() => undefined);
+  const gameAssets = await gamesShopAssetsSublevel
+    .get(gameKey)
+    .catch(() => undefined);
 
   await downloadsSublevel.del(gameKey);
 

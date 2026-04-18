@@ -296,7 +296,9 @@ function useHeroPanelActions() {
       <Button
         theme="primary"
         onClick={() =>
-          window.electron.openExternal(`https://store.steampowered.com/app/${objectId}`)
+          window.electron.openExternal(
+            `https://store.steampowered.com/app/${objectId}`
+          )
         }
         disabled={deleting || isGameDownloading}
         title={t("install_via_steam_tooltip", {

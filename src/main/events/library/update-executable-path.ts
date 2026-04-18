@@ -16,9 +16,10 @@ const updateExecutablePath = async (
     ? /^[a-z][a-z0-9+\-.]*:\/\//i.test(executablePath)
     : false;
 
-  const parsedPath = executablePath && !isProtocolUri
-    ? parseExecutablePath(executablePath)
-    : executablePath ?? null;
+  const parsedPath =
+    executablePath && !isProtocolUri
+      ? parseExecutablePath(executablePath)
+      : (executablePath ?? null);
 
   const gameKey = levelKeys.game(shop, objectId);
 
