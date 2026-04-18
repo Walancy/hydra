@@ -46,7 +46,9 @@ const addGameToLibrary = async (
   } else if (shop === "epic" && (!iconUrl || (game && !game.iconUrl))) {
     try {
       const titleCleaned = title.replace(/[™®©]/g, "").trim();
-      const res = await axios.get(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(titleCleaned)}&l=english&cc=US`);
+      const res = await axios.get(
+        `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(titleCleaned)}&l=english&cc=US`
+      );
       const data = res.data;
       if (data && data.items && data.items.length > 0) {
         const steamAppId = data.items[0].id;
@@ -63,10 +65,11 @@ const addGameToLibrary = async (
     await downloadsSublevel.del(gameKey);
 
     game.isDeleted = false;
-    
+
     // Patch in assets if they were missing (e.g. older imports)
     if (!game.iconUrl && iconUrl) game.iconUrl = iconUrl;
-    if (!game.libraryHeroImageUrl && libraryHeroImageUrl) game.libraryHeroImageUrl = libraryHeroImageUrl;
+    if (!game.libraryHeroImageUrl && libraryHeroImageUrl)
+      game.libraryHeroImageUrl = libraryHeroImageUrl;
     if (!game.logoImageUrl && logoImageUrl) game.logoImageUrl = logoImageUrl;
 
     await gamesSublevel.put(gameKey, game);
