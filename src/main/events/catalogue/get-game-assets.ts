@@ -6,13 +6,13 @@ import { gamesShopAssetsSublevel, levelKeys } from "@main/level";
 const LOCAL_CACHE_EXPIRATION = 1000 * 60 * 60 * 8; // 8 hours
 
 export const getGameAssets = async (objectId: string, shop: GameShop) => {
-  if (shop === "custom") {
+  if (shop === "custom" || shop === "epic") {
     return null;
   }
 
-  const cachedAssets = await gamesShopAssetsSublevel.get(
-    levelKeys.game(shop, objectId)
-  );
+  const cachedAssets = await gamesShopAssetsSublevel
+    .get(levelKeys.game(shop, objectId))
+    .catch(() => undefined);
 
   if (
     cachedAssets &&
@@ -27,21 +27,25 @@ export const getGameAssets = async (objectId: string, shop: GameShop) => {
     {
       needsAuth: false,
     }
-  ).then(async (assets) => {
-    if (!assets) return null;
+  )
+    .then(async (assets) => {
+      if (!assets) return null;
 
-    // Preserve existing title if it differs from the incoming title (indicating it was customized)
-    const shouldPreserveTitle =
-      cachedAssets?.title && cachedAssets.title !== assets.title;
+      // Preserve existing title if it differs from the incoming title (indicating it was customized)
+      const shouldPreserveTitle =
+        cachedAssets?.title && cachedAssets.title !== assets.title;
 
-    await gamesShopAssetsSublevel.put(levelKeys.game(shop, objectId), {
-      ...assets,
-      title: shouldPreserveTitle ? cachedAssets.title : assets.title,
-      updatedAt: Date.now(),
+      await gamesShopAssetsSublevel.put(levelKeys.game(shop, objectId), {
+        ...assets,
+        title: shouldPreserveTitle ? cachedAssets.title : assets.title,
+        updatedAt: Date.now(),
+      });
+
+      return assets;
+    })
+    .catch(() => {
+      return null;
     });
-
-    return assets;
-  });
 };
 
 const getGameAssetsEvent = async (

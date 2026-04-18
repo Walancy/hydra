@@ -12,9 +12,13 @@ const updateExecutablePath = async (
   objectId: string,
   executablePath: string | null
 ) => {
-  const parsedPath = executablePath
+  const isProtocolUri = executablePath
+    ? /^[a-z][a-z0-9+\-.]*:\/\//i.test(executablePath)
+    : false;
+
+  const parsedPath = executablePath && !isProtocolUri
     ? parseExecutablePath(executablePath)
-    : null;
+    : executablePath ?? null;
 
   const gameKey = levelKeys.game(shop, objectId);
 
@@ -30,8 +34,8 @@ const updateExecutablePath = async (
       executablePath === null ? false : game.automaticCloudSync,
   });
 
-  // Calculate size in background and update later
-  if (parsedPath) {
+  // Calculate size in background and update later (skip for protocol URIs)
+  if (parsedPath && !isProtocolUri) {
     findGameRootFromExe(parsedPath)
       .then(async (gameRoot) => {
         if (!gameRoot) {

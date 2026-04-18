@@ -10,6 +10,10 @@ import {
 } from "@main/level";
 import { AchievementWatcherManager } from "@main/services/achievements/achievement-watcher-manager";
 
+const EPIC_TO_STEAM_APPID_MAP: Record<string, number> = {
+  "Grand Theft Auto V": 271590,
+  "Grand Theft Auto V Enhanced": 271590,
+};
 const addGameToLibrary = async (
   _event: Electron.IpcMainInvokeEvent,
   shop: GameShop,
@@ -17,11 +21,11 @@ const addGameToLibrary = async (
   title: string
 ) => {
   const gameKey = levelKeys.game(shop, objectId);
-  let game = await gamesSublevel.get(gameKey);
+  let game = await gamesSublevel.get(gameKey).catch(() => undefined);
 
-  let gameAssets = await gamesShopAssetsSublevel.get(gameKey);
+  let gameAssets = await gamesShopAssetsSublevel.get(gameKey).catch(() => undefined);
 
-  if (!gameAssets && shop !== "custom") {
+  if (!gameAssets && shop !== "custom" && shop !== "epic") {
     const { getGameAssets } = await import("../catalogue/get-game-assets");
     const result = await getGameAssets(objectId, shop);
     if (result) {
@@ -46,12 +50,23 @@ const addGameToLibrary = async (
   } else if (shop === "epic" && (!iconUrl || (game && !game.iconUrl))) {
     try {
       const titleCleaned = title.replace(/[™®©]/g, "").trim();
-      const res = await axios.get(
-        `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(titleCleaned)}&l=english&cc=US`
-      );
-      const data = res.data;
-      if (data && data.items && data.items.length > 0) {
-        const steamAppId = data.items[0].id;
+      let steamAppId: number | null =
+        EPIC_TO_STEAM_APPID_MAP[title] ||
+        EPIC_TO_STEAM_APPID_MAP[titleCleaned] ||
+        null;
+
+      if (!steamAppId) {
+        const res = await axios.get(
+          `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(titleCleaned)}&l=english&cc=US`,
+          { timeout: 5000 }
+        );
+        const data = res.data;
+        if (data && data.items && data.items.length > 0) {
+          steamAppId = data.items[0].id;
+        }
+      }
+
+      if (steamAppId) {
         iconUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900.jpg`;
         libraryHeroImageUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_hero.jpg`;
         logoImageUrl = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/logo.png`;

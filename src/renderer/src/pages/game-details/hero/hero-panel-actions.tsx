@@ -294,18 +294,16 @@ function useHeroPanelActions() {
   const installViaSteamButton =
     shop === "steam" ? (
       <Button
-        theme={game ? "primary" : "outline"}
+        theme="primary"
         onClick={() =>
-          window.electron.openExternal(`steam://install/${objectId}`)
+          window.electron.openExternal(`https://store.steampowered.com/app/${objectId}`)
         }
         disabled={deleting || isGameDownloading}
         title={t("install_via_steam_tooltip", {
           defaultValue: "Baixar e instalar via cliente original Steam",
         })}
-        style={{ minWidth: 200 }}
       >
         <SteamIcon style={{ width: 14, height: 14, fill: "currentColor" }} />
-        {t("install_via_steam", { defaultValue: "Instalar" })}
       </Button>
     ) : null;
 
@@ -373,19 +371,15 @@ function useHeroPanelActions() {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {shop === "steam" ? (
             <>
-              <div style={{ display: "flex", gap: 8 }}>
-                {installViaSteamButton}
-                {/* Epic install button could go here when implemented */}
-              </div>
               <Button
                 onClick={() => setShowRepacksModal(true)}
-                theme="outline"
+                theme="primary"
                 disabled={isGameDownloading}
-                style={{ width: "100%" }}
+                style={{ minWidth: 200 }}
               >
                 <DownloadIcon />
                 {t("download_via_hydra", {
-                  defaultValue: "Baixar alternativo",
+                  defaultValue: "Baixar",
                 })}
               </Button>
             </>
@@ -439,6 +433,7 @@ function useHeroPanelActions() {
           >
             {game.favorite ? <HeartFillIcon /> : <HeartIcon />}
           </Button>
+          {shop === "steam" && installViaSteamButton}
           {removeGameFromLibraryButton}
         </>
       ),
