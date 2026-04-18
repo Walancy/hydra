@@ -54,7 +54,8 @@
     flex-direction: column;
     justify-content: center;
     height: 100%;
-    padding: 95px calc(globals.$spacing-unit * 3) calc(globals.$spacing-unit * 2);
+    padding: 95px calc(globals.$spacing-unit * 3)
+      calc(globals.$spacing-unit * 2);
     gap: calc(globals.$spacing-unit * 1);
 
     .gamepad-active & {
@@ -62,14 +63,16 @@
     }
 
     @media (max-width: 1300px) {
-      padding: 95px calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 2);
+      padding: 95px calc(globals.$spacing-unit * 2)
+        calc(globals.$spacing-unit * 2);
 
       .gamepad-active & {
         padding-bottom: 52px;
       }
     }
     @media (max-width: 800px) {
-      padding: 95px calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2);
+      padding: 95px calc(globals.$spacing-unit * 1.5)
+        calc(globals.$spacing-unit * 2);
       gap: calc(globals.$spacing-unit * 0.75);
 
       .gamepad-active & {
@@ -77,13 +80,14 @@
       }
     }
     @media (max-width: 600px) {
-      padding: 95px calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 2);
+      padding: 95px calc(globals.$spacing-unit * 1)
+        calc(globals.$spacing-unit * 2);
     }
 
     @media (max-height: 800px) {
       justify-content: flex-start;
       overflow-y: auto;
-      
+
       &::-webkit-scrollbar {
         width: 6px;
         background: transparent;

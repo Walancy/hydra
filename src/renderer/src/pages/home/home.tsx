@@ -73,31 +73,47 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
   const customLibrary = resolveImageSource(game.libraryImageUrl);
   const customIcon = resolveImageSource(game.iconUrl);
 
-  const initialPrimarySrc = game.shop === "steam"
-    ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-    : (customCover ?? customLibrary ?? customIcon ?? null);
+  const initialPrimarySrc =
+    game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+      : (customCover ?? customLibrary ?? customIcon ?? null);
 
   const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
   const [finalFailed, setFinalFailed] = useState(false);
 
   const steamGridCover = useSteamGridCover(
-    game.objectId, 
-    game.title, 
-    primaryFailed, 
+    game.objectId,
+    game.title,
+    primaryFailed,
     "vertical"
   );
 
-  const primarySrc = game.shop === "steam"
-    ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-    : (customCover ?? customLibrary ?? customIcon ?? null);
+  const primarySrc =
+    game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+      : (customCover ?? customLibrary ?? customIcon ?? null);
 
   const activeSrc = primaryFailed
     ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? null)
     : primarySrc;
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', wordBreak: 'break-word' }}>
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+      <span
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "16px",
+          textAlign: "center",
+          fontSize: "13px",
+          fontWeight: 600,
+          color: "rgba(255,255,255,0.8)",
+          wordBreak: "break-word",
+        }}
+      >
         {game.title}
       </span>
       {!finalFailed && activeSrc && (
@@ -107,7 +123,11 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
           className="home__card-image"
           loading="lazy"
           draggable={false}
-          style={{ position: 'relative', zIndex: 1, backgroundColor: 'inherit' }}
+          style={{
+            position: "relative",
+            zIndex: 1,
+            backgroundColor: "inherit",
+          }}
           onError={() => {
             if (!primaryFailed) {
               setPrimaryFailed(true);
@@ -270,8 +290,6 @@ export default function Home() {
   }, []);
 
   const categories = Object.values(CatalogueCategory);
-
-
 
   const libraryAsGames = useMemo<
     (ShopAssets & {
