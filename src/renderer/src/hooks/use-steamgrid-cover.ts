@@ -49,7 +49,9 @@ async function fetchGridByObjectId(
     const vertical =
       (data.data as GridItem[]).find(
         (g) => g.width === 600 && g.height === 900
-      ) ?? (data.data[0] as GridItem);
+      ) ??
+      (data.data as GridItem[]).find((g) => g.height > g.width) ??
+      (data.data[0] as GridItem);
     return vertical.url;
   }
   return null;
@@ -107,7 +109,13 @@ async function fetchGridByGameId(
       `https://www.steamgriddb.com/api/v2/grids/game/${gameId}`
     );
     if (fallbackData?.success && fallbackData.data?.length > 0) {
-      return (fallbackData.data[0] as GridItem).url;
+      const vertical =
+        (fallbackData.data as GridItem[]).find(
+          (g) => g.width === 600 && g.height === 900
+        ) ??
+        (fallbackData.data as GridItem[]).find((g) => g.height > g.width) ??
+        (fallbackData.data[0] as GridItem);
+      return vertical.url;
     }
   }
 

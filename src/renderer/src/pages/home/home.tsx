@@ -9,6 +9,7 @@ import {
   setIsMyGames,
   setCurrentCategory,
 } from "@renderer/features";
+import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 import { useTranslation } from "react-i18next";
 import { levelDBService } from "@renderer/services/leveldb.service";
 import { orderBy } from "lodash-es";
@@ -45,6 +46,80 @@ import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
 import { useHomeGamepad } from "@renderer/hooks/use-home-gamepad";
 import { GamepadHint } from "@renderer/components/gamepad-hint/gamepad-hint";
 import "./home.scss";
+
+export const resolveImageSource = (
+  imageUrl: string | null | undefined
+): string | null => {
+  if (!imageUrl) return null;
+  const trimmed = imageUrl.trim();
+  if (!trimmed) return null;
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:")
+  )
+    return trimmed;
+  if (trimmed.startsWith("local:"))
+    return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+  const normalized = trimmed.replaceAll("\\", "/");
+  if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+    return `local:${normalized}`;
+  return normalized;
+};
+
+export function HomeGameImage({ game }: { game: ShopAssets }) {
+  const customCover = resolveImageSource(game.coverImageUrl);
+  const customLibrary = resolveImageSource(game.libraryImageUrl);
+  const customIcon = resolveImageSource(game.iconUrl);
+
+  const initialPrimarySrc = game.shop === "steam"
+    ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+    : (customCover ?? customLibrary ?? customIcon ?? null);
+
+  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
+  const [finalFailed, setFinalFailed] = useState(false);
+
+  const steamGridCover = useSteamGridCover(
+    game.objectId, 
+    game.title, 
+    primaryFailed, 
+    "vertical"
+  );
+
+  const primarySrc = game.shop === "steam"
+    ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+    : (customCover ?? customLibrary ?? customIcon ?? null);
+
+  const activeSrc = primaryFailed
+    ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? null)
+    : primarySrc;
+
+  return (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', wordBreak: 'break-word' }}>
+        {game.title}
+      </span>
+      {!finalFailed && activeSrc && (
+        <img
+          src={activeSrc}
+          alt={game.title}
+          className="home__card-image"
+          loading="lazy"
+          draggable={false}
+          style={{ position: 'relative', zIndex: 1, backgroundColor: 'inherit' }}
+          onError={() => {
+            if (!primaryFailed) {
+              setPrimaryFailed(true);
+            } else {
+              setFinalFailed(true);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const { t } = useTranslation("home");
@@ -196,26 +271,7 @@ export default function Home() {
 
   const categories = Object.values(CatalogueCategory);
 
-  const resolveImageSource = (
-    imageUrl: string | null | undefined
-  ): string | null => {
-    if (!imageUrl) return null;
-    const trimmed = imageUrl.trim();
-    if (!trimmed) return null;
-    if (
-      trimmed.startsWith("http://") ||
-      trimmed.startsWith("https://") ||
-      trimmed.startsWith("data:") ||
-      trimmed.startsWith("blob:")
-    )
-      return trimmed;
-    if (trimmed.startsWith("local:"))
-      return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
-    const normalized = trimmed.replaceAll("\\", "/");
-    if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
-      return `local:${normalized}`;
-    return normalized;
-  };
+
 
   const libraryAsGames = useMemo<
     (ShopAssets & {
@@ -773,31 +829,7 @@ export default function Home() {
                           ))}
                         </div>
                       ) : (
-                        <img
-                          src={
-                            game!.shop === "steam"
-                              ? `https://steamcdn-a.akamaihd.net/steam/apps/${game!.objectId}/library_600x900_2x.jpg`
-                              : (resolveImageSource(game!.iconUrl) ??
-                                resolveImageSource(game!.coverImageUrl) ??
-                                resolveImageSource(game!.libraryImageUrl) ??
-                                undefined)
-                          }
-                          alt={game!.title}
-                          className="home__card-image"
-                          loading="lazy"
-                          draggable={false}
-                          onError={(e) => {
-                            const img = e.currentTarget;
-                            if (
-                              game!.libraryImageUrl &&
-                              img.src !==
-                                resolveImageSource(game!.libraryImageUrl)
-                            ) {
-                              img.src =
-                                resolveImageSource(game!.libraryImageUrl) ?? "";
-                            }
-                          }}
-                        />
+                        <HomeGameImage game={game!} />
                       )}
                     </button>
                   );
