@@ -16,29 +16,94 @@ import {
 } from "lucide-react";
 import "./category-explorer.scss";
 
-const STEAM_GENRES = [
-  { key: "action", label: "Ação", icon: Flame },
-  { key: "adventure", label: "Aventura", icon: MapIcon },
-  { key: "rpg", label: "RPG", icon: Shield },
-  { key: "strategy", label: "Estratégia", icon: Crosshair },
-  { key: "simulation", label: "Simulação", icon: Monitor },
-  { key: "sports", label: "Esportes", icon: Trophy },
-  { key: "racing", label: "Corrida", icon: Car },
-  { key: "puzzle", label: "Quebra-Cabeça", icon: Puzzle },
-  { key: "horror", label: "Terror", icon: Ghost },
-  { key: "openworld", label: "Mundo Aberto", icon: Globe },
-  { key: "fighting", label: "Luta", icon: Swords },
-  { key: "city", label: "Construção de Cidades", icon: Building },
+const STEAM_CATEGORIES = [
+  { key: "action", type: "genre", value: "Action", label: "Ação", icon: Flame },
+  {
+    key: "adventure",
+    type: "genre",
+    value: "Adventure",
+    label: "Aventura",
+    icon: MapIcon,
+  },
+  { key: "rpg", type: "genre", value: "RPG", label: "RPG", icon: Shield },
+  {
+    key: "strategy",
+    type: "genre",
+    value: "Strategy",
+    label: "Estratégia",
+    icon: Crosshair,
+  },
+  {
+    key: "simulation",
+    type: "genre",
+    value: "Simulation",
+    label: "Simulação",
+    icon: Monitor,
+  },
+  {
+    key: "sports",
+    type: "genre",
+    value: "Sports",
+    label: "Esportes",
+    icon: Trophy,
+  },
+  {
+    key: "racing",
+    type: "genre",
+    value: "Racing",
+    label: "Corrida",
+    icon: Car,
+  },
+  {
+    key: "puzzle",
+    type: "tag",
+    value: "Puzzle",
+    label: "Quebra-Cabeça",
+    icon: Puzzle,
+  },
+  { key: "horror", type: "tag", value: "Horror", label: "Terror", icon: Ghost },
+  {
+    key: "openworld",
+    type: "tag",
+    value: "Open World",
+    label: "Mundo Aberto",
+    icon: Globe,
+  },
+  {
+    key: "fighting",
+    type: "tag",
+    value: "Fighting",
+    label: "Luta",
+    icon: Swords,
+  },
+  {
+    key: "city",
+    type: "tag",
+    value: "City Builder",
+    label: "Construção de Cidades",
+    icon: Building,
+  },
 ];
 
+export interface CategoryExplorerItem {
+  type: "genre" | "tag";
+  value: string;
+}
+
 interface CategoryExplorerProps {
-  onSelectGenre: (genre: string) => void;
+  onSelect: (item: CategoryExplorerItem) => void;
 }
 
 export function CategoryExplorer({
-  onSelectGenre,
+  onSelect,
 }: Readonly<CategoryExplorerProps>) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0,
+    hasDragged: false,
+  });
 
   const scroll = (dir: "left" | "right") => {
     if (!trackRef.current) return;
@@ -46,6 +111,15 @@ export function CategoryExplorer({
       left: dir === "left" ? -400 : 400,
       behavior: "smooth",
     });
+  };
+
+  const handleCardClick = (e: React.MouseEvent, item: CategoryExplorerItem) => {
+    if (dragRef.current.hasDragged) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    onSelect(item);
   };
 
   return (
@@ -62,13 +136,48 @@ export function CategoryExplorer({
           <ChevronLeftIcon size={24} />
         </button>
 
-        <div className="cat-explorer__track" ref={trackRef}>
-          {STEAM_GENRES.map((genre) => (
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+        <div
+          className="cat-explorer__track"
+          ref={trackRef}
+          onMouseDown={(e) => {
+            dragRef.current.isDragging = true;
+            dragRef.current.startX = e.pageX - e.currentTarget.offsetLeft;
+            dragRef.current.scrollLeft = e.currentTarget.scrollLeft;
+            dragRef.current.hasDragged = false;
+            e.currentTarget.style.scrollBehavior = "auto";
+            e.currentTarget.style.cursor = "grabbing";
+          }}
+          onMouseLeave={(e) => {
+            dragRef.current.isDragging = false;
+            e.currentTarget.style.scrollBehavior = "";
+            e.currentTarget.style.cursor = "";
+          }}
+          onMouseUp={(e) => {
+            dragRef.current.isDragging = false;
+            e.currentTarget.style.scrollBehavior = "";
+            e.currentTarget.style.cursor = "";
+          }}
+          onMouseMove={(e) => {
+            if (!dragRef.current.isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - e.currentTarget.offsetLeft;
+            const walk = x - dragRef.current.startX;
+            if (Math.abs(walk) > 5) dragRef.current.hasDragged = true;
+            e.currentTarget.scrollLeft = dragRef.current.scrollLeft - walk;
+          }}
+        >
+          {STEAM_CATEGORIES.map((genre) => (
             <button
               key={genre.key}
               type="button"
               className={`cat-explorer__card cat-explorer__card--${genre.key}`}
-              onClick={() => onSelectGenre(genre.label)}
+              onClick={(e) =>
+                handleCardClick(e, {
+                  type: genre.type as "genre" | "tag",
+                  value: genre.value,
+                })
+              }
               aria-label={`Explorar ${genre.label}`}
             >
               <genre.icon size={28} className="cat-explorer__icon" />

@@ -1,7 +1,6 @@
 import { CheckboxField } from "@renderer/components/checkbox-field/checkbox-field";
-import { TextField } from "@renderer/components/text-field/text-field";
 import { useFormat } from "@renderer/hooks";
-import { ChevronDownIcon } from "@primer/octicons-react";
+import { ChevronDownIcon, SearchIcon } from "@primer/octicons-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./filter.scss";
 import List from "rc-virtual-list";
@@ -127,20 +126,26 @@ export function FilterSection({
             </span>
           )}
 
-          <TextField
-            placeholder={t("search")}
-            onChange={(e) => onSearch(e.target.value)}
-            value={search}
-            containerProps={{ className: "filter-section__search" }}
-            theme="dark"
-          />
+          <div
+            className="filter-section__search header__search-bar header__search-bar--inline"
+            style={{ width: "100%", padding: "6px 12px", minWidth: "unset" }}
+          >
+            <SearchIcon size={14} className="header__search-bar-icon" />
+            <input
+              type="text"
+              className="header__search-input"
+              placeholder={t("search", { defaultValue: "Filtrar..." })}
+              onChange={(e) => onSearch(e.target.value)}
+              value={search}
+            />
+          </div>
 
           <List
             data={filteredItems}
             height={
-              28 * (filteredItems.length > 10 ? 10 : filteredItems.length)
+              32 * (filteredItems.length > 10 ? 10 : filteredItems.length)
             }
-            itemHeight={28}
+            itemHeight={32}
             itemKey="value"
             styles={{
               verticalScrollBar: {

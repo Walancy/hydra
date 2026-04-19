@@ -18,6 +18,8 @@ import {
   UploadIcon,
   ChevronLeftIcon,
   PlusIcon,
+  CheckIcon,
+  XIcon,
 } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import { GameCollection, LibraryGame } from "@types";
@@ -41,7 +43,6 @@ import {
   expandAcronym,
 } from "@renderer/services/game-acronyms";
 import { useHomeGroups } from "@renderer/hooks/use-home-groups";
-import { CreateFolderModal } from "../home/create-folder-modal";
 import { AddCustomGameModal } from "./add-custom-game-modal";
 import { PlatformFilter, PlatformTab } from "./platform-filter";
 
@@ -72,6 +73,8 @@ export default function Library() {
     createGroup,
     updateGroup,
     deleteGroup,
+    removeGameFromGroup,
+    removeGamesFromGroup,
   } = useHomeGroups();
   const { showSuccessToast, showErrorToast } = useToast();
   const { removeGameFromLibrary, cancelDownload, lastPacket } = useDownload();
@@ -115,20 +118,55 @@ export default function Library() {
   const [showDeleteCollectionModal, setShowDeleteCollectionModal] =
     useState(false);
   const [isDeletingCollection, setIsDeletingCollection] = useState(false);
-  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
-  const [folderToEdit, setFolderToEdit] = useState<
-    (typeof homeGroups)[0] | null
-  >(null);
+
   const [gameToRemove, setGameToRemove] = useState<LibraryGame | null>(null);
   const [isRemovingGame, setIsRemovingGame] = useState(false);
   const [showAddCustomGameModal, setShowAddCustomGameModal] = useState(false);
+  const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const [folderPickerSelectedIds, setFolderPickerSelectedIds] = useState<
+    Set<string>
+  >(new Set());
+  const [folderPickerName, setFolderPickerName] = useState("");
 
   const searchQuery = useAppSelector((state) => state.library.searchQuery);
   const dispatch = useAppDispatch();
   const { t } = useTranslation(["library", "sidebar"]);
 
   const selectedCollectionId = searchParams.get("collection");
+  const action = searchParams.get("action");
+
+  useEffect(() => {
+    if (selectedCollectionId === "new" && !showFolderPicker) {
+      setFolderPickerSelectedIds(new Set());
+      setFolderPickerName("");
+      setShowFolderPicker(true);
+    } else if (
+      action === "edit" &&
+      selectedCollectionId &&
+      homeGroups.length > 0 &&
+      !showFolderPicker
+    ) {
+      const folder = homeGroups.find((g) => g.id === selectedCollectionId);
+      if (folder) {
+        setFolderPickerSelectedIds(new Set((folder.gameIds ?? []).map(String)));
+        setFolderPickerName(folder.name);
+        setShowFolderPicker(true);
+        const params = new URLSearchParams(searchParams);
+        params.delete("action");
+        setSearchParams(params, { replace: true });
+      }
+    }
+  }, [
+    selectedCollectionId,
+    action,
+    homeGroups,
+    showFolderPicker,
+    searchParams,
+    setSearchParams,
+  ]);
 
   const handleCollectionSelect = useCallback(
     (collectionId: string | null) => {
@@ -140,6 +178,8 @@ export default function Library() {
         params.delete("collection");
       }
 
+      setSelectedGameIds(new Set());
+      setShowFolderPicker(false);
       setSearchParams(params, { replace: true });
     },
     [searchParams, setSearchParams]
@@ -231,6 +271,117 @@ export default function Library() {
     },
     [updateLibrary]
   );
+
+  const handleToggleSelectGame = useCallback((game: LibraryGame) => {
+    setSelectedGameIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(game.objectId)) {
+        next.delete(game.objectId);
+      } else {
+        next.add(game.objectId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback((gameIds: string[]) => {
+    setSelectedGameIds((prev) => {
+      const allSelected = gameIds.every((id) => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(gameIds);
+    });
+  }, []);
+
+  const handleRemoveSelectedFromFolder = useCallback(() => {
+    if (!selectedCollectionId) return;
+    removeGamesFromGroup(selectedCollectionId, Array.from(selectedGameIds));
+    setSelectedGameIds(new Set());
+  }, [selectedCollectionId, selectedGameIds, removeGamesFromGroup]);
+
+  const handleRemoveFromFolder = useCallback(
+    (game: LibraryGame) => {
+      if (!selectedCollectionId) return;
+      removeGameFromGroup(selectedCollectionId, game.objectId);
+    },
+    [selectedCollectionId, removeGameFromGroup]
+  );
+
+  const handleOpenFolderPicker = useCallback(() => {
+    const folder = homeGroups.find((g) => g.id === selectedCollectionId);
+    // Ensure all ids are strings to avoid type mismatch (number vs string)
+    setFolderPickerSelectedIds(new Set((folder?.gameIds ?? []).map(String)));
+    setFolderPickerName(folder?.name ?? "");
+    setShowFolderPicker(true);
+  }, [homeGroups, selectedCollectionId]);
+
+  const handleFolderPickerToggle = useCallback((game: LibraryGame) => {
+    const id = String(game.objectId);
+    setFolderPickerSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleFolderPickerConfirm = useCallback(() => {
+    if (!selectedCollectionId) return;
+
+    const trimmedName = folderPickerName.trim();
+    if (!trimmedName) {
+      showErrorToast(
+        t("collection_name_required", {
+          defaultValue: "O nome da pasta é obrigatório",
+        })
+      );
+      return;
+    }
+
+    if (selectedCollectionId === "new") {
+      createGroup(trimmedName, Array.from(folderPickerSelectedIds));
+      const params = new URLSearchParams(searchParams);
+      params.delete("collection");
+      setSearchParams(params, { replace: true });
+    } else {
+      const folder = homeGroups.find((g) => g.id === selectedCollectionId);
+      if (folder) {
+        updateGroup(
+          selectedCollectionId,
+          trimmedName,
+          Array.from(folderPickerSelectedIds)
+        );
+      }
+    }
+
+    setShowFolderPicker(false);
+    setFolderPickerSelectedIds(new Set());
+    setFolderPickerName("");
+  }, [
+    selectedCollectionId,
+    homeGroups,
+    folderPickerSelectedIds,
+    folderPickerName,
+    updateGroup,
+    createGroup,
+    showErrorToast,
+    t,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  const handleFolderPickerCancel = useCallback(() => {
+    setShowFolderPicker(false);
+    setFolderPickerSelectedIds(new Set());
+    setFolderPickerName("");
+    if (selectedCollectionId === "new") {
+      const params = new URLSearchParams(searchParams);
+      params.delete("collection");
+      setSearchParams(params, { replace: true });
+    }
+  }, [selectedCollectionId, searchParams, setSearchParams]);
 
   const handleRemoveFromLibrary = useCallback(
     async (game: LibraryGame) => {
@@ -461,8 +612,8 @@ export default function Library() {
   useEffect(() => {
     if (!selectedCollectionId) return;
     if (!hasLoadedCollections) return;
-
     if (selectedCollectionId === FAVORITES_COLLECTION_ID) return;
+    if (selectedCollectionId === "new") return;
 
     const hasCollection =
       collections.some(
@@ -497,7 +648,7 @@ export default function Library() {
       });
     }
 
-    if (selectedCollectionId) {
+    if (selectedCollectionId && !showFolderPicker) {
       if (selectedCollectionId === FAVORITES_COLLECTION_ID) {
         filtered = filtered.filter((game) => game.favorite);
       } else {
@@ -520,16 +671,13 @@ export default function Library() {
     const expandedQuery = expandAcronym(queryLower);
 
     return filtered.filter((game) => {
-      // Acronym match (exact or generated)
       if (matchesAcronym(queryLower, game.title)) return true;
 
       const compareTarget = expandedQuery || queryLower;
       const titleLower = game.title.toLowerCase();
 
-      // Substring match against expanded query
       if (expandedQuery && titleLower.includes(expandedQuery)) return true;
 
-      // Fuzzy character sequence match
       let queryIndex = 0;
       for (
         let i = 0;
@@ -543,7 +691,14 @@ export default function Library() {
 
       return queryIndex === compareTarget.length;
     });
-  }, [library, searchQuery, selectedCollectionId, platformTab]);
+  }, [
+    library,
+    searchQuery,
+    selectedCollectionId,
+    platformTab,
+    homeGroups,
+    showFolderPicker,
+  ]);
 
   const sortedLibrary = useMemo(() => {
     return [...filteredLibrary].sort((a, b) => {
@@ -745,122 +900,243 @@ export default function Library() {
 
       <div className="library__content">
         {hasGames && !selectedCollectionId && (
-          <div className="library__folders-grid">
-            {libraryCollections.map((collection) => (
-              <button
-                key={collection.id}
-                type="button"
-                className={`library__folder-card ${
-                  selectedCollectionId === collection.id
-                    ? "library__folder-card--active"
-                    : ""
-                }`}
-                onClick={() =>
-                  handleCollectionSelect(
-                    selectedCollectionId === collection.id
-                      ? null
-                      : collection.id
-                  )
-                }
-                onContextMenu={(event) => {
-                  if (collection.isHomeGroup) return;
-                  handleOpenCollectionContextMenu(
-                    event,
-                    collection.ref as GameCollection
-                  );
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              marginBottom: "16px",
+            }}
+          >
+            <div style={{ display: "flex" }}>
+              <Button
+                theme="outline"
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set("collection", "new");
+                  setSearchParams(params, { replace: true });
                 }}
               >
-                <div className="library__folder-card-previews">
-                  {collection.previewGames.length > 0 ? (
-                    collection.previewGames.map((url, i) => (
-                      <img
-                        key={i}
-                        src={url || ""}
-                        alt="preview"
-                        className="library__folder-preview-img"
-                      />
-                    ))
-                  ) : (
-                    <div className="library__folder-preview-empty">
-                      <FileDirectoryIcon size={24} />
+                <PlusIcon size={16} />
+                {t("create_folder", { defaultValue: "Criar pasta" })}
+              </Button>
+            </div>
+
+            {libraryCollections.length > 0 && (
+              <div
+                className="library__folders-grid"
+                style={{ marginBottom: 0 }}
+              >
+                {libraryCollections.map((collection) => (
+                  <button
+                    key={collection.id}
+                    type="button"
+                    className={`library__folder-card ${
+                      selectedCollectionId === collection.id
+                        ? "library__folder-card--active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      handleCollectionSelect(
+                        selectedCollectionId === collection.id
+                          ? null
+                          : collection.id
+                      )
+                    }
+                    onContextMenu={(event) => {
+                      if (collection.isHomeGroup) return;
+                      handleOpenCollectionContextMenu(
+                        event,
+                        collection.ref as GameCollection
+                      );
+                    }}
+                  >
+                    <div className="library__folder-card-previews">
+                      <div className="library__folder-preview-container">
+                        {collection.previewGames.length > 0 ? (
+                          collection.previewGames.map((url, i) => (
+                            <img
+                              key={i}
+                              src={url || ""}
+                              alt="preview"
+                              className="library__folder-preview-img"
+                            />
+                          ))
+                        ) : (
+                          <div className="library__folder-preview-empty">
+                            <FileDirectoryIcon size={24} />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="library__folder-card-info">
-                  <span className="library__folder-card-name">
-                    {collection.name}
-                  </span>
-                  <span className="library__folder-card-count">
-                    {collection.gamesCount}
-                  </span>
-                </div>
-              </button>
-            ))}
-            <button
-              type="button"
-              className="library__folder-card library__folder-card--create"
-              onClick={() => setShowCreateFolderModal(true)}
-            >
-              <div className="library__folder-card-previews">
-                <div className="library__folder-preview-empty">
-                  <span>+</span>
-                </div>
+                    <div className="library__folder-card-info">
+                      <span
+                        className="library__folder-card-name"
+                        title={collection.name}
+                      >
+                        {collection.name}
+                      </span>
+                      <div className="library__folder-card-meta">
+                        <span className="library__folder-card-meta-item">
+                          <FileDirectoryIcon size={12} />
+                          {collection.gamesCount} jogo
+                          {collection.gamesCount !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
-              <div className="library__folder-card-info">
-                <span className="library__folder-card-name">
-                  {t("create_folder", { defaultValue: "Criar pasta" })}
-                </span>
-              </div>
-            </button>
+            )}
           </div>
         )}
 
         {hasGames && selectedCollectionId && (
           <div className="library__folder-back-nav">
-            <Button
-              theme="outline"
-              onClick={() => handleCollectionSelect(null)}
-              className="library__folder-back-button"
-            >
-              <ChevronLeftIcon size={16} />
-              {t("back", { defaultValue: "Voltar", ns: "shared" })}
-            </Button>
-            <div className="library__folder-back-info">
-              <FileDirectoryIcon size={24} />
-              <h2 style={{ margin: 0 }}>
-                {selectedCollectionId === FAVORITES_COLLECTION_ID
-                  ? t("favorites")
-                  : libraryCollections.find(
-                      (c) => c.id === selectedCollectionId
-                    )?.name}
-              </h2>
-            </div>
-
-            {homeGroups.some((g) => g.id === selectedCollectionId) && (
-              <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-                <Button
-                  theme="outline"
-                  onClick={() =>
-                    setFolderToEdit(
-                      homeGroups.find((g) => g.id === selectedCollectionId) ??
-                        null
-                    )
-                  }
+            {showFolderPicker ? (
+              // ── Picker mode bar ──────────────────────────────────
+              <>
+                <button
+                  type="button"
+                  className="library__select-all-btn"
+                  onClick={handleFolderPickerCancel}
                 >
-                  <PlusIcon size={16} />
-                  Adicionar jogos
-                </Button>
-                <Button
-                  theme="danger"
-                  onClick={() => {
-                    deleteGroup(selectedCollectionId!);
-                    handleCollectionSelect(null);
+                  <XIcon size={14} />
+                  Cancelar
+                </button>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginLeft: 8,
                   }}
                 >
-                  <TrashIcon size={16} />
-                  Excluir pasta
+                  <span
+                    style={{
+                      fontSize: 13,
+                      color: "rgba(255,255,255,0.5)",
+                      marginRight: 8,
+                    }}
+                  >
+                    Adicionar jogos em
+                  </span>
+                  <input
+                    className="library__folder-back-input"
+                    value={folderPickerName}
+                    onChange={(e) => setFolderPickerName(e.target.value)}
+                    placeholder="Nome da pasta"
+                    autoFocus
+                  />
+                </div>
+
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}
+                  >
+                    {folderPickerSelectedIds.size} selecionado
+                    {folderPickerSelectedIds.size !== 1 ? "s" : ""}
+                  </span>
+                  <Button theme="primary" onClick={handleFolderPickerConfirm}>
+                    <CheckIcon size={14} />
+                    Salvar
+                  </Button>
+                </div>
+              </>
+            ) : (
+              // ── Normal folder bar ─────────────────────────────────
+              <>
+                <Button
+                  theme="outline"
+                  onClick={() => handleCollectionSelect(null)}
+                  className="library__folder-back-button"
+                >
+                  <ChevronLeftIcon size={16} />
+                  {t("back", { defaultValue: "Voltar", ns: "shared" })}
                 </Button>
-              </div>
+                <div className="library__folder-back-info">
+                  <FileDirectoryIcon size={24} />
+                  <h2 style={{ margin: 0 }}>
+                    {selectedCollectionId === FAVORITES_COLLECTION_ID
+                      ? t("favorites")
+                      : libraryCollections.find(
+                          (c) => c.id === selectedCollectionId
+                        )?.name}
+                  </h2>
+                </div>
+
+                {homeGroups.some((g) => g.id === selectedCollectionId) &&
+                  (() => {
+                    const currentHomeGroup = homeGroups.find(
+                      (g) => g.id === selectedCollectionId
+                    );
+                    const folderGameIds = currentHomeGroup?.gameIds ?? [];
+                    const allSelected =
+                      folderGameIds.length > 0 &&
+                      folderGameIds.every((id) => selectedGameIds.has(id));
+                    const someSelected = selectedGameIds.size > 0;
+
+                    return (
+                      <div
+                        style={{
+                          marginLeft: "auto",
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "center",
+                        }}
+                      >
+                        {someSelected && (
+                          <Button
+                            theme="danger"
+                            onClick={handleRemoveSelectedFromFolder}
+                          >
+                            <TrashIcon size={14} />
+                            Remover selecionados ({selectedGameIds.size})
+                          </Button>
+                        )}
+
+                        <button
+                          type="button"
+                          className={`library__select-all-btn${allSelected ? " library__select-all-btn--active" : ""}`}
+                          onClick={() => handleSelectAll(folderGameIds)}
+                          title={
+                            allSelected ? "Desmarcar todos" : "Selecionar todos"
+                          }
+                        >
+                          <span className="library__select-all-checkbox">
+                            {allSelected && <span>✓</span>}
+                          </span>
+                          {allSelected ? "Desmarcar todos" : "Selecionar todos"}
+                        </button>
+
+                        <Button
+                          theme="outline"
+                          onClick={handleOpenFolderPicker}
+                        >
+                          <PlusIcon size={16} />
+                          Adicionar jogos
+                        </Button>
+                        <Button
+                          theme="danger"
+                          onClick={() => {
+                            deleteGroup(selectedCollectionId!);
+                            handleCollectionSelect(null);
+                          }}
+                        >
+                          <TrashIcon size={16} />
+                          Excluir pasta
+                        </Button>
+                      </div>
+                    );
+                  })()}
+              </>
             )}
           </div>
         )}
@@ -909,9 +1185,36 @@ export default function Library() {
                 >
                   <LibraryCatalogueView
                     games={sortedLibrary}
-                    onContextMenu={handleOpenContextMenu}
-                    onToggleFavorite={handleToggleFavorite}
-                    onRemoveFromLibrary={setGameToRemove}
+                    onContextMenu={
+                      !showFolderPicker ? handleOpenContextMenu : undefined
+                    }
+                    onToggleFavorite={
+                      !showFolderPicker ? handleToggleFavorite : undefined
+                    }
+                    onRemoveFromLibrary={
+                      !showFolderPicker ? setGameToRemove : undefined
+                    }
+                    onRemoveFromFolder={
+                      !showFolderPicker &&
+                      homeGroups.some((g) => g.id === selectedCollectionId)
+                        ? handleRemoveFromFolder
+                        : undefined
+                    }
+                    selectedGameIds={
+                      showFolderPicker
+                        ? folderPickerSelectedIds
+                        : homeGroups.some((g) => g.id === selectedCollectionId)
+                          ? selectedGameIds
+                          : undefined
+                    }
+                    onToggleSelect={
+                      showFolderPicker
+                        ? handleFolderPickerToggle
+                        : homeGroups.some((g) => g.id === selectedCollectionId)
+                          ? handleToggleSelectGame
+                          : undefined
+                    }
+                    selectOnClick={showFolderPicker}
                   />
                 </motion.div>
               )}
@@ -932,11 +1235,46 @@ export default function Library() {
                     >
                       <LibraryGameCard
                         game={game}
-                        onMouseEnter={handleOnMouseEnterGameCard}
-                        onMouseLeave={handleOnMouseLeaveGameCard}
-                        onContextMenu={handleOpenContextMenu}
-                        onToggleFavorite={handleToggleFavorite}
-                        onRemoveFromLibrary={setGameToRemove}
+                        onMouseEnter={
+                          !showFolderPicker
+                            ? handleOnMouseEnterGameCard
+                            : undefined
+                        }
+                        onMouseLeave={
+                          !showFolderPicker
+                            ? handleOnMouseLeaveGameCard
+                            : undefined
+                        }
+                        onContextMenu={
+                          !showFolderPicker ? handleOpenContextMenu : undefined
+                        }
+                        onToggleFavorite={
+                          !showFolderPicker ? handleToggleFavorite : undefined
+                        }
+                        onRemoveFromLibrary={
+                          !showFolderPicker ? setGameToRemove : undefined
+                        }
+                        onRemoveFromFolder={
+                          !showFolderPicker &&
+                          homeGroups.some((g) => g.id === selectedCollectionId)
+                            ? handleRemoveFromFolder
+                            : undefined
+                        }
+                        isSelected={
+                          showFolderPicker
+                            ? folderPickerSelectedIds.has(String(game.objectId))
+                            : selectedGameIds.has(game.objectId)
+                        }
+                        onToggleSelect={
+                          showFolderPicker
+                            ? handleFolderPickerToggle
+                            : homeGroups.some(
+                                  (g) => g.id === selectedCollectionId
+                                )
+                              ? handleToggleSelectGame
+                              : undefined
+                        }
+                        selectOnClick={showFolderPicker}
                       />
                     </li>
                   ))}
@@ -1039,70 +1377,7 @@ export default function Library() {
           confirmButtonLabel={t("delete_collection")}
           buttonsIsDisabled={isDeletingCollection}
         />
-
-        <Modal
-          visible={showCreateFolderModal}
-          title={t("create_folder", { defaultValue: "Criar pasta" })}
-          description={t("create_folder_description", {
-            defaultValue: "Dê um nome para a sua nova pasta.",
-          })}
-          onClose={() => setShowCreateFolderModal(false)}
-        >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (newFolderName.trim()) {
-                createGroup(newFolderName.trim());
-                setNewFolderName("");
-                setShowCreateFolderModal(false);
-              }
-            }}
-          >
-            <div className="library__collection-modal">
-              <TextField
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder={t("folder_name", {
-                  defaultValue: "Nome da pasta",
-                })}
-                label={t("folder_name", { defaultValue: "Nome da pasta" })}
-              />
-
-              <div className="library__collection-modal-actions">
-                <Button
-                  type="button"
-                  theme="outline"
-                  onClick={() => setShowCreateFolderModal(false)}
-                >
-                  {t("cancel", { defaultValue: "Cancelar", ns: "shared" })}
-                </Button>
-                <Button type="submit" theme="primary">
-                  {t("create", { defaultValue: "Criar", ns: "shared" })}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </Modal>
       </div>
-
-      {folderToEdit && (
-        <CreateFolderModal
-          visible={!!folderToEdit}
-          initialName={folderToEdit.name}
-          initialSelectedIds={folderToEdit.gameIds}
-          games={
-            library.map((g) => ({
-              ...g,
-              libraryImageUrl: g.libraryImageUrl ?? null,
-            })) as any
-          }
-          onClose={() => setFolderToEdit(null)}
-          onCreate={(name, gameIds) => {
-            updateGroup(folderToEdit.id, name, gameIds);
-            setFolderToEdit(null);
-          }}
-        />
-      )}
 
       <AddCustomGameModal
         visible={showAddCustomGameModal}

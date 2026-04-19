@@ -15,7 +15,8 @@
     display: block;
     transition:
       transform 0.2s ease,
-      box-shadow 0.2s ease;
+      box-shadow 0.2s ease,
+      outline-color 0.15s ease;
     z-index: 1;
 
     &:hover,
@@ -24,9 +25,11 @@
       transform: translateY(-3px) scale(1.08) !important;
       z-index: 10;
       outline: none;
-      box-shadow:
-        0 0 0 3px rgba(255, 255, 255, 0.9),
-        0px 4px 25px 0px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    &--selected {
+      outline: 2px solid rgba(255, 255, 255, 0.9);
+      outline-offset: 3px;
     }
   }
 
@@ -182,12 +185,81 @@
     }
   }
 
+  &__folder-remove-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      color 0.15s ease,
+      background 0.15s ease;
+    z-index: 3;
+    flex-shrink: 0;
+
+    &:hover {
+      color: #e05c7a;
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  // ── Checkbox de seleção — canto inferior esquerdo ────
+  &__checkbox {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+    opacity: 0;
+
+    &--checked {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  &__checkbox-mark {
+    font-size: 10px;
+    color: #fff;
+    line-height: 1;
+    font-weight: 600;
+  }
+
   &__wrapper:hover &__fav-btn,
   &__wrapper:focus &__fav-btn,
   &__wrapper:focus-within &__fav-btn,
   &__wrapper:hover &__remove-btn,
   &__wrapper:focus &__remove-btn,
-  &__wrapper:focus-within &__remove-btn {
+  &__wrapper:focus-within &__remove-btn,
+  &__wrapper:hover &__folder-remove-btn,
+  &__wrapper:focus &__folder-remove-btn,
+  &__wrapper:focus-within &__folder-remove-btn,
+  &__wrapper:hover &__checkbox,
+  &__wrapper:focus &__checkbox,
+  &__wrapper:focus-within &__checkbox {
     opacity: 1;
   }
 

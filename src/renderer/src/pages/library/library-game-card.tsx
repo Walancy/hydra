@@ -8,7 +8,8 @@ import {
   ImageIcon,
   HeartIcon,
   HeartFillIcon,
-  DashIcon,
+  TrashIcon,
+  XIcon,
 } from "@primer/octicons-react";
 import HydraIcon from "@renderer/assets/icons/hydra.svg?react";
 import SteamIcon from "@renderer/assets/launcher-icons/steam.svg?react";
@@ -18,9 +19,9 @@ import { logger } from "@renderer/logger";
 
 interface LibraryGameCardProps {
   game: LibraryGame;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-  onContextMenu: (
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  onContextMenu?: (
     game: LibraryGame,
     position: { x: number; y: number }
   ) => void;
@@ -28,6 +29,10 @@ interface LibraryGameCardProps {
   onHideTooltip?: () => void;
   onToggleFavorite?: (game: LibraryGame) => void;
   onRemoveFromLibrary?: (game: LibraryGame) => void;
+  onRemoveFromFolder?: (game: LibraryGame) => void;
+  isSelected?: boolean;
+  onToggleSelect?: (game: LibraryGame) => void;
+  selectOnClick?: boolean;
 }
 
 export const LibraryGameCard = memo(function LibraryGameCard({
@@ -37,9 +42,20 @@ export const LibraryGameCard = memo(function LibraryGameCard({
   onContextMenu,
   onToggleFavorite,
   onRemoveFromLibrary,
+  onRemoveFromFolder,
+  isSelected,
+  onToggleSelect,
+  selectOnClick = false,
 }: Readonly<LibraryGameCardProps>) {
   const { formatPlayTime, handleCardClick, handleContextMenuClick } =
-    useGameCard(game, onContextMenu);
+    useGameCard(game, onContextMenu ?? (() => {}));
+
+  const handleClick = selectOnClick
+    ? (e: React.MouseEvent<HTMLButtonElement>) => {
+        onToggleSelect?.(game);
+        e.currentTarget.blur();
+      }
+    : handleCardClick;
 
   const handleFavClick = useCallback(
     (e: React.MouseEvent) => {
@@ -57,6 +73,24 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       onRemoveFromLibrary?.(game);
     },
     [game, onRemoveFromLibrary]
+  );
+
+  const handleRemoveFromFolderClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onRemoveFromFolder?.(game);
+    },
+    [game, onRemoveFromFolder]
+  );
+
+  const handleCheckboxClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onToggleSelect?.(game);
+    },
+    [game, onToggleSelect]
   );
 
   const sources = [
@@ -132,10 +166,10 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       onMouseLeave={onMouseLeave}
       onFocus={onMouseEnter}
       onBlur={onMouseLeave}
-      className="library-game-card__wrapper"
+      className={`library-game-card__wrapper${isSelected ? " library-game-card__wrapper--selected" : ""}`}
       title={game.title}
-      onClick={handleCardClick}
-      onContextMenu={handleContextMenuClick}
+      onClick={handleClick}
+      onContextMenu={!selectOnClick ? handleContextMenuClick : undefined}
     >
       {/* Image */}
       {imageError || !activeImageSource ? (
@@ -181,36 +215,67 @@ export const LibraryGameCard = memo(function LibraryGameCard({
           />
         )}
 
-        {/* Action buttons — top right */}
-        <div className="library-game-card__actions">
-          {onToggleFavorite && (
-            <button
-              type="button"
-              className={`library-game-card__fav-btn${game.favorite ? " library-game-card__fav-btn--active" : ""}`}
-              onClick={handleFavClick}
-              aria-label={game.favorite ? "Remover dos favoritos" : "Favoritar"}
-              title={game.favorite ? "Remover dos favoritos" : "Favoritar"}
-            >
-              {game.favorite ? (
-                <HeartFillIcon size={11} />
-              ) : (
-                <HeartIcon size={11} />
-              )}
-            </button>
-          )}
+        {/* Checkbox — apenas fora do picker mode */}
+        {!selectOnClick && onToggleSelect && (
+          <button
+            type="button"
+            className={`library-game-card__checkbox${isSelected ? " library-game-card__checkbox--checked" : ""}`}
+            onClick={handleCheckboxClick}
+            aria-label={isSelected ? "Desmarcar" : "Selecionar"}
+            title={isSelected ? "Desmarcar" : "Selecionar"}
+          >
+            {isSelected && (
+              <span className="library-game-card__checkbox-mark">✓</span>
+            )}
+          </button>
+        )}
 
-          {onRemoveFromLibrary && (
-            <button
-              type="button"
-              className="library-game-card__remove-btn"
-              onClick={handleRemoveClick}
-              aria-label="Remover da biblioteca"
-              title="Remover da biblioteca"
-            >
-              <DashIcon size={11} />
-            </button>
-          )}
-        </div>
+        {/* Action buttons — ocultos no picker mode */}
+        {!selectOnClick && (
+          <div className="library-game-card__actions">
+            {onToggleFavorite && (
+              <button
+                type="button"
+                className={`library-game-card__fav-btn${game.favorite ? " library-game-card__fav-btn--active" : ""}`}
+                onClick={handleFavClick}
+                aria-label={
+                  game.favorite ? "Remover dos favoritos" : "Favoritar"
+                }
+                title={game.favorite ? "Remover dos favoritos" : "Favoritar"}
+              >
+                {game.favorite ? (
+                  <HeartFillIcon size={11} />
+                ) : (
+                  <HeartIcon size={11} />
+                )}
+              </button>
+            )}
+
+            {onRemoveFromFolder && (
+              <button
+                type="button"
+                className="library-game-card__folder-remove-btn"
+                onClick={handleRemoveFromFolderClick}
+                aria-label="Remover da pasta"
+                title="Remover da pasta"
+              >
+                <XIcon size={11} />
+              </button>
+            )}
+
+            {onRemoveFromLibrary && (
+              <button
+                type="button"
+                className="library-game-card__remove-btn"
+                onClick={handleRemoveClick}
+                aria-label="Remover da biblioteca"
+                title="Remover da biblioteca"
+              >
+                <TrashIcon size={11} />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Info strip at bottom */}
         <div className="library-game-card__info">

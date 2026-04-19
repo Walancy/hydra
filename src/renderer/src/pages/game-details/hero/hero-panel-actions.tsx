@@ -307,7 +307,6 @@ function useHeroPanelActions() {
       </Button>
     ) : null;
 
-
   const locateButton = (
     <Button
       theme="primary"

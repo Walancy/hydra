@@ -63,16 +63,6 @@ export function useHomeGroups() {
           if (g.id === groupId) {
             return { ...g, name: newName, gameIds: newGameIds };
           }
-          // Remove from other groups
-          if (
-            g.id !== groupId &&
-            g.gameIds.some((id) => newGameIds.includes(id))
-          ) {
-            return {
-              ...g,
-              gameIds: g.gameIds.filter((id) => !newGameIds.includes(id)),
-            };
-          }
           return g;
         })
       );
@@ -113,6 +103,24 @@ export function useHomeGroups() {
     [groups, saveGroups]
   );
 
+  const removeGamesFromGroup = useCallback(
+    (groupId: string, gameIds: string[]) => {
+      const toRemove = new Set(gameIds);
+      saveGroups(
+        groups.map((g) => {
+          if (g.id === groupId) {
+            return {
+              ...g,
+              gameIds: g.gameIds.filter((id) => !toRemove.has(id)),
+            };
+          }
+          return g;
+        })
+      );
+    },
+    [groups, saveGroups]
+  );
+
   const deleteGroup = useCallback(
     (groupId: string) => {
       saveGroups(groups.filter((g) => g.id !== groupId));
@@ -125,6 +133,7 @@ export function useHomeGroups() {
     createGroup,
     addGameToGroup,
     removeGameFromGroup,
+    removeGamesFromGroup,
     deleteGroup,
     renameGroup,
     updateGroup,

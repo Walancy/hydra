@@ -40,7 +40,6 @@ import {
   TrashIcon,
   GiftIcon,
 } from "@primer/octicons-react";
-import { CreateFolderModal } from "./create-folder-modal";
 import { setOpenedFolderName } from "@renderer/features";
 import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
 import { useHomeGamepad } from "@renderer/hooks/use-home-gamepad";
@@ -175,19 +174,13 @@ export default function Home() {
   const dispatch = useAppDispatch();
   const { closeFolderTrigger } = useAppSelector((state) => state.window);
 
-  const {
-    groups,
-    createGroup,
-    removeGameFromGroup,
-    deleteGroup,
-    renameGroup,
-    updateGroup,
-  } = useHomeGroups();
+  const { groups, createGroup, removeGameFromGroup, deleteGroup, renameGroup } =
+    useHomeGroups();
   const [openedGroup, setOpenedGroup] = useState<HomeGroup | null>(null);
-  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
-  const [folderToEdit, setFolderToEdit] = useState<HomeGroup | null>(null);
   const [isSelectingGames, setIsSelectingGames] = useState(false);
-  const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
+  const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(
+    new Set()
+  );
 
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
@@ -485,7 +478,7 @@ export default function Home() {
     } else if (item.type === "button_library") {
       navigate("/library");
     } else if (item.type === "button_create_folder") {
-      setShowCreateFolderModal(true);
+      navigate("/library?collection=new");
     } else if (item.type === "game") {
       navigate(buildGameDetailsPath(item.data as ShopAssets));
     }
@@ -677,7 +670,12 @@ export default function Home() {
                       <Button
                         theme={isBgLight ? "dark" : "primary"}
                         className="home__folder-header-action-btn"
-                        style={{ width: "auto", padding: "0 12px", borderRadius: "18px", fontSize: "13px" }}
+                        style={{
+                          width: "auto",
+                          padding: "0 12px",
+                          borderRadius: "18px",
+                          fontSize: "13px",
+                        }}
                         onClick={async () => {
                           for (const id of selectedGameIds) {
                             await removeGameFromGroup(openedGroup.id, id);
@@ -685,7 +683,9 @@ export default function Home() {
                           setSelectedGameIds(new Set());
                           setIsSelectingGames(false);
                         }}
-                        title={t("remover_selecionados", { defaultValue: "Remover selecionados" })}
+                        title={t("remover_selecionados", {
+                          defaultValue: "Remover selecionados",
+                        })}
                       >
                         <TrashIcon size={14} />
                         {selectedGameIds.size}
@@ -700,14 +700,18 @@ export default function Home() {
                       className="home__folder-header-action-btn"
                       onClick={() => {
                         setSelectedIndex(currentGames.length);
-                        setFolderToEdit(openedGroup);
+                        navigate(
+                          `/library?collection=${openedGroup.id}&action=edit`
+                        );
                       }}
                     >
                       <PlusCircleIcon size={16} />
                     </Button>
                     <Button
                       theme={isBgLight ? "dark" : "primary"}
-                      title={t("selecionar_para_remover", { defaultValue: "Selecionar para remover" })}
+                      title={t("selecionar_para_remover", {
+                        defaultValue: "Selecionar para remover",
+                      })}
                       className="home__folder-header-action-btn"
                       onClick={() => setIsSelectingGames(true)}
                     >
@@ -810,12 +814,12 @@ export default function Home() {
                         onClick={() => {
                           if (dragRef.current.hasDragged) return;
                           setSelectedIndex(index);
-                          setShowCreateFolderModal(true);
+                          navigate("/library?collection=new");
                         }}
                       >
                         <PlusCircleIcon size={32} />
                         <span>
-                          {t("criar_pasta", { defaultValue: "Criar Pasta" })}
+                          {t("criar_pasta", { defaultValue: "Criar pasta" })}
                         </span>
                       </button>
                     );
@@ -844,7 +848,10 @@ export default function Home() {
                           index === selectedIndex &&
                           isSliderActive,
                         "home__folder-card": isFolder,
-                        "home__card--selecting": isSelectingGames && !isFolder && selectedGameIds.has(itemId),
+                        "home__card--selecting":
+                          isSelectingGames &&
+                          !isFolder &&
+                          selectedGameIds.has(itemId),
                       })}
                       onFocus={() => {
                         setSelectedIndex(index);
@@ -881,7 +888,8 @@ export default function Home() {
                       {isSelectingGames && !isFolder && (
                         <div
                           className={cn("home__card-select-badge", {
-                            "home__card-select-badge--checked": selectedGameIds.has(itemId),
+                            "home__card-select-badge--checked":
+                              selectedGameIds.has(itemId),
                           })}
                         />
                       )}
@@ -1025,31 +1033,6 @@ export default function Home() {
           />
         )}
       </section>
-
-      {(showCreateFolderModal || folderToEdit) && (
-        <CreateFolderModal
-          visible={showCreateFolderModal || !!folderToEdit}
-          onClose={() => {
-            setShowCreateFolderModal(false);
-            setFolderToEdit(null);
-          }}
-          initialName={folderToEdit ? folderToEdit.name : ""}
-          initialSelectedIds={folderToEdit ? folderToEdit.gameIds : []}
-          onCreate={(name, gameIds) => {
-            if (folderToEdit) {
-              updateGroup(folderToEdit.id, name, gameIds);
-              setOpenedGroup((prev) =>
-                prev ? { ...prev, name, gameIds } : null
-              );
-            } else {
-              createGroup(name, gameIds);
-            }
-            setShowCreateFolderModal(false);
-            setFolderToEdit(null);
-          }}
-          games={libraryAsGames}
-        />
-      )}
 
       {folderToDelete && (
         <ConfirmationModal

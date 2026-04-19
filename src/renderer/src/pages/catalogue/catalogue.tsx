@@ -446,12 +446,18 @@ export default function Catalogue() {
     [filters, dispatch]
   );
 
-  const handleGenreClick = useCallback(
-    (genre: string) => {
-      const enKey = steamGenresMapping[genre];
-      if (enKey) dispatch(setFilters({ genres: [enKey] }));
+  const handleCategoryExplorerSelect = useCallback(
+    ({ type, value }: { type: "genre" | "tag"; value: string }) => {
+      if (type === "genre") {
+        dispatch(setFilters({ genres: [value] }));
+      } else {
+        const tagId = steamUserTags["en"]?.[value];
+        if (tagId !== undefined) {
+          dispatch(setFilters({ tags: [tagId] }));
+        }
+      }
     },
-    [steamGenresMapping, dispatch]
+    [steamUserTags, dispatch]
   );
 
   // Seeded daily shuffle — mesmo resultado para o dia, muda à meia-noite
@@ -709,7 +715,7 @@ export default function Catalogue() {
             )}
             {!isGamepadConnected && (
               <>
-                <CategoryExplorer onSelectGenre={handleGenreClick} />
+                <CategoryExplorer onSelect={handleCategoryExplorerSelect} />
                 <TopSellers games={results} isLoading={isLoading} />
               </>
             )}
