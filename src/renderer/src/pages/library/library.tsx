@@ -1026,6 +1026,7 @@ export default function Library() {
                     value={folderPickerName}
                     onChange={(e) => setFolderPickerName(e.target.value)}
                     placeholder="Nome da pasta"
+                    // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
                   />
                 </div>
