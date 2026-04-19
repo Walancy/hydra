@@ -186,6 +186,8 @@ export default function Home() {
   const [openedGroup, setOpenedGroup] = useState<HomeGroup | null>(null);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<HomeGroup | null>(null);
+  const [isSelectingGames, setIsSelectingGames] = useState(false);
+  const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
 
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
@@ -266,6 +268,8 @@ export default function Home() {
     if (closeFolderTrigger > 0) {
       setOpenedGroup(null);
       setSelectedIndex(0);
+      setIsSelectingGames(false);
+      setSelectedGameIds(new Set());
     }
   }, [closeFolderTrigger]);
 
@@ -656,27 +660,61 @@ export default function Home() {
               <div
                 style={{ display: "flex", gap: "8px", alignItems: "center" }}
               >
-                <Button
-                  theme={isBgLight ? "dark" : "primary"}
-                  title={t("add_game", { defaultValue: "Adicionar Jogo" })}
-                  className="home__folder-header-action-btn"
-                  onClick={() => {
-                    setSelectedIndex(currentGames.length);
-                    setFolderToEdit(openedGroup);
-                  }}
-                >
-                  <PlusCircleIcon size={16} />
-                </Button>
-                <Button
-                  theme={isBgLight ? "dark" : "primary"}
-                  title={t("excluir_pasta", { defaultValue: "Excluir pasta" })}
-                  className="home__folder-header-action-btn"
-                  onClick={() => {
-                    setFolderToDelete(openedGroup.id);
-                  }}
-                >
-                  <TrashIcon size={16} />
-                </Button>
+                {isSelectingGames ? (
+                  <>
+                    <Button
+                      theme={isBgLight ? "dark" : "primary"}
+                      className="home__folder-header-action-btn"
+                      onClick={() => {
+                        setIsSelectingGames(false);
+                        setSelectedGameIds(new Set());
+                      }}
+                      title={t("cancelar", { defaultValue: "Cancelar" })}
+                    >
+                      ✕
+                    </Button>
+                    {selectedGameIds.size > 0 && (
+                      <Button
+                        theme={isBgLight ? "dark" : "primary"}
+                        className="home__folder-header-action-btn"
+                        style={{ width: "auto", padding: "0 12px", borderRadius: "18px", fontSize: "13px" }}
+                        onClick={async () => {
+                          for (const id of selectedGameIds) {
+                            await removeGameFromGroup(openedGroup.id, id);
+                          }
+                          setSelectedGameIds(new Set());
+                          setIsSelectingGames(false);
+                        }}
+                        title={t("remover_selecionados", { defaultValue: "Remover selecionados" })}
+                      >
+                        <TrashIcon size={14} />
+                        {selectedGameIds.size}
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      theme={isBgLight ? "dark" : "primary"}
+                      title={t("add_game", { defaultValue: "Adicionar Jogo" })}
+                      className="home__folder-header-action-btn"
+                      onClick={() => {
+                        setSelectedIndex(currentGames.length);
+                        setFolderToEdit(openedGroup);
+                      }}
+                    >
+                      <PlusCircleIcon size={16} />
+                    </Button>
+                    <Button
+                      theme={isBgLight ? "dark" : "primary"}
+                      title={t("selecionar_para_remover", { defaultValue: "Selecionar para remover" })}
+                      className="home__folder-header-action-btn"
+                      onClick={() => setIsSelectingGames(true)}
+                    >
+                      <TrashIcon size={16} />
+                    </Button>
+                  </>
+                )}
               </div>
               <input
                 className="home__folder-header-title-input"
@@ -806,6 +844,7 @@ export default function Home() {
                           index === selectedIndex &&
                           isSliderActive,
                         "home__folder-card": isFolder,
+                        "home__card--selecting": isSelectingGames && !isFolder && selectedGameIds.has(itemId),
                       })}
                       onFocus={() => {
                         setSelectedIndex(index);
@@ -813,9 +852,19 @@ export default function Home() {
                       }}
                       onClick={() => {
                         if (dragRef.current.hasDragged) return;
+                        if (isSelectingGames && !isFolder) {
+                          setSelectedGameIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(itemId)) next.delete(itemId);
+                            else next.add(itemId);
+                            return next;
+                          });
+                          return;
+                        }
                         setSelectedIndex(index);
                       }}
                       onDoubleClick={() => {
+                        if (isSelectingGames) return;
                         if (isFolder) {
                           setOpenedGroup(folder);
                           setSelectedIndex(0);
@@ -829,6 +878,13 @@ export default function Home() {
                           : undefined
                       }
                     >
+                      {isSelectingGames && !isFolder && (
+                        <div
+                          className={cn("home__card-select-badge", {
+                            "home__card-select-badge--checked": selectedGameIds.has(itemId),
+                          })}
+                        />
+                      )}
                       {isFolder ? (
                         <div className="home__folder-grid">
                           {Array.from({ length: 4 }).map((_, i) => (

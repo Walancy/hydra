@@ -285,6 +285,44 @@
       outline: 1px solid rgba(255, 255, 255, 0.5);
       outline-offset: 2px;
     }
+
+    &--selecting {
+      outline: 2px solid rgba(255, 255, 255, 0.9) !important;
+      outline-offset: 2px;
+      opacity: 0.75;
+    }
+  }
+
+  &__card-select-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 10;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    pointer-events: none;
+
+    &--checked {
+      background: white;
+      border-color: white;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 6px;
+        width: 5px;
+        height: 9px;
+        border: 2px solid #111;
+        border-top: none;
+        border-left: none;
+        transform: rotate(45deg);
+      }
+    }
   }
 
   &__card-image {
