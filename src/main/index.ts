@@ -136,7 +136,7 @@ app.whenReady().then(async () => {
   });
 
   await openDB();
-  await loadState();
+  loadState().catch((err) => logger.error("Failed to load state:", err));
 
   const language = await db
     .get<string, string>(levelKeys.language, {

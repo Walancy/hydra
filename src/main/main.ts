@@ -27,12 +27,11 @@ import { migrateDownloadSources } from "./helpers/migrate-download-sources";
 export const loadState = async () => {
   await Lock.acquireLock();
 
-  const userPreferences = await db.get<string, UserPreferences | null>(
-    levelKeys.userPreferences,
-    {
+  const userPreferences = await db
+    .get<string, UserPreferences | null>(levelKeys.userPreferences, {
       valueEncoding: "json",
-    }
-  );
+    })
+    .catch(() => null);
 
   await import("./events");
 

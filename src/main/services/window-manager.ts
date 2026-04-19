@@ -101,12 +101,11 @@ export class WindowManager {
   }
 
   private static async loadScreenConfig() {
-    const data = await db.get<string, ScreenState | undefined>(
-      levelKeys.screenState,
-      {
+    const data = await db
+      .get<string, ScreenState | undefined>(levelKeys.screenState, {
         valueEncoding: "json",
-      }
-    );
+      })
+      .catch(() => undefined);
     return data ?? { isMaximized: false, height: 860, width: 1200 };
   }
 
@@ -224,12 +223,11 @@ export class WindowManager {
       const mainWindow = this.mainWindow;
       this.mainWindow = null;
 
-      const userPreferences = await db.get<string, UserPreferences>(
-        levelKeys.userPreferences,
-        {
+      const userPreferences = await db
+        .get<string, UserPreferences>(levelKeys.userPreferences, {
           valueEncoding: "json",
-        }
-      );
+        })
+        .catch(() => null);
 
       if (mainWindow) {
         mainWindow.setProgressBar(-1);

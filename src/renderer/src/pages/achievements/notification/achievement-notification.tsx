@@ -169,6 +169,15 @@ export function AchievementNotification() {
     return () => unsubscribe();
   }, [loadAndApplyTheme]);
 
+  useEffect(() => {
+    document.body.style.backgroundColor = "transparent";
+    document.documentElement.style.backgroundColor = "transparent";
+    const rootEl = document.getElementById("root");
+    if (rootEl) {
+      rootEl.style.backgroundColor = "transparent";
+    }
+  }, []);
+
   return (
     <root.div>
       <style type="text/css">
