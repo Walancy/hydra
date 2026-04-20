@@ -21,7 +21,7 @@ import { Button } from "@renderer/components";
 import type { DownloadSource, LibraryGame, ShopAssets } from "@types";
 import { useLibrary } from "@renderer/hooks/use-library";
 
-import { buildGameDetailsPath, playBeep } from "@renderer/helpers";
+import { buildGameDetailsPath, playBeep, getSteamLanguage } from "@renderer/helpers";
 import { CatalogueCategory } from "@shared";
 import cn from "classnames";
 import { GameInfo } from "./game-info";
@@ -141,7 +141,7 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
 }
 
 export default function Home() {
-  const { t } = useTranslation("home");
+  const { t, i18n } = useTranslation("home");
   const navigate = useNavigate();
   const { library } = useLibrary();
 
@@ -207,21 +207,29 @@ export default function Home() {
         // Only show skeleton if we have no cached data yet
         if (forceLoadingState && !hasCached) setIsLoading(true);
 
-        const sources = (await levelDBService.values(
-          "downloadSources"
-        )) as DownloadSource[];
-        const downloadSources = orderBy(sources, "createdAt", "desc");
+        let result: ShopAssets[] = [];
 
-        const params = {
-          take: category === CatalogueCategory.Achievements ? 60 : 20,
-          skip: 0,
-          downloadSourceIds: downloadSources.map((source) => source.id),
-        };
+        if (category === CatalogueCategory.Hot) {
+          result = await window.electron.getSteamFeatured(
+            getSteamLanguage(i18n.language)
+          );
+        } else {
+          const sources = (await levelDBService.values(
+            "downloadSources"
+          )) as DownloadSource[];
+          const downloadSources = orderBy(sources, "createdAt", "desc");
 
-        const result = await window.electron.hydraApi.get<ShopAssets[]>(
-          `/catalogue/${category}`,
-          { params, needsAuth: false }
-        );
+          const params = {
+            take: category === CatalogueCategory.Achievements ? 60 : 20,
+            skip: 0,
+            downloadSourceIds: downloadSources.map((source) => source.id),
+          };
+
+          result = await window.electron.hydraApi.get<ShopAssets[]>(
+            `/catalogue/${category}`,
+            { params, needsAuth: false }
+          );
+        }
 
         dispatch(setCatalogueCategory({ category, games: result }));
         if (!hasCached) setSelectedIndex(0);

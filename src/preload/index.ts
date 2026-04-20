@@ -82,6 +82,8 @@ contextBridge.exposeInMainWorld("electron", {
     >,
 
   /* Catalogue */
+  getSteamFeatured: (language: string) =>
+    ipcRenderer.invoke("getSteamFeatured", language),
   getGameShopDetails: (objectId: string, shop: GameShop, language: string) =>
     ipcRenderer.invoke("getGameShopDetails", objectId, shop, language),
   getRandomGame: () => ipcRenderer.invoke("getRandomGame"),

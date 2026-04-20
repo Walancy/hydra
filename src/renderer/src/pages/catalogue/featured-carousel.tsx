@@ -11,19 +11,69 @@ interface FeaturedCarouselProps {
 
 const SLIDE_INTERVAL = 10000;
 
-const getHeroUrl = (game: CatalogueSearchResult): string =>
-  `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`;
+import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
+
+const resolveImageSource = (
+  imageUrl: string | null | undefined
+): string | null => {
+  if (!imageUrl) return null;
+  const trimmed = imageUrl.trim();
+  if (!trimmed) return null;
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:")
+  )
+    return trimmed;
+  if (trimmed.startsWith("local:"))
+    return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+  const normalized = trimmed.replaceAll("\\", "/");
+  if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+    return `local:${normalized}`;
+  return normalized;
+};
 
 function SlideImage({ game }: { game: CatalogueSearchResult }) {
-  const [failed, setFailed] = useState(false);
-  const src = failed ? (game.libraryImageUrl ?? "") : getHeroUrl(game);
+  // @ts-expect-error Game might have ShopAssets fields injected
+  const customCover = resolveImageSource(game.coverImageUrl);
+  const customLibrary = resolveImageSource(game.libraryImageUrl);
+  // @ts-expect-error Game might have ShopAssets fields injected
+  const customIcon = resolveImageSource(game.iconUrl);
+
+  const initialPrimarySrc =
+    game.shop === "steam"
+      ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+      : (customCover ?? customLibrary ?? customIcon ?? "");
+
+  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
+  const [finalFailed, setFinalFailed] = useState(false);
+
+  const steamGridCover = useSteamGridCover(
+    game.objectId,
+    game.title,
+    primaryFailed,
+    "vertical"
+  );
+
+  const activeSrc = primaryFailed
+    ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? "")
+    : initialPrimarySrc;
+
   return (
     <img
-      src={src}
+      src={activeSrc}
       alt={game.title}
       className="featured-carousel__img"
       loading="lazy"
-      onError={() => !failed && setFailed(true)}
+      onError={() => {
+        if (!primaryFailed) {
+          setPrimaryFailed(true);
+        } else {
+          setFinalFailed(true);
+        }
+      }}
+      style={{ display: finalFailed && !activeSrc ? "none" : "block" }}
     />
   );
 }

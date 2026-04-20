@@ -343,17 +343,7 @@ void main() {
   }, [
     isVisible,
     raysOrigin,
-    raysColor,
-    raysSpeed,
-    lightSpread,
-    rayLength,
-    pulsating,
-    fadeDistance,
-    saturation,
     followMouse,
-    mouseInfluence,
-    noiseAmount,
-    distortion,
   ]);
 
   useEffect(() => {

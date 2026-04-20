@@ -24,7 +24,7 @@ export const DEFAULT_CONFIG: CustomThemeConfig = {
   buttons: {
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0)",
+    borderColor: "rgba(255,255,255,0.12)",
     bgColor: "#ffffff",
     bgOpacity: 0.05,
     blur: 16,
@@ -137,16 +137,6 @@ function buildCSS(c: CustomThemeConfig): string {
   // Prefixo #root: specificity 1,1,0 → vence qualquer override de SCSS com .a .b (0,2,0)
   const r = "#root";
 
-  // Bloco completo: Button component e inputs (overflow+isolation para blur não vazar)
-  const ip = `
-    border-radius: ${b.borderRadius}px !important;
-    border: ${btnBorder} !important;
-    background: ${btnBg} !important;
-    backdrop-filter: ${btnBlur} !important;
-    -webkit-backdrop-filter: ${btnBlur} !important;
-    overflow: hidden !important;
-    isolation: isolate !important;`;
-
   // Bloco nav: header, sidebar, tabs — SEM overflow:hidden (evita cortar conteúdo)
   const np = `
     border-radius: ${b.borderRadius}px !important;
@@ -251,7 +241,14 @@ function buildCSS(c: CustomThemeConfig): string {
 
   /* ── Inputs: container visual (não o <input> interno) ── */
   ${r} .text-field-container__text-field,
-  ${r} .select-field { ${ip} }
+  ${r} .select-field {
+    border-radius: ${Math.min(b.borderRadius, 12)}px !important;
+    border: ${btnBorder} !important;
+    backdrop-filter: ${btnBlur} !important;
+    -webkit-backdrop-filter: ${btnBlur} !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+  }
 
   /* ── Menus flutuantes ────────────────────────────────── */
   ${r} .context-menu,
@@ -288,6 +285,9 @@ function buildCSS(c: CustomThemeConfig): string {
 
   /* ── Cards de imagem (só forma, bg preserva a capa) ──── */
   ${r} .game-card,
+  ${r} .home__card,
+  ${r} .lib-cat-card,
+  ${r} .home__folder-game-card-btn,
   ${r} .library-game-card__wrapper,
   ${r} .library-game-card-large {
     border-radius: ${ca.borderRadius}px !important;

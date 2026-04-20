@@ -214,6 +214,14 @@ export function Header() {
   const handleBackButtonClick = () => {
     if (openedFolderName) {
       dispatch(triggerCloseFolder());
+    } else if (
+      searchParams.has("collection") &&
+      searchParams.get("collection") !== "new" &&
+      searchParams.get("action") !== "edit"
+    ) {
+      const params = new URLSearchParams(searchParams);
+      params.delete("collection");
+      setSearchParams(params, { replace: true });
     } else {
       navigate(-1);
     }
@@ -293,6 +301,16 @@ export function Header() {
     setIsSearchOpen((prev) => !prev);
   };
 
+  const isMainPage =
+    location.pathname === "/" ||
+    location.pathname === "/catalogue" ||
+    location.pathname === "/library" ||
+    location.pathname === "/downloads" ||
+    location.pathname === "/settings";
+
+  const showBackButton =
+    !isMainPage || !!openedFolderName || searchParams.has("collection");
+
   return (
     <>
       {!(isHomePage || isGamePage || isSettingsPage) && (
@@ -326,10 +344,10 @@ export function Header() {
           <button
             type="button"
             className={cn("header__back-button", {
-              "header__back-button--enabled": location.key !== "default",
+              "header__back-button--enabled": showBackButton,
             })}
             onClick={handleBackButtonClick}
-            disabled={location.key === "default"}
+            disabled={!showBackButton}
           >
             <ArrowLeftIcon />
           </button>

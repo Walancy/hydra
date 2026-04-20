@@ -82,6 +82,7 @@ declare global {
     >;
 
     /* Catalogue */
+    getSteamFeatured: (language: string) => Promise<ShopAssets[]>;
     getGameShopDetails: (
       objectId: string,
       shop: GameShop,

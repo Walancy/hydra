@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, type CSSProperties } from "react";
 import type {
   ElementStyle,
   CustomThemeConfig,
@@ -136,6 +136,99 @@ export function GlobalSection({ value, onChange }: GlobalProps) {
 }
 
 // ── Element section (buttons / cards) ──────────────────────────────────────────
+function hexToRgbaPreview(color: string, opacity: number): string {
+  const m = color.match(/^#([0-9a-f]{6})/i);
+  if (!m) return `rgba(255,255,255,${opacity})`;
+  const r = parseInt(m[1].slice(0, 2), 16);
+  const g = parseInt(m[1].slice(2, 4), 16);
+  const b = parseInt(m[1].slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${opacity})`;
+}
+
+interface ElementPreviewProps {
+  readonly value: ElementStyle;
+  readonly type: "button" | "card";
+}
+
+const CYBERPUNK_COVER =
+  "https://steamcdn-a.akamaihd.net/steam/apps/1091500/library_600x900_2x.jpg";
+const CYBERPUNK_HEADER =
+  "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg";
+
+function ElementPreview({ value, type }: ElementPreviewProps) {
+  const bg = useMemo(
+    () => hexToRgbaPreview(value.bgColor, value.bgOpacity),
+    [value.bgColor, value.bgOpacity]
+  );
+  const border = `${value.borderWidth}px solid ${value.borderColor}`;
+  const blur = value.blur > 0 ? `blur(${value.blur}px)` : "none";
+  const radius = `${value.borderRadius}px`;
+
+  const baseStyle: CSSProperties = {
+    background: bg,
+    border,
+    borderRadius: radius,
+    backdropFilter: blur,
+    WebkitBackdropFilter: blur,
+    overflow: "hidden",
+    isolation: "isolate",
+  };
+
+  return (
+    <div className="cz__preview">
+      <p className="cz__preview-label">Preview</p>
+      <div className="cz__preview-row">
+        {type === "button" && (
+          <>
+            <div className="cz__prev-btn" style={baseStyle}>
+              Botão
+            </div>
+            <div
+              className="cz__prev-input"
+              style={{
+                ...baseStyle,
+                borderRadius: `${Math.min(value.borderRadius, 12)}px`,
+              }}
+            >
+              <span className="cz__prev-placeholder">Input de texto…</span>
+            </div>
+          </>
+        )}
+        {type === "card" && (
+          <>
+            {/* Home-screen style card */}
+            <div className="cz__prev-game-card" style={baseStyle}>
+              <img
+                src={CYBERPUNK_COVER}
+                alt="Cyberpunk 2077"
+                className="cz__prev-game-cover"
+                loading="lazy"
+              />
+              <div className="cz__prev-game-info">
+                <span className="cz__prev-game-title">Cyberpunk 2077</span>
+              </div>
+            </div>
+
+            {/* Library card style */}
+            <div className="cz__prev-lib-card" style={baseStyle}>
+              <img
+                src={CYBERPUNK_HEADER}
+                alt="Cyberpunk 2077"
+                className="cz__prev-lib-cover"
+                loading="lazy"
+              />
+              <div className="cz__prev-lib-info">
+                <span className="cz__prev-lib-title">Cyberpunk 2077</span>
+                <span className="cz__prev-lib-meta">⏱ 142h</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface ElementProps {
   readonly title: string;
   readonly value: ElementStyle;
@@ -145,6 +238,7 @@ interface ElementProps {
 export function ElementSection({ title, value, onChange }: ElementProps) {
   const set = (patch: Partial<ElementStyle>) =>
     onChange({ ...value, ...patch });
+  const previewType = title.toLowerCase().includes("card") ? "card" : "button";
   return (
     <div className="cz__section">
       <p className="cz__section-title">{title}</p>
@@ -191,6 +285,7 @@ export function ElementSection({ title, value, onChange }: ElementProps) {
           onChange={(v) => set({ bgColor: v })}
         />
       </div>
+      <ElementPreview value={value} type={previewType} />
     </div>
   );
 }

@@ -193,37 +193,32 @@
 }
 
 // ── Overrides de componentes dentro do painel settings ──
-// Padrão visual: border-radius 100px + glassmorphism igual header/catálogo.
+// Visual: glassmorphism igual header/nav — border-radius vem do customizador.
 .settings__panel {
-  // ── TextField — igual campo de busca da header ────────
+  // ── TextField — glassmorphism ─────────────────────────
   .text-field-container__text-field {
     background-color: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 100px !important;
 
-    &:hover {
-      border-color: rgba(255, 255, 255, 0.25) !important;
-    }
-
+    &:hover,
     &--focused {
-      border-color: rgba(255, 255, 255, 0.45) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
     }
   }
 
-  // ── SelectField — pill shape ──────────────────────────
+  // ── SelectField — glassmorphism ───────────────────────
   .select-field {
     background-color: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 100px !important;
     width: 100%;
     padding: 0 12px 0 16px;
 
     &:hover {
-      border-color: rgba(255, 255, 255, 0.25) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
     }
 
     // remove aparência nativa e padroniza
@@ -248,7 +243,7 @@
     width: 100%;
   }
 
-  // ── CheckboxField — pill shape na box ─────────────────
+  // ── CheckboxField ─────────────────────────────────────
   .checkbox-field__checkbox {
     background-color: rgba(255, 255, 255, 0.06) !important;
     border-color: rgba(255, 255, 255, 0.18) !important;
@@ -264,11 +259,7 @@
     }
   }
 
-  // ── Botões — border-radius 100px como na header ───────
-  .button {
-    border-radius: 100px !important;
-  }
-
+  // ── Botões — outline com glassmorphism ────────────────
   .button--outline {
     border-color: rgba(255, 255, 255, 0.15) !important;
 

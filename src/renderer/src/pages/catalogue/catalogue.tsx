@@ -2,6 +2,7 @@ import type {
   CatalogueSearchResult,
   CatalogueSearchPayload,
   DownloadSource,
+  ShopAssets,
 } from "@types";
 
 import { useAppDispatch, useAppSelector, useFormat } from "@renderer/hooks";
@@ -41,6 +42,7 @@ import { CategoryExplorer } from "./category-explorer";
 import { TopSellers } from "./top-sellers";
 import { expandAcronym } from "@renderer/services/game-acronyms";
 import { useGamepadConnected } from "@renderer/hooks/use-gamepad";
+import { getSteamLanguage } from "@renderer/helpers";
 
 const ProtonCompatibilitySection = lazy(async () => {
   const mod = await import("./proton-compatibility-section");
@@ -535,7 +537,17 @@ export default function Catalogue() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [allGamesTitle, setAllGamesTitle] = useState<string | null>(null);
-  const featuredGames = useMemo(() => results.slice(0, 9), [results]);
+  
+  const [steamFeaturedGames, setSteamFeaturedGames] = useState<ShopAssets[]>([]);
+  useEffect(() => {
+    window.electron.getSteamFeatured(getSteamLanguage(language)).then((sg) => {
+      setSteamFeaturedGames(sg.slice(0, 18)); // Allow up to 18 items
+    });
+  }, [language]);
+
+  const featuredGames = useMemo(() => 
+    steamFeaturedGames.length > 0 ? (steamFeaturedGames as unknown as CatalogueSearchResult[]) : results.slice(0, 18)
+  , [results, steamFeaturedGames]);
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>

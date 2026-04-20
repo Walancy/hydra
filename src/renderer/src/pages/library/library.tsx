@@ -158,6 +158,8 @@ export default function Library() {
         params.delete("action");
         setSearchParams(params, { replace: true });
       }
+    } else if (!selectedCollectionId && showFolderPicker) {
+      setShowFolderPicker(false);
     }
   }, [
     selectedCollectionId,
@@ -914,7 +916,7 @@ export default function Library() {
                 onClick={() => {
                   const params = new URLSearchParams(searchParams);
                   params.set("collection", "new");
-                  setSearchParams(params, { replace: true });
+                  setSearchParams(params);
                 }}
               >
                 <PlusIcon size={16} />

@@ -336,4 +336,141 @@
       color: rgba(200, 60, 60, 0.9);
     }
   }
+  // \u2500\u2500 Preview strip \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  &__preview {
+    padding: 8px 16px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__preview-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 0;
+  }
+
+  &__preview-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  // Botão de preview (div para evitar border nativa do browser)
+  &__prev-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    min-height: 36px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: inherit;
+    cursor: default;
+    pointer-events: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  // Input fake de preview
+  &__prev-input {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    height: 36px;
+    min-width: 160px;
+    flex: 1;
+  }
+
+  &__prev-placeholder {
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: inherit;
+    pointer-events: none;
+  }
+
+  // Game card de preview (Cyberpunk 2077)
+  &__prev-game-card {
+    position: relative;
+    width: 130px;
+    height: 180px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  &__prev-game-cover {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 0;
+  }
+
+  &__prev-game-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 10px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    z-index: 1;
+  }
+
+  &__prev-game-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    display: block;
+    line-height: 1.3;
+  }
+
+  // Library card preview — layout horizontal (header.jpg)
+  &__prev-lib-card {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    height: 180px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  &__prev-lib-cover {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  &__prev-lib-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 10px;
+    flex-shrink: 0;
+  }
+
+  &__prev-lib-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__prev-lib-meta {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.5);
+  }
 }

@@ -7,12 +7,12 @@
 
 /* Foco visível apenas em elementos interativos genuínos */
 button:focus-visible,
-input:focus-visible,
+input:focus-visible:not(.text-field-container__text-field-input),
 a:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 .gamepad-active button:focus,
-.gamepad-active input:focus,
+.gamepad-active input:focus:not(.text-field-container__text-field-input),
 .gamepad-active a:focus,
 .gamepad-active textarea:focus,
 .gamepad-active select:focus {

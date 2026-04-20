@@ -252,6 +252,7 @@ export default function FloatingLines({
   mixBlendMode = "screen",
 }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const materialRef = useRef<ShaderMaterial | null>(null);
   const targetMouseRef = useRef(new Vector2(-1000, -1000));
   const currentMouseRef = useRef(new Vector2(-1000, -1000));
   const targetInfluenceRef = useRef(0);
@@ -381,6 +382,7 @@ export default function FloatingLines({
       vertexShader,
       fragmentShader,
     });
+    materialRef.current = material;
 
     const geometry = new PlaneGeometry(2, 2);
     const mesh = new Mesh(geometry, material);
@@ -473,6 +475,7 @@ export default function FloatingLines({
 
     return () => {
       active = false;
+      materialRef.current = null;
 
       cancelAnimationFrame(raf);
 
@@ -499,7 +502,6 @@ export default function FloatingLines({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    linesGradient,
     enabledWaves,
     lineCount,
     lineDistance,
@@ -514,6 +516,18 @@ export default function FloatingLines({
     parallax,
     parallaxStrength,
   ]);
+
+  // Atualiza apenas as cores sem reiniciar a cena
+  useEffect(() => {
+    const mat = materialRef.current;
+    if (!mat || !linesGradient || linesGradient.length === 0) return;
+    const stops = linesGradient.slice(0, MAX_GRADIENT_STOPS);
+    mat.uniforms.lineGradientCount.value = stops.length;
+    stops.forEach((hex: string, i: number) => {
+      const color = hexToVec3(hex);
+      mat.uniforms.lineGradient.value[i].set(color.x, color.y, color.z);
+    });
+  }, [linesGradient]);
 
   return (
     <div
