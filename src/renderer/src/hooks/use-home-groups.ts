@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useToast } from "./use-toast";
 
 export interface HomeGroup {
   id: string;
@@ -7,23 +8,53 @@ export interface HomeGroup {
 }
 
 export function useHomeGroups() {
-  const [groups, setGroups] = useState<HomeGroup[]>([]);
-
-  useEffect(() => {
+  const [groups, setGroups] = useState<HomeGroup[]>(() => {
+    // Carregamento zero-delay: Injetando direto na primeira renderização
     const savedGroups = localStorage.getItem("hydra:home-groups");
     if (savedGroups) {
       try {
-        setGroups(JSON.parse(savedGroups));
+        return JSON.parse(savedGroups);
       } catch (e) {
         console.error("Failed to parse home groups", e);
       }
     }
+    return [];
+  });
+  const { showSuccessToast, showErrorToast } = useToast();
+
+  useEffect(() => {
+    // Busca assíncrona da nuvem (Stale-While-Revalidate)
+    const syncFromCloud = async () => {
+      const cloudGroups = await window.electron
+        .fetchHomeGroups()
+        .catch(() => null);
+      if (cloudGroups && Array.isArray(cloudGroups)) {
+        setGroups(cloudGroups);
+        localStorage.setItem("hydra:home-groups", JSON.stringify(cloudGroups));
+      }
+    };
+
+    syncFromCloud();
   }, []);
 
-  const saveGroups = useCallback((newGroups: HomeGroup[]) => {
-    localStorage.setItem("hydra:home-groups", JSON.stringify(newGroups));
-    setGroups(newGroups);
-  }, []);
+  const saveGroups = useCallback(
+    (newGroups: HomeGroup[]) => {
+      localStorage.setItem("hydra:home-groups", JSON.stringify(newGroups));
+      setGroups(newGroups);
+      window.electron
+        .syncHomeGroups(newGroups)
+        .then((res) => {
+          if (res?.status === "synced") {
+            showSuccessToast("Pasta sincronizada com o Supabase!");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          showErrorToast("Erro ao sincronizar pasta com Supabase");
+        });
+    },
+    [showSuccessToast, showErrorToast]
+  );
 
   const createGroup = useCallback(
     (name: string, initialGameIds?: string | string[]) => {

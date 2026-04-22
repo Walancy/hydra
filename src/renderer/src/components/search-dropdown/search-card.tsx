@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchIcon } from "@primer/octicons-react";
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 import type { SearchSuggestion } from "@renderer/hooks/use-search-suggestions";
+import Skeleton from "react-loading-skeleton";
+import { globalImageCache } from "@renderer/helpers";
+import { useRef } from "react";
 
 interface SearchCardProps {
   item: SearchSuggestion;
@@ -21,6 +24,7 @@ export function SearchCard({ item, isActive, onClick }: SearchCardProps) {
 
   const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
   const [finalFailed, setFinalFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const steamGridUrl = useSteamGridCover(
     item.objectId,
@@ -39,14 +43,55 @@ export function SearchCard({ item, isActive, onClick }: SearchCardProps) {
 
   const cardClass = `search-dropdown__card${isActive ? " search-dropdown__card--active" : ""}`;
 
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    activeSrc ? globalImageCache.has(activeSrc) : false
+  );
+
+  // Reset loaded state when source changes
+  useEffect(() => {
+    setImageLoaded(activeSrc ? globalImageCache.has(activeSrc) : false);
+    if (
+      activeSrc &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(activeSrc);
+      setImageLoaded(true);
+    }
+  }, [activeSrc]);
+
   return (
     <button type="button" className={cardClass} onClick={onClick}>
-      <div className="search-dropdown__card-image">
+      <div
+        className="search-dropdown__card-image"
+        style={{ position: "relative" }}
+      >
+        {activeSrc && !finalFailed && !imageLoaded && (
+          <Skeleton
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              borderRadius: "inherit",
+              height: "100%",
+            }}
+          />
+        )}
         {activeSrc && !finalFailed ? (
           <img
+            ref={imgRef}
+            key={activeSrc}
             src={activeSrc}
             alt={item.title}
             draggable={false}
+            onLoad={() => {
+              if (activeSrc) globalImageCache.add(activeSrc);
+              setImageLoaded(true);
+            }}
+            style={{
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
             onError={() => {
               if (!primaryFailed) {
                 setPrimaryFailed(true);

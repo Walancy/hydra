@@ -3,10 +3,11 @@ import { useTranslation } from "react-i18next";
 import { SettingsDebrid } from "./settings-debrid";
 import { SettingsSteamImport } from "./settings-steam-import";
 import { SettingsEpicImport } from "./settings-epic-import";
+import { SettingsSupabaseLibrary } from "./settings-supabase-library";
 import "./settings-context-integrations.scss";
-import "./settings-context-downloads.scss"; // Reuse tab styles
+import "./settings-context-downloads.scss";
 
-type IntegrationsTab = "debrid" | "launchers";
+type IntegrationsTab = "debrid" | "launchers" | "cloud";
 
 export function SettingsContextIntegrations() {
   const { t } = useTranslation("settings");
@@ -22,6 +23,10 @@ export function SettingsContextIntegrations() {
       label: t("platform_integrations", {
         defaultValue: "Lojas e Plataformas",
       }),
+    },
+    {
+      id: "cloud",
+      label: t("cloud_storage_tab", { defaultValue: "Cloud Storage" }),
     },
   ];
 
@@ -54,6 +59,12 @@ export function SettingsContextIntegrations() {
             <SettingsSteamImport />
             <SettingsEpicImport />
           </div>
+        </div>
+      )}
+
+      {activeTab === "cloud" && (
+        <div className="settings-context-panel">
+          <SettingsSupabaseLibrary />
         </div>
       )}
     </div>

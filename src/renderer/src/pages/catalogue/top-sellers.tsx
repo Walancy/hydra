@@ -1,9 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CatalogueSearchResult, ShopDetailsWithAssets } from "@types";
-import { QuestionIcon } from "@primer/octicons-react";
-import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
+import {
+  buildGameDetailsPath,
+  getSteamLanguage,
+  globalImageCache,
+} from "@renderer/helpers";
 import { useTranslation } from "react-i18next";
+import Skeleton from "react-loading-skeleton";
 import "./top-sellers.scss";
 
 // Mapeamento de gêneros Steam por tab (valores en pois o catálogo usa inglês internamente)
@@ -32,6 +36,24 @@ function GameRow({
 }>) {
   const navigate = useNavigate();
   const genres = game.genres?.slice(0, 3).join(", ") ?? "";
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
+  );
+
+  useEffect(() => {
+    setImageLoaded(
+      game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
+    );
+    if (
+      game.libraryImageUrl &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(game.libraryImageUrl);
+      setImageLoaded(true);
+    }
+  }, [game.libraryImageUrl]);
 
   return (
     <button
@@ -42,9 +64,36 @@ function GameRow({
       aria-label={game.title}
     >
       <span className="top-sellers__rank">{rank}</span>
-      <div className="top-sellers__thumb">
+      <div className="top-sellers__thumb" style={{ position: "relative" }}>
         {game.libraryImageUrl ? (
-          <img src={game.libraryImageUrl} alt={game.title} loading="lazy" />
+          <>
+            {!imageLoaded && (
+              <Skeleton
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  zIndex: 2,
+                  height: "100%",
+                }}
+              />
+            )}
+            <img
+              ref={imgRef}
+              key={game.libraryImageUrl}
+              src={game.libraryImageUrl}
+              alt={game.title}
+              loading="lazy"
+              onLoad={() => {
+                if (game.libraryImageUrl)
+                  globalImageCache.add(game.libraryImageUrl);
+                setImageLoaded(true);
+              }}
+              style={{
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+            />
+          </>
         ) : (
           <QuestionIcon size={20} />
         )}
@@ -126,6 +175,11 @@ export function TopSellers({
     useState<ShopDetailsWithAssets | null>(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [isHoveringPanel, setIsHoveringPanel] = useState(false);
+  const panelImgRef = useRef<HTMLImageElement>(null);
+  const [panelImageLoaded, setPanelImageLoaded] = useState(() => {
+    // Only check if it's the active media full url
+    return false; // Initialize correctly in effect based on activeMedia
+  });
   const [releaseTimestamps, setReleaseTimestamps] = useState<
     Record<string, number>
   >({});
@@ -306,6 +360,20 @@ export function TopSellers({
     };
   }, [mediaItems.length, isHoveringPanel]);
 
+  useEffect(() => {
+    setPanelImageLoaded(
+      activeMedia ? globalImageCache.has(activeMedia.full) : false
+    );
+    if (
+      activeMedia &&
+      panelImgRef.current?.complete &&
+      panelImgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(activeMedia.full);
+      setPanelImageLoaded(true);
+    }
+  }, [activeMedia]);
+
   if (!isLoading && !games.length) return null;
 
   return (
@@ -370,13 +438,40 @@ export function TopSellers({
 
               <div className="top-sellers__detail-body">
                 <div className="top-sellers__cover-section">
-                  <div className="top-sellers__detail-cover">
+                  <div
+                    className="top-sellers__detail-cover"
+                    style={{ position: "relative" }}
+                  >
                     {activeMedia ? (
-                      <img
-                        src={activeMedia.full}
-                        alt={activeGame.title}
-                        loading="lazy"
-                      />
+                      <>
+                        {!panelImageLoaded && (
+                          <Skeleton
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              zIndex: 2,
+                              height: "100%",
+                              borderRadius: "inherit",
+                            }}
+                          />
+                        )}
+                        <img
+                          ref={panelImgRef}
+                          key={activeMedia.full}
+                          src={activeMedia.full}
+                          alt={activeGame.title}
+                          loading="lazy"
+                          onLoad={() => {
+                            if (activeMedia)
+                              globalImageCache.add(activeMedia.full);
+                            setPanelImageLoaded(true);
+                          }}
+                          style={{
+                            opacity: panelImageLoaded ? 1 : 0,
+                            transition: "opacity 0.3s ease",
+                          }}
+                        />
+                      </>
                     ) : (
                       <div className="top-sellers__detail-placeholder">
                         <QuestionIcon size={40} />

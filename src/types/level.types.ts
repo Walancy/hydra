@@ -108,6 +108,13 @@ export type AchievementCustomNotificationPosition =
   | "bottom-center"
   | "bottom-right";
 
+export interface SupabaseConfig {
+  url: string;
+  anonKey: string;
+}
+
+export type LibraryStorageMode = "local" | "supabase";
+
 export interface UserPreferences {
   downloadsPath?: string | null;
   ggDealsApiKey?: string | null;
@@ -148,6 +155,8 @@ export interface UserPreferences {
   backgroundMusicEnabled?: boolean;
   backgroundMusicVolume?: number;
   customScanDirectories?: string[];
+  supabaseConfig?: SupabaseConfig | null;
+  libraryStorageMode?: LibraryStorageMode;
 }
 
 export interface ScreenState {

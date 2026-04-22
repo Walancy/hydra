@@ -10,6 +10,8 @@ import { CatalogueSearchResult } from "@types";
 import { QuestionIcon, PlusIcon, DashIcon } from "@primer/octicons-react";
 import cn from "classnames";
 import { Button } from "@renderer/components/button/button";
+import Skeleton from "react-loading-skeleton";
+import { globalImageCache } from "@renderer/helpers";
 
 const ProtonDBBadge = lazy(async () => {
   const mod = await import("./protondb-badge");
@@ -94,15 +96,58 @@ export function GameItem({ game }: GameItemProps) {
     });
   }, [game.genres, language, steamGenres]);
 
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
+  );
+
+  useEffect(() => {
+    setImageLoaded(
+      game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
+    );
+    if (
+      game.libraryImageUrl &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(game.libraryImageUrl);
+      setImageLoaded(true);
+    }
+  }, [game.libraryImageUrl]);
+
   const libraryImage = useMemo(() => {
     if (game.libraryImageUrl) {
       return (
-        <img
-          className="game-item__cover"
-          src={game.libraryImageUrl}
-          alt={game.title}
-          loading="lazy"
-        />
+        <>
+          {!imageLoaded && (
+            <Skeleton
+              className="game-item__cover"
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 2,
+                borderRadius: "inherit",
+              }}
+            />
+          )}
+          <img
+            ref={imgRef}
+            key={game.libraryImageUrl}
+            className="game-item__cover"
+            src={game.libraryImageUrl}
+            alt={game.title}
+            loading="lazy"
+            onLoad={() => {
+              if (game.libraryImageUrl)
+                globalImageCache.add(game.libraryImageUrl);
+              setImageLoaded(true);
+            }}
+            style={{
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
+          />
+        </>
       );
     }
 
@@ -111,7 +156,7 @@ export function GameItem({ game }: GameItemProps) {
         <QuestionIcon size={28} />
       </div>
     );
-  }, [game.libraryImageUrl, game.title]);
+  }, [game.libraryImageUrl, game.title, imageLoaded]);
 
   const rawProtonValue =
     game.tier ??
@@ -131,7 +176,10 @@ export function GameItem({ game }: GameItemProps) {
   return (
     <article className="game-item">
       <Link to={buildGameDetailsPath(game)} className="game-item__content-link">
-        <div className="game-item__cover-wrapper">
+        <div
+          className="game-item__cover-wrapper"
+          style={{ position: "relative" }}
+        >
           {libraryImage}
 
           {shouldShowProtonFeatures && protonBadge && (

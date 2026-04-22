@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeftIcon, ChevronRightIcon } from "@primer/octicons-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  QuestionIcon,
+} from "@primer/octicons-react";
 import type { CatalogueSearchResult } from "@types";
-import { buildGameDetailsPath } from "@renderer/helpers";
+import { buildGameDetailsPath, globalImageCache } from "@renderer/helpers";
+import Skeleton from "react-loading-skeleton";
 import "./featured-carousel.scss";
 
 interface FeaturedCarouselProps {
@@ -10,6 +16,16 @@ interface FeaturedCarouselProps {
 }
 
 const SLIDE_INTERVAL = 10000;
+
+const RANDOM_PHRASES = [
+  "Melhores do Dia",
+  "Especiais para Você",
+  "Descubra sua Próxima Aventura",
+  "Destaques da Semana",
+  "Escolhas Incríveis",
+  "Os Mais Jogados",
+  "Coleção Especial",
+];
 
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 
@@ -48,6 +64,7 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
 
   const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
   const [finalFailed, setFinalFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const steamGridCover = useSteamGridCover(
     game.objectId,
@@ -60,117 +77,269 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
     ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? "")
     : initialPrimarySrc;
 
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    activeSrc ? globalImageCache.has(activeSrc) : false
+  );
+
+  useEffect(() => {
+    setImageLoaded(activeSrc ? globalImageCache.has(activeSrc) : false);
+
+    // Check if the image is already cached/complete without firing onLoad
+    if (
+      activeSrc &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(activeSrc);
+      setImageLoaded(true);
+    }
+  }, [activeSrc, steamGridCover]);
+
+  // Se não tem imagem possível e todas as opções falharam, exibe placeholder
+  if (finalFailed || (!activeSrc && primaryFailed && steamGridCover === null)) {
+    return (
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#1a1a1a",
+          borderRadius: "inherit",
+        }}
+      >
+        <QuestionIcon size={48} fill="rgba(255, 255, 255, 0.2)" />
+      </div>
+    );
+  }
+
+  // Define if we should show skeleton. Treat undefined steamGridCover as still loading if primary failed.
+  const isStillLoadingFallback = primaryFailed && steamGridCover === undefined;
+  const shouldShowSkeleton =
+    !imageLoaded && (activeSrc !== "" || isStillLoadingFallback);
+
   return (
-    <img
-      src={activeSrc}
-      alt={game.title}
-      className="featured-carousel__img"
-      loading="lazy"
-      onError={() => {
-        if (!primaryFailed) {
-          setPrimaryFailed(true);
-        } else {
-          setFinalFailed(true);
-        }
-      }}
-      style={{ display: finalFailed && !activeSrc ? "none" : "block" }}
-    />
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {shouldShowSkeleton && (
+        <Skeleton
+          className="featured-carousel__img-skeleton"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 2,
+            borderRadius: "inherit",
+            height: "100%",
+          }}
+        />
+      )}
+      {activeSrc && (
+        <img
+          ref={imgRef}
+          key={activeSrc}
+          src={activeSrc}
+          alt={game.title}
+          className="featured-carousel__img"
+          loading="lazy"
+          onLoad={() => {
+            if (activeSrc) globalImageCache.add(activeSrc);
+            setImageLoaded(true);
+          }}
+          onError={() => {
+            if (!primaryFailed) {
+              setPrimaryFailed(true);
+            } else {
+              setFinalFailed(true);
+            }
+          }}
+          style={{
+            display: "block",
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 0.3s ease",
+            position: "relative",
+            zIndex: 1,
+            borderRadius: "inherit",
+          }}
+        />
+      )}
+    </div>
   );
 }
 
 export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
   const [active, setActive] = useState(0);
+  const [phrase] = useState(
+    () => RANDOM_PHRASES[Math.floor(Math.random() * RANDOM_PHRASES.length)]
+  );
   const navigate = useNavigate();
+  const isAnimatingRef = React.useRef(false);
 
-  const slideTo = useCallback(
-    (index: number) => {
-      setActive((index + games.length) % games.length);
+  const slideTo = useCallback((offsetDir: number) => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+    setActive((prev) => prev + offsetDir);
+    setTimeout(() => {
+      isAnimatingRef.current = false;
+    }, 450);
+  }, []);
+
+  const jumpToDot = useCallback(
+    (targetIndex: number) => {
+      if (isAnimatingRef.current) return;
+      isAnimatingRef.current = true;
+      setActive((prev) => {
+        const currentMod =
+          ((prev % games.length) + games.length) % games.length;
+        let diff = targetIndex - currentMod;
+        if (diff > games.length / 2) diff -= games.length;
+        if (diff < -games.length / 2) diff += games.length;
+        return prev + diff;
+      });
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+      }, 450);
     },
     [games.length]
   );
 
   useEffect(() => {
     if (games.length <= 1) return;
-    const id = setInterval(() => slideTo(active + 1), SLIDE_INTERVAL);
+    const id = setInterval(() => slideTo(1), SLIDE_INTERVAL);
     return () => clearInterval(id);
-  }, [active, games.length, slideTo]);
+  }, [games.length, slideTo]);
 
   if (!games.length) return null;
 
-  const prev = (active - 1 + games.length) % games.length;
-  const next = (active + 1) % games.length;
-
-  const displayedSlots =
-    games.length >= 3
-      ? [
-          { game: games[prev], slot: "prev" as const },
-          { game: games[active], slot: "main" as const },
-          { game: games[next], slot: "next" as const },
-        ]
-      : [{ game: games[0], slot: "main" as const }];
-
   return (
-    <div className="featured-carousel" aria-label="Jogos em destaque">
-      <button
-        type="button"
-        className="featured-carousel__nav featured-carousel__nav--left"
-        onClick={() => slideTo(active - 1)}
-        aria-label="Anterior"
+    <div
+      className="featured-carousel-wrapper"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: "100%",
+        gap: "0",
+      }}
+    >
+      <h2
+        style={{
+          fontSize: "24px",
+          fontWeight: "400",
+          color: "var(--foreground, rgba(255, 255, 255, 0.9))",
+          marginTop: "16px",
+          marginBottom: "-16px",
+          letterSpacing: "0.5px",
+        }}
       >
-        <ChevronLeftIcon size={24} />
-      </button>
+        {phrase}
+      </h2>
+      <div
+        className="featured-carousel"
+        aria-label="Jogos em destaque"
+        style={{
+          justifyContent: "center",
+          gap: "24px",
+          width: "100%",
+          maxWidth: "1050px",
+        }}
+      >
+        <button
+          type="button"
+          className="featured-carousel__nav featured-carousel__nav--left"
+          onClick={() => slideTo(-1)}
+          aria-label="Anterior"
+        >
+          <ChevronLeftIcon size={24} />
+        </button>
 
-      <div className="featured-carousel__track">
-        {displayedSlots.map(({ game, slot }) => (
-          <button
-            key={`${slot}-${game.objectId}`}
-            type="button"
-            className={`featured-carousel__slide featured-carousel__slide--${slot}`}
-            onClick={() => navigate(buildGameDetailsPath(game))}
-            aria-label={game.title}
-          >
-            <SlideImage game={game} />
-            <div className="featured-carousel__overlay" />
-            <div className="featured-carousel__info">
-              <h3 className="featured-carousel__title">{game.title}</h3>
-              {game.genres?.length > 0 && (
-                <div className="featured-carousel__genres">
-                  {game.genres.slice(0, 3).join(", ")}
-                </div>
-              )}
-              {game.downloadSources?.length > 0 && (
-                <div className="featured-carousel__sources">
-                  {game.downloadSources.slice(0, 2).map((s) => (
-                    <span key={s} className="featured-carousel__source-badge">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </button>
-        ))}
+        <div
+          className="featured-carousel__track"
+          style={{
+            position: "relative",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: "320px",
+              maxWidth: "30vw",
+              aspectRatio: "3.5 / 5",
+              pointerEvents: "none",
+              opacity: 0,
+            }}
+          />
+
+          <AnimatePresence initial={false}>
+            {[-2, -1, 0, 1, 2].map((relativeOffset) => {
+              const absoluteIndex = active + relativeOffset;
+              // Calcula de forma cíclica o indice no Game Array
+              const gameIndex =
+                ((absoluteIndex % games.length) + games.length) % games.length;
+              const game = games[gameIndex];
+
+              const isMain = relativeOffset === 0;
+
+              return (
+                <motion.button
+                  key={absoluteIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    x: `calc(-50% + ${relativeOffset * 95}%)`,
+                    scale: isMain ? 1 : 0.85,
+                    opacity: Math.abs(relativeOffset) <= 1 ? 1 : 0,
+                    zIndex: 10 - Math.abs(relativeOffset),
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.45, ease: [0.25, 1, 0.5, 1] }}
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: 0,
+                    width: "320px",
+                    maxWidth: "30vw",
+                    aspectRatio: "3.5 / 5",
+                    pointerEvents:
+                      Math.abs(relativeOffset) <= 1 ? "auto" : "none",
+                  }}
+                  className={`featured-carousel__slide featured-carousel__slide--${isMain ? "main" : relativeOffset < 0 ? "prev" : "next"}`}
+                  onClick={() => navigate(buildGameDetailsPath(game))}
+                  aria-label={game.title}
+                >
+                  <SlideImage game={game} />
+                </motion.button>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+
+        <button
+          type="button"
+          className="featured-carousel__nav featured-carousel__nav--right"
+          onClick={() => slideTo(1)}
+          aria-label="Próximo"
+        >
+          <ChevronRightIcon size={24} />
+        </button>
       </div>
 
-      <button
-        type="button"
-        className="featured-carousel__nav featured-carousel__nav--right"
-        onClick={() => slideTo(active + 1)}
-        aria-label="Próximo"
-      >
-        <ChevronRightIcon size={24} />
-      </button>
-
-      <div className="featured-carousel__dots">
-        {games.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`featured-carousel__dot${i === active ? " featured-carousel__dot--active" : ""}`}
-            onClick={() => slideTo(i)}
-            aria-label={`Slide ${i + 1}`}
-          />
-        ))}
+      <div className="featured-carousel__dots" style={{ marginTop: "16px" }}>
+        {games.map((_, i) => {
+          const currentMod =
+            ((active % games.length) + games.length) % games.length;
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`featured-carousel__dot${i === currentMod ? " featured-carousel__dot--active" : ""}`}
+              onClick={() => jumpToDot(i)}
+              aria-label={`Slide ${i + 1}`}
+            />
+          );
+        })}
       </div>
     </div>
   );

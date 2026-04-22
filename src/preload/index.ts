@@ -25,6 +25,7 @@ import type {
 } from "@types";
 import type { AuthPage } from "@shared";
 import type { AxiosProgressEvent } from "axios";
+import type { SupabaseConfig, LibraryStorageMode } from "@types";
 
 contextBridge.exposeInMainWorld("electron", {
   /* Torrenting */
@@ -238,6 +239,9 @@ contextBridge.exposeInMainWorld("electron", {
     collectionIds: string[]
   ) =>
     ipcRenderer.invoke("assignGameToCollection", shop, objectId, collectionIds),
+  syncHomeGroups: (groups: any[]) =>
+    ipcRenderer.invoke("syncHomeGroups", groups),
+  fetchHomeGroups: () => ipcRenderer.invoke("fetchHomeGroups"),
   clearNewDownloadOptions: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("clearNewDownloadOptions", shop, objectId),
   toggleGamePin: (shop: GameShop, objectId: string, pinned: boolean) =>
@@ -828,4 +832,17 @@ contextBridge.exposeInMainWorld("electron", {
     iterator: (sublevelName: string) =>
       ipcRenderer.invoke("leveldbIterator", sublevelName),
   },
+
+  /* Supabase Library Integration */
+  connectSupabase: (config: SupabaseConfig) =>
+    ipcRenderer.invoke("connectSupabase", config) as Promise<
+      { ok: true } | { ok: false; error: string }
+    >,
+  disconnectSupabase: () => ipcRenderer.invoke("disconnectSupabase"),
+  checkSupabaseConnection: (config: SupabaseConfig) =>
+    ipcRenderer.invoke("checkSupabaseConnection", config) as Promise<
+      { ok: true } | { ok: false; error: string }
+    >,
+  setLibraryStorageMode: (mode: LibraryStorageMode) =>
+    ipcRenderer.invoke("setLibraryStorageMode", mode),
 });

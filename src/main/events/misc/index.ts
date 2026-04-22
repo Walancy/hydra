@@ -19,3 +19,4 @@ import "./save-temp-file";
 import "./show-item-in-folder";
 import "./show-open-dialog";
 import "./show-virtual-keyboard";
+import "./supabase-library";

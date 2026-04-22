@@ -25,6 +25,7 @@ import {
   buildGameDetailsPath,
   playBeep,
   getSteamLanguage,
+  globalImageCache,
 } from "@renderer/helpers";
 import { CatalogueCategory } from "@shared";
 import cn from "classnames";
@@ -83,6 +84,7 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
 
   const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
   const [finalFailed, setFinalFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const steamGridCover = useSteamGridCover(
     game.objectId,
@@ -99,6 +101,22 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
   const activeSrc = primaryFailed
     ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? null)
     : primarySrc;
+
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    activeSrc ? globalImageCache.has(activeSrc) : false
+  );
+
+  useEffect(() => {
+    setImageLoaded(activeSrc ? globalImageCache.has(activeSrc) : false);
+    if (
+      activeSrc &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(activeSrc);
+      setImageLoaded(true);
+    }
+  }, [activeSrc]);
 
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -119,17 +137,37 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
       >
         {game.title}
       </span>
+      {!imageLoaded && (
+        <Skeleton
+          className="home__card-skeleton"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 2,
+            height: "100%",
+            borderRadius: "inherit",
+          }}
+        />
+      )}
       {!finalFailed && activeSrc && (
         <img
+          ref={imgRef}
+          key={activeSrc}
           src={activeSrc}
           alt={game.title}
           className="home__card-image"
           loading="lazy"
           draggable={false}
+          onLoad={() => {
+            globalImageCache.add(activeSrc);
+            setImageLoaded(true);
+          }}
           style={{
             position: "relative",
             zIndex: 1,
             backgroundColor: "inherit",
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 0.3s ease",
           }}
           onError={() => {
             if (!primaryFailed) {

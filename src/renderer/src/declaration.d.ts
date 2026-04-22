@@ -38,6 +38,8 @@ import type {
   ProtonVersion,
   CreateSteamShortcutOptions,
   TorrentFilesResponse,
+  SupabaseConfig,
+  LibraryStorageMode,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -185,10 +187,14 @@ declare global {
       objectId: string
     ) => Promise<void>;
     assignGameToCollection: (
-      shop: GameShop,
+      shop: import("./types").GameShop,
       objectId: string,
-      collectionIds: string[]
+      collectionId: string[]
     ) => Promise<void>;
+    syncHomeGroups: (
+      groups: any[]
+    ) => Promise<{ status: string; provider: string }>;
+    fetchHomeGroups: () => Promise<any[] | null>;
     clearNewDownloadOptions: (
       shop: GameShop,
       objectId: string
@@ -587,6 +593,16 @@ declare global {
       values: (sublevelName: string) => Promise<unknown[]>;
       iterator: (sublevelName: string) => Promise<[string, unknown][]>;
     };
+
+    /* Supabase Library Integration */
+    connectSupabase: (
+      config: SupabaseConfig
+    ) => Promise<{ ok: true } | { ok: false; error: string }>;
+    disconnectSupabase: () => Promise<void>;
+    checkSupabaseConnection: (
+      config: SupabaseConfig
+    ) => Promise<{ ok: true } | { ok: false; error: string }>;
+    setLibraryStorageMode: (mode: LibraryStorageMode) => Promise<void>;
   }
 
   interface Window {

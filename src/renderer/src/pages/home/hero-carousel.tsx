@@ -3,8 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import cn from "classnames";
 import { ShopAssets, ShopDetailsWithAssets } from "@types";
-import { buildGameDetailsPath, getSteamLanguage } from "@renderer/helpers";
+import {
+  buildGameDetailsPath,
+  getSteamLanguage,
+  globalImageCache,
+} from "@renderer/helpers";
 import { Button } from "@renderer/components";
+import Skeleton from "react-loading-skeleton";
 import "./hero-carousel.scss";
 
 interface HeroCarouselProps {
@@ -82,7 +87,30 @@ function CarouselSlide({
     detailsCache.get(game.objectId) ?? null
   );
   const [logoFailed, setLogoFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   const fetchedRef = useRef<string>("");
+
+  const bgImage =
+    game.libraryHeroImageUrl ||
+    (game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_hero.jpg`
+      : game.libraryImageUrl);
+
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    bgImage ? globalImageCache.has(bgImage) : false
+  );
+
+  useEffect(() => {
+    setImageLoaded(bgImage ? globalImageCache.has(bgImage) : false);
+    if (
+      bgImage &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(bgImage);
+      setImageLoaded(true);
+    }
+  }, [bgImage]);
 
   useEffect(() => {
     setLogoFailed(false);
@@ -113,12 +141,6 @@ function CarouselSlide({
     : "";
   const meta = [publisher, date].filter(Boolean).join(" - ");
 
-  const bgImage =
-    game.libraryHeroImageUrl ||
-    (game.shop === "steam"
-      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_hero.jpg`
-      : game.libraryImageUrl);
-
   const logoImage =
     !logoFailed &&
     (game.logoImageUrl ||
@@ -132,15 +154,40 @@ function CarouselSlide({
         "hero-carousel__slide--active": isActive,
       })}
     >
+      {!imageLoaded && (
+        <Skeleton
+          className="hero-carousel__image-skeleton"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        />
+      )}
       <img
+        ref={imgRef}
+        key={bgImage}
         src={bgImage ?? undefined}
         alt={game.title}
         className="hero-carousel__image"
         loading="lazy"
+        draggable={false}
+        onLoad={() => {
+          if (bgImage) globalImageCache.add(bgImage);
+          setImageLoaded(true);
+        }}
+        style={{
+          opacity: imageLoaded ? 1 : 0,
+          transition: "opacity 0.3s ease",
+        }}
         onError={(e) => {
           const img = e.currentTarget;
           if (game.libraryImageUrl && img.src !== game.libraryImageUrl) {
             img.src = game.libraryImageUrl;
+          } else {
+            setImageLoaded(true);
           }
         }}
       />

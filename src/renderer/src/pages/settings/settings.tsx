@@ -11,6 +11,7 @@ import {
   DownloadIcon,
   GearIcon,
   PlayIcon,
+  PersonIcon,
 } from "@primer/octicons-react";
 import { Wrench } from "lucide-react";
 import { SettingsContextGeneral } from "./settings-context-general";
@@ -20,7 +21,7 @@ import { SettingsContextContentGameplay } from "./settings-context-content-gamep
 import { SettingsContextIntegrations } from "./settings-context-integrations";
 import { SettingsContextCompatibility } from "./settings-context-compatibility";
 import { SettingsAppearance } from "./appearance/settings-appearance";
-import { PaintbrushIcon, PersonIcon } from "@primer/octicons-react";
+import { PaintbrushIcon } from "@primer/octicons-react";
 import { SettingsAccount } from "./settings-account";
 
 export default function Settings() {
@@ -61,14 +62,14 @@ export default function Settings() {
         icon: <CloudIcon size={16} />,
       },
       {
+        id: "account_privacy" as const,
+        label: t("account_privacy", { defaultValue: "Account & Privacy" }),
+        icon: <PersonIcon size={16} />,
+      },
+      {
         id: "compatibility" as const,
         label: t("compatibility", { defaultValue: "Compatibility" }),
         icon: <Wrench size={16} />,
-      },
-      {
-        id: "account_privacy" as const,
-        label: t("account_privacy", { defaultValue: "Account & privacy" }),
-        icon: <PersonIcon size={16} />,
       },
     ],
     [t]
@@ -108,12 +109,12 @@ export default function Settings() {
               return <SettingsContextIntegrations />;
             }
 
-            if (selectedCategoryId === "compatibility") {
-              return <SettingsContextCompatibility />;
-            }
-
             if (selectedCategoryId === "account_privacy") {
               return <SettingsAccount />;
+            }
+
+            if (selectedCategoryId === "compatibility") {
+              return <SettingsContextCompatibility />;
             }
 
             return null;

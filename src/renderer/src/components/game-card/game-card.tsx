@@ -8,9 +8,12 @@ import "./game-card.scss";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../badge/badge";
 import { StarRating } from "../star-rating/star-rating";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useFormat } from "@renderer/hooks";
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
+import Skeleton from "react-loading-skeleton";
+import { globalImageCache } from "@renderer/helpers";
+import { useRef } from "react";
 
 export interface GameCardProps
   extends React.DetailedHTMLProps<
@@ -78,6 +81,25 @@ export function GameCard({ game, ...props }: GameCardProps) {
     ? (steamGridUrl ?? customCover ?? customLibrary ?? customIcon ?? null)
     : primarySrc;
 
+  const resolvedSrc = activeSrc || game.libraryImageUrl || undefined;
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    resolvedSrc ? globalImageCache.has(resolvedSrc) : false
+  );
+
+  useEffect(() => {
+    setImageLoaded(resolvedSrc ? globalImageCache.has(resolvedSrc) : false);
+    if (
+      resolvedSrc &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(resolvedSrc);
+      setImageLoaded(true);
+    }
+  }, [resolvedSrc]);
+
   const handleHover = useCallback(() => {
     if (!stats) {
       window.electron.getGameStats(game.objectId, game.shop).then((stats) => {
@@ -96,13 +118,37 @@ export function GameCard({ game, ...props }: GameCardProps) {
       onMouseEnter={handleHover}
       onFocus={handleHover}
     >
-      <div className="game-card__backdrop">
+      <div className="game-card__backdrop" style={{ position: "relative" }}>
+        {!imageLoaded && (
+          <Skeleton
+            className="game-card__cover"
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              borderRadius: "inherit",
+              height: "100%",
+            }}
+          />
+        )}
         {!finalFailed && activeSrc ? (
           <img
+            ref={imgRef}
+            key={activeSrc}
             src={activeSrc}
             alt={game.title}
             className="game-card__cover"
             loading="lazy"
+            onLoad={() => {
+              if (activeSrc) globalImageCache.add(activeSrc);
+              setImageLoaded(true);
+            }}
+            style={{
+              position: "relative",
+              zIndex: 1,
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
             onError={() => {
               if (!primaryFailed) {
                 setPrimaryFailed(true);
@@ -113,10 +159,23 @@ export function GameCard({ game, ...props }: GameCardProps) {
           />
         ) : (
           <img
+            ref={imgRef}
+            key={game.libraryImageUrl ?? "placeholder"}
             src={game.libraryImageUrl ?? undefined}
             alt={game.title}
             className="game-card__cover"
             loading="lazy"
+            onLoad={() => {
+              if (game.libraryImageUrl)
+                globalImageCache.add(game.libraryImageUrl);
+              setImageLoaded(true);
+            }}
+            style={{
+              position: "relative",
+              zIndex: 1,
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
           />
         )}
 

@@ -16,6 +16,8 @@ import SteamIcon from "@renderer/assets/launcher-icons/steam.svg?react";
 import EpicGamesIcon from "@renderer/assets/launcher-icons/epic-games.svg?react";
 import "./library-game-card.scss";
 import { logger } from "@renderer/logger";
+import Skeleton from "react-loading-skeleton";
+import { globalImageCache } from "@renderer/helpers";
 
 interface LibraryGameCardProps {
   game: LibraryGame;
@@ -127,8 +129,12 @@ export const LibraryGameCard = memo(function LibraryGameCard({
 
   const [fallbackIndex, setFallbackIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const activeImageSource = resolveImageSource(sources[fallbackIndex]);
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    activeImageSource ? globalImageCache.has(activeImageSource) : false
+  );
 
   const handleImageError = () => {
     logger.warn(`Image failed to load for ${game.title}`, {
@@ -146,6 +152,20 @@ export const LibraryGameCard = memo(function LibraryGameCard({
     setFallbackIndex(0);
     setImageError(false);
   }, [game.id]);
+
+  useEffect(() => {
+    setImageLoaded(
+      activeImageSource ? globalImageCache.has(activeImageSource) : false
+    );
+    if (
+      activeImageSource &&
+      imgRef.current?.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
+      globalImageCache.add(activeImageSource);
+      setImageLoaded(true);
+    }
+  }, [activeImageSource]);
 
   const achievementPercent =
     (game.achievementCount ?? 0) > 0
@@ -172,19 +192,43 @@ export const LibraryGameCard = memo(function LibraryGameCard({
       onContextMenu={!selectOnClick ? handleContextMenuClick : undefined}
     >
       {/* Image */}
-      {imageError || !activeImageSource ? (
-        <div className="library-game-card__cover-placeholder">
-          <ImageIcon size={32} />
-        </div>
-      ) : (
-        <img
-          src={activeImageSource}
-          alt={game.title}
-          className="library-game-card__game-image"
-          loading="lazy"
-          onError={handleImageError}
-        />
-      )}
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        {!imageLoaded && !imageError && activeImageSource && (
+          <Skeleton
+            className="library-game-card__game-image"
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              borderRadius: "inherit",
+              height: "100%",
+            }}
+          />
+        )}
+        {imageError || !activeImageSource ? (
+          <div className="library-game-card__cover-placeholder">
+            <ImageIcon size={32} />
+          </div>
+        ) : (
+          <img
+            ref={imgRef}
+            key={activeImageSource}
+            src={activeImageSource}
+            alt={game.title}
+            className="library-game-card__game-image"
+            loading="lazy"
+            onLoad={() => {
+              if (activeImageSource) globalImageCache.add(activeImageSource);
+              setImageLoaded(true);
+            }}
+            onError={handleImageError}
+            style={{
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
+          />
+        )}
+      </div>
 
       {/* Gradient overlay with info at bottom */}
       <div className="library-game-card__overlay">

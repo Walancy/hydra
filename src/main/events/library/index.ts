@@ -5,6 +5,7 @@ import "./import-epic-games";
 import "./add-game-to-favorites";
 import "./add-game-to-library";
 import "./assign-game-to-collection";
+import "./sync-home-groups";
 import "./change-game-playtime";
 import "./cleanup-unused-assets";
 import "./clear-new-download-options";
