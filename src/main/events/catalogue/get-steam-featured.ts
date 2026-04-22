@@ -21,7 +21,7 @@ const getSteamFeaturedEvent = async (
 
         const gameId = game.id || game.appid || game.item_id;
         if (!gameId) continue;
-        
+
         const gameIdStr = gameId.toString();
 
         if (!games.find((g) => g.objectId === gameIdStr)) {

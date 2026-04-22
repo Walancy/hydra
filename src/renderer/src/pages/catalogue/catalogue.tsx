@@ -537,17 +537,23 @@ export default function Catalogue() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [allGamesTitle, setAllGamesTitle] = useState<string | null>(null);
-  
-  const [steamFeaturedGames, setSteamFeaturedGames] = useState<ShopAssets[]>([]);
+
+  const [steamFeaturedGames, setSteamFeaturedGames] = useState<ShopAssets[]>(
+    []
+  );
   useEffect(() => {
     window.electron.getSteamFeatured(getSteamLanguage(language)).then((sg) => {
       setSteamFeaturedGames(sg.slice(0, 18)); // Allow up to 18 items
     });
   }, [language]);
 
-  const featuredGames = useMemo(() => 
-    steamFeaturedGames.length > 0 ? (steamFeaturedGames as unknown as CatalogueSearchResult[]) : results.slice(0, 18)
-  , [results, steamFeaturedGames]);
+  const featuredGames = useMemo(
+    () =>
+      steamFeaturedGames.length > 0
+        ? (steamFeaturedGames as unknown as CatalogueSearchResult[])
+        : results.slice(0, 18),
+    [results, steamFeaturedGames]
+  );
 
   return (
     <div className="catalogue" ref={cataloguePageRef}>

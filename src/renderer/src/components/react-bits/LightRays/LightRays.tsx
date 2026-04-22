@@ -340,11 +340,7 @@ void main() {
         cleanupFunctionRef.current = null;
       }
     };
-  }, [
-    isVisible,
-    raysOrigin,
-    followMouse,
-  ]);
+  }, [isVisible, raysOrigin, followMouse]);
 
   useEffect(() => {
     if (!uniformsRef.current || !containerRef.current || !rendererRef.current)

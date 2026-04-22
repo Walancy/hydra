@@ -21,7 +21,11 @@ import { Button } from "@renderer/components";
 import type { DownloadSource, LibraryGame, ShopAssets } from "@types";
 import { useLibrary } from "@renderer/hooks/use-library";
 
-import { buildGameDetailsPath, playBeep, getSteamLanguage } from "@renderer/helpers";
+import {
+  buildGameDetailsPath,
+  playBeep,
+  getSteamLanguage,
+} from "@renderer/helpers";
 import { CatalogueCategory } from "@shared";
 import cn from "classnames";
 import { GameInfo } from "./game-info";
