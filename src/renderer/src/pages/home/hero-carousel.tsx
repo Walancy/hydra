@@ -8,6 +8,7 @@ import {
   getSteamLanguage,
   globalImageCache,
 } from "@renderer/helpers";
+import { useSteamGridHeroAndLogo } from "@renderer/hooks/use-steamgrid-cover";
 import { Button } from "@renderer/components";
 import Skeleton from "react-loading-skeleton";
 import "./hero-carousel.scss";
@@ -86,15 +87,37 @@ function CarouselSlide({
   const [details, setDetails] = useState<ShopDetailsWithAssets | null>(
     detailsCache.get(game.objectId) ?? null
   );
-  const [logoFailed, setLogoFailed] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const fetchedRef = useRef<string>("");
 
-  const bgImage =
+  const initialBgImage =
     game.libraryHeroImageUrl ||
     (game.shop === "steam"
       ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_hero.jpg`
       : game.libraryImageUrl);
+
+  const initialLogoImage =
+    game.logoImageUrl ||
+    (game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/logo.png`
+      : undefined);
+
+  const [bgPrimaryFailed, setBgPrimaryFailed] = useState(!initialBgImage);
+  const [logoPrimaryFailed, setLogoPrimaryFailed] = useState(!initialLogoImage);
+  const [bgFinalFailed, setBgFinalFailed] = useState(false);
+
+  const steamGridArt = useSteamGridHeroAndLogo(
+    game.objectId,
+    game.title,
+    bgPrimaryFailed || logoPrimaryFailed
+  );
+
+  const bgImage = bgPrimaryFailed
+    ? (steamGridArt.heroUrl ?? game.libraryImageUrl ?? null)
+    : initialBgImage;
+
+  const logoImage = logoPrimaryFailed ? steamGridArt.logoUrl : initialLogoImage;
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const fetchedRef = useRef<string>("");
 
   const [imageLoaded, setImageLoaded] = useState(() =>
     bgImage ? globalImageCache.has(bgImage) : false
@@ -113,7 +136,6 @@ function CarouselSlide({
   }, [bgImage]);
 
   useEffect(() => {
-    setLogoFailed(false);
     const key = game.objectId;
     if (fetchedRef.current === key) return;
     fetchedRef.current = key;
@@ -141,20 +163,13 @@ function CarouselSlide({
     : "";
   const meta = [publisher, date].filter(Boolean).join(" - ");
 
-  const logoImage =
-    !logoFailed &&
-    (game.logoImageUrl ||
-      (game.shop === "steam"
-        ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/logo.png`
-        : undefined));
-
   return (
     <div
       className={cn("hero-carousel__slide", {
         "hero-carousel__slide--active": isActive,
       })}
     >
-      {!imageLoaded && (
+      {!imageLoaded && !bgFinalFailed && (
         <Skeleton
           className="hero-carousel__image-skeleton"
           style={{
@@ -166,41 +181,51 @@ function CarouselSlide({
           }}
         />
       )}
-      <img
-        ref={imgRef}
-        key={bgImage}
-        src={bgImage ?? undefined}
-        alt={game.title}
-        className="hero-carousel__image"
-        loading="lazy"
-        draggable={false}
-        onLoad={() => {
-          if (bgImage) globalImageCache.add(bgImage);
-          setImageLoaded(true);
-        }}
-        style={{
-          opacity: imageLoaded ? 1 : 0,
-          transition: "opacity 0.3s ease",
-        }}
-        onError={(e) => {
-          const img = e.currentTarget;
-          if (game.libraryImageUrl && img.src !== game.libraryImageUrl) {
-            img.src = game.libraryImageUrl;
-          } else {
+      {!bgFinalFailed && bgImage && (
+        <img
+          ref={imgRef}
+          key={bgImage}
+          src={bgImage ?? undefined}
+          alt={game.title}
+          className="hero-carousel__image"
+          loading="lazy"
+          draggable={false}
+          onLoad={() => {
+            if (bgImage) globalImageCache.add(bgImage);
             setImageLoaded(true);
-          }
-        }}
-      />
+          }}
+          style={{
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 0.3s ease",
+          }}
+          onError={(e) => {
+            if (!bgPrimaryFailed) {
+              setBgPrimaryFailed(true);
+            } else {
+              setBgFinalFailed(true);
+              setImageLoaded(true);
+            }
+          }}
+        />
+      )}
 
       <div className="hero-carousel__overlay">
         <div className="hero-carousel__content">
-          {logoImage ? (
+          {logoImage && !logoPrimaryFailed ? (
             <img
               src={logoImage}
               alt={game.title}
               className="hero-carousel__logo"
               loading="lazy"
-              onError={() => setLogoFailed(true)}
+              onError={() => setLogoPrimaryFailed(true)}
+            />
+          ) : steamGridArt.logoUrl && logoPrimaryFailed ? (
+            <img
+              src={steamGridArt.logoUrl}
+              alt={game.title}
+              className="hero-carousel__logo"
+              loading="lazy"
+              onError={() => {}} // Se a da Grid também falhar, mantemos o h3 ali logo abaixo
             />
           ) : (
             <h3 className="hero-carousel__title">{game.title}</h3>
