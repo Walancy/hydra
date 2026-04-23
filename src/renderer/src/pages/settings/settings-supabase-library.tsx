@@ -117,9 +117,12 @@ export function SettingsSupabaseLibrary() {
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   game_ids TEXT[],
+  is_deleted BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE hydra_home_groups ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
 
 ALTER TABLE hydra_home_groups ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public full access" ON hydra_home_groups

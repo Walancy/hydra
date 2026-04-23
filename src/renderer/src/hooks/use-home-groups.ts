@@ -5,6 +5,7 @@ export interface HomeGroup {
   id: string;
   name: string;
   gameIds: string[];
+  is_deleted?: boolean;
 }
 
 export function useHomeGroups() {
@@ -154,13 +155,20 @@ export function useHomeGroups() {
 
   const deleteGroup = useCallback(
     (groupId: string) => {
-      saveGroups(groups.filter((g) => g.id !== groupId));
+      saveGroups(
+        groups.map((g) => {
+          if (g.id === groupId) {
+            return { ...g, is_deleted: true };
+          }
+          return g;
+        })
+      );
     },
     [groups, saveGroups]
   );
 
   return {
-    groups,
+    groups: groups.filter((g) => !g.is_deleted),
     createGroup,
     addGameToGroup,
     removeGameFromGroup,

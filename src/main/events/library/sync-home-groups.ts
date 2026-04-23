@@ -10,6 +10,7 @@ interface HomeGroup {
   id: string;
   name: string;
   gameIds: string[];
+  is_deleted?: boolean;
 }
 
 const syncHomeGroups = async (
@@ -27,12 +28,13 @@ const syncHomeGroups = async (
       id: g.id,
       name: g.name,
       game_ids: g.gameIds,
+      is_deleted: g.is_deleted ?? false,
     }));
 
     if (payloads.length > 0) {
       const { error } = await supabaseFetch(
         activeConfig,
-        "/hydra_home_groups",
+        "/hydra_home_groups?on_conflict=id",
         {
           method: "POST",
           headers: {
@@ -62,13 +64,14 @@ const fetchHomeGroups = async (
 
   if (prefs?.libraryStorageMode === "supabase" && activeConfig) {
     const { data, error } = await supabaseFetch<
-      { id: string; name: string; game_ids: string[] }[]
+      { id: string; name: string; game_ids: string[]; is_deleted?: boolean }[]
     >(activeConfig, "/hydra_home_groups", { method: "GET" });
     if (!error && Array.isArray(data)) {
       return data.map((g) => ({
         id: g.id,
         name: g.name,
         gameIds: g.game_ids || [],
+        is_deleted: g.is_deleted ?? false,
       }));
     }
   }
