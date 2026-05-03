@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
+import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,7 +28,6 @@ const RANDOM_PHRASES = [
   "Relaxe e Jogue",
 ];
 
-import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 
 const resolveImageSource = (
   imageUrl: string | null | undefined
@@ -185,7 +185,7 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
         <img
           ref={imgRef}
           key={activeSrc}
-          src={activeSrc}
+          src={activeSrc || undefined}
           alt={game.title}
           className="featured-carousel__img"
           loading="lazy"
