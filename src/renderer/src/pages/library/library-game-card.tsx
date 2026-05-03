@@ -1,6 +1,6 @@
 import { LibraryGame } from "@types";
 import { useGameCard } from "@renderer/hooks";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState, useRef } from "react";
 import {
   ClockIcon,
   AlertFillIcon,
@@ -157,13 +157,13 @@ export const LibraryGameCard = memo(function LibraryGameCard({
     setImageLoaded(
       activeImageSource ? globalImageCache.has(activeImageSource) : false
     );
-    if (
-      activeImageSource &&
-      imgRef.current?.complete &&
-      imgRef.current.naturalWidth > 0
-    ) {
-      globalImageCache.add(activeImageSource);
-      setImageLoaded(true);
+    if (activeImageSource && imgRef.current?.complete) {
+      if (imgRef.current.naturalWidth > 0) {
+        globalImageCache.add(activeImageSource);
+        setImageLoaded(true);
+      } else {
+        handleImageError();
+      }
     }
   }, [activeImageSource]);
 

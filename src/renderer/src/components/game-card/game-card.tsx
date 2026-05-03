@@ -1,4 +1,4 @@
-import { DownloadIcon, PeopleIcon } from "@primer/octicons-react";
+import { DownloadIcon, PeopleIcon, QuestionIcon } from "@primer/octicons-react";
 import type { GameStats, ShopAssets } from "@types";
 
 import SteamLogo from "@renderer/assets/steam-logo.svg?react";
@@ -8,7 +8,7 @@ import "./game-card.scss";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../badge/badge";
 import { StarRating } from "../star-rating/star-rating";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useFormat } from "@renderer/hooks";
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 import Skeleton from "react-loading-skeleton";
@@ -62,43 +62,86 @@ export function GameCard({ game, ...props }: GameCardProps) {
       ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
       : (customCover ?? customLibrary ?? customIcon ?? null);
 
-  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
-
+  const [fallbackIndex, setFallbackIndex] = useState(0);
   const [finalFailed, setFinalFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const steamGridUrl = useSteamGridCover(
     game.objectId,
     game.title,
-    primaryFailed
+    fallbackIndex > 0
   );
 
-  const primarySrc =
+  const steamHeader =
     game.shop === "steam"
-      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-      : (customCover ?? customLibrary ?? customIcon ?? null);
+      ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/header.jpg`
+      : null;
 
-  const activeSrc = primaryFailed
-    ? (steamGridUrl ?? customCover ?? customLibrary ?? customIcon ?? null)
-    : primarySrc;
+  const fallbackSources = useMemo(() => {
+    const sources: (string | null | undefined)[] = [initialPrimarySrc];
 
-  const resolvedSrc = activeSrc || game.libraryImageUrl || undefined;
+    if (steamGridUrl) sources.push(steamGridUrl);
 
-  const imgRef = useRef<HTMLImageElement>(null);
+    sources.push(customLibrary);
+    sources.push(customCover);
+    sources.push(game.libraryImageUrl);
+    sources.push(game.coverImageUrl);
+
+    if (game.shop === "steam") {
+      sources.push(
+        `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900.jpg`
+      );
+      sources.push(
+        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/capsule_616x353.jpg`
+      );
+      sources.push(steamHeader);
+    }
+    sources.push(customIcon);
+
+    return Array.from(new Set(sources.filter(Boolean))) as string[];
+  }, [
+    initialPrimarySrc,
+    steamGridUrl,
+    customLibrary,
+    customCover,
+    game,
+    steamHeader,
+    customIcon,
+  ]);
+
+  const activeSrc =
+    fallbackIndex === 0
+      ? initialPrimarySrc
+      : fallbackIndex > 0 && steamGridUrl === undefined
+        ? undefined
+        : fallbackSources[fallbackIndex];
+
+  const resolvedSrc = activeSrc || undefined;
+
   const [imageLoaded, setImageLoaded] = useState(() =>
     resolvedSrc ? globalImageCache.has(resolvedSrc) : false
   );
 
+  const handleImageError = useCallback(() => {
+    if (fallbackIndex < fallbackSources.length - 1) {
+      setFallbackIndex((prev) => prev + 1);
+    } else {
+      setFinalFailed(true);
+    }
+  }, [fallbackIndex, fallbackSources.length]);
+
   useEffect(() => {
     setImageLoaded(resolvedSrc ? globalImageCache.has(resolvedSrc) : false);
-    if (
-      resolvedSrc &&
-      imgRef.current?.complete &&
-      imgRef.current.naturalWidth > 0
-    ) {
-      globalImageCache.add(resolvedSrc);
-      setImageLoaded(true);
+
+    if (resolvedSrc && imgRef.current?.complete) {
+      if (imgRef.current.naturalWidth > 1) {
+        globalImageCache.add(resolvedSrc);
+        setImageLoaded(true);
+      } else {
+        handleImageError();
+      }
     }
-  }, [resolvedSrc]);
+  }, [resolvedSrc, handleImageError]);
 
   const handleHover = useCallback(() => {
     if (!stats) {
@@ -119,64 +162,62 @@ export function GameCard({ game, ...props }: GameCardProps) {
       onFocus={handleHover}
     >
       <div className="game-card__backdrop" style={{ position: "relative" }}>
-        {!imageLoaded && (
-          <Skeleton
-            className="game-card__cover"
+        {finalFailed ||
+        (!resolvedSrc &&
+          steamGridUrl !== undefined &&
+          fallbackIndex >= fallbackSources.length) ? (
+          <div
             style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 2,
-              borderRadius: "inherit",
+              width: "100%",
               height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#1c1c1c",
             }}
-          />
-        )}
-        {!finalFailed && activeSrc ? (
-          <img
-            ref={imgRef}
-            key={activeSrc}
-            src={activeSrc}
-            alt={game.title}
-            className="game-card__cover"
-            loading="lazy"
-            onLoad={() => {
-              if (activeSrc) globalImageCache.add(activeSrc);
-              setImageLoaded(true);
-            }}
-            style={{
-              position: "relative",
-              zIndex: 1,
-              opacity: imageLoaded ? 1 : 0,
-              transition: "opacity 0.3s ease",
-            }}
-            onError={() => {
-              if (!primaryFailed) {
-                setPrimaryFailed(true);
-              } else {
-                setFinalFailed(true);
-              }
-            }}
-          />
+          >
+            <QuestionIcon size={40} fill="#444" />
+          </div>
         ) : (
-          <img
-            ref={imgRef}
-            key={game.libraryImageUrl ?? "placeholder"}
-            src={game.libraryImageUrl ?? undefined}
-            alt={game.title}
-            className="game-card__cover"
-            loading="lazy"
-            onLoad={() => {
-              if (game.libraryImageUrl)
-                globalImageCache.add(game.libraryImageUrl);
-              setImageLoaded(true);
-            }}
-            style={{
-              position: "relative",
-              zIndex: 1,
-              opacity: imageLoaded ? 1 : 0,
-              transition: "opacity 0.3s ease",
-            }}
-          />
+          <>
+            {!imageLoaded && (
+              <Skeleton
+                className="game-card__cover"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  zIndex: 2,
+                  borderRadius: "inherit",
+                  height: "100%",
+                }}
+              />
+            )}
+            {resolvedSrc !== undefined && (
+              <img
+                ref={imgRef}
+                key={resolvedSrc}
+                src={resolvedSrc}
+                alt={game.title}
+                className="game-card__cover"
+                loading="lazy"
+                onLoad={(e) => {
+                  if (e.currentTarget.naturalWidth <= 1) {
+                    handleImageError();
+                  } else {
+                    if (resolvedSrc) globalImageCache.add(resolvedSrc);
+                    setImageLoaded(true);
+                  }
+                }}
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  opacity: imageLoaded ? 1 : 0,
+                  transition: "opacity 0.3s ease",
+                }}
+                onError={handleImageError}
+              />
+            )}
+          </>
         )}
 
         <div className="game-card__content">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,13 +18,13 @@ interface FeaturedCarouselProps {
 const SLIDE_INTERVAL = 10000;
 
 const RANDOM_PHRASES = [
-  "Melhores do Dia",
   "Especiais para Você",
   "Descubra sua Próxima Aventura",
-  "Destaques da Semana",
   "Escolhas Incríveis",
   "Os Mais Jogados",
-  "Coleção Especial",
+  "Populares Agora",
+  "Tendências da Comunidade",
+  "Relaxe e Jogue",
 ];
 
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
@@ -51,7 +51,6 @@ const resolveImageSource = (
 };
 
 function SlideImage({ game }: { game: CatalogueSearchResult }) {
-  // @ts-expect-error Game might have ShopAssets fields injected
   const customCover = resolveImageSource(game.coverImageUrl);
   const customLibrary = resolveImageSource(game.libraryImageUrl);
   // @ts-expect-error Game might have ShopAssets fields injected
@@ -60,43 +59,96 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
   const initialPrimarySrc =
     game.shop === "steam"
       ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-      : (customCover ?? customLibrary ?? customIcon ?? "");
+      : (customCover ?? customLibrary ?? customIcon ?? null);
 
-  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
+  const steamHeader =
+    game.shop === "steam"
+      ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/header.jpg`
+      : null;
+
+  const [fallbackIndex, setFallbackIndex] = useState(0);
   const [finalFailed, setFinalFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const steamGridCover = useSteamGridCover(
     game.objectId,
     game.title,
-    primaryFailed,
+    fallbackIndex > 0,
     "vertical"
   );
 
-  const activeSrc = primaryFailed
-    ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? "")
-    : initialPrimarySrc;
+  const fallbackSources = useMemo(() => {
+    const sources: (string | null | undefined)[] = [initialPrimarySrc];
+
+    if (steamGridCover) sources.push(steamGridCover);
+
+    sources.push(customLibrary);
+    sources.push(customCover);
+    sources.push((game as any).libraryImageUrl);
+    sources.push((game as any).coverImageUrl);
+
+    if (game.shop === "steam") {
+      sources.push(
+        `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/library_600x900.jpg`
+      );
+      sources.push(
+        `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/capsule_616x353.jpg`
+      );
+      sources.push(steamHeader);
+    }
+    sources.push(customIcon);
+
+    return Array.from(new Set(sources.filter(Boolean))) as string[];
+  }, [
+    initialPrimarySrc,
+    steamGridCover,
+    customLibrary,
+    customCover,
+    game,
+    steamHeader,
+    customIcon,
+  ]);
+
+  const activeSrc =
+    fallbackIndex === 0
+      ? initialPrimarySrc
+      : fallbackIndex > 0 && steamGridCover === undefined
+        ? undefined
+        : fallbackSources[fallbackIndex];
 
   const [imageLoaded, setImageLoaded] = useState(() =>
     activeSrc ? globalImageCache.has(activeSrc) : false
   );
 
+  const handleImageError = useCallback(() => {
+    if (fallbackIndex < fallbackSources.length - 1) {
+      setFallbackIndex((prev) => prev + 1);
+    } else {
+      setFinalFailed(true);
+    }
+  }, [fallbackIndex, fallbackSources.length]);
+
   useEffect(() => {
     setImageLoaded(activeSrc ? globalImageCache.has(activeSrc) : false);
 
     // Check if the image is already cached/complete without firing onLoad
-    if (
-      activeSrc &&
-      imgRef.current?.complete &&
-      imgRef.current.naturalWidth > 0
-    ) {
-      globalImageCache.add(activeSrc);
-      setImageLoaded(true);
+    if (activeSrc && imgRef.current?.complete) {
+      if (imgRef.current.naturalWidth > 1) {
+        globalImageCache.add(activeSrc);
+        setImageLoaded(true);
+      } else {
+        handleImageError();
+      }
     }
-  }, [activeSrc, steamGridCover]);
+  }, [activeSrc, handleImageError]);
 
   // Se não tem imagem possível e todas as opções falharam, exibe placeholder
-  if (finalFailed || (!activeSrc && primaryFailed && steamGridCover === null)) {
+  if (
+    finalFailed ||
+    (!activeSrc &&
+      steamGridCover !== undefined &&
+      fallbackIndex >= fallbackSources.length)
+  ) {
     return (
       <div
         style={{
@@ -115,14 +167,9 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
     );
   }
 
-  // Define if we should show skeleton. Treat undefined steamGridCover as still loading if primary failed.
-  const isStillLoadingFallback = primaryFailed && steamGridCover === undefined;
-  const shouldShowSkeleton =
-    !imageLoaded && (activeSrc !== "" || isStillLoadingFallback);
-
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {shouldShowSkeleton && (
+      {!imageLoaded && (
         <Skeleton
           className="featured-carousel__img-skeleton"
           style={{
@@ -134,7 +181,7 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
           }}
         />
       )}
-      {activeSrc && (
+      {activeSrc !== undefined && (
         <img
           ref={imgRef}
           key={activeSrc}
@@ -142,17 +189,15 @@ function SlideImage({ game }: { game: CatalogueSearchResult }) {
           alt={game.title}
           className="featured-carousel__img"
           loading="lazy"
-          onLoad={() => {
-            if (activeSrc) globalImageCache.add(activeSrc);
-            setImageLoaded(true);
-          }}
-          onError={() => {
-            if (!primaryFailed) {
-              setPrimaryFailed(true);
+          onLoad={(e) => {
+            if (e.currentTarget.naturalWidth <= 1) {
+              handleImageError();
             } else {
-              setFinalFailed(true);
+              if (activeSrc) globalImageCache.add(activeSrc);
+              setImageLoaded(true);
             }
           }}
+          onError={handleImageError}
           style={{
             display: "block",
             opacity: imageLoaded ? 1 : 0,
@@ -173,21 +218,12 @@ export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
     () => RANDOM_PHRASES[Math.floor(Math.random() * RANDOM_PHRASES.length)]
   );
   const navigate = useNavigate();
-  const isAnimatingRef = React.useRef(false);
-
   const slideTo = useCallback((offsetDir: number) => {
-    if (isAnimatingRef.current) return;
-    isAnimatingRef.current = true;
     setActive((prev) => prev + offsetDir);
-    setTimeout(() => {
-      isAnimatingRef.current = false;
-    }, 450);
   }, []);
 
   const jumpToDot = useCallback(
     (targetIndex: number) => {
-      if (isAnimatingRef.current) return;
-      isAnimatingRef.current = true;
       setActive((prev) => {
         const currentMod =
           ((prev % games.length) + games.length) % games.length;
@@ -196,9 +232,6 @@ export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
         if (diff < -games.length / 2) diff += games.length;
         return prev + diff;
       });
-      setTimeout(() => {
-        isAnimatingRef.current = false;
-      }, 450);
     },
     [games.length]
   );
@@ -222,18 +255,44 @@ export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
         gap: "0",
       }}
     >
-      <h2
+      <div
         style={{
-          fontSize: "24px",
-          fontWeight: "400",
-          color: "var(--foreground, rgba(255, 255, 255, 0.9))",
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          maxWidth: "1050px",
           marginTop: "16px",
           marginBottom: "-16px",
-          letterSpacing: "0.5px",
         }}
       >
-        {phrase}
-      </h2>
+        <div
+          style={{
+            flex: 1,
+            height: "1px",
+            background:
+              "linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15))",
+          }}
+        />
+        <h2
+          style={{
+            fontSize: "24px",
+            fontWeight: "400",
+            color: "var(--foreground, rgba(255, 255, 255, 0.9))",
+            letterSpacing: "0.5px",
+            margin: "0 24px",
+          }}
+        >
+          {phrase}
+        </h2>
+        <div
+          style={{
+            flex: 1,
+            height: "1px",
+            background:
+              "linear-gradient(to left, transparent, rgba(255, 255, 255, 0.15))",
+          }}
+        />
+      </div>
       <div
         className="featured-carousel"
         aria-label="Jogos em destaque"
@@ -294,7 +353,7 @@ export function FeaturedCarousel({ games }: Readonly<FeaturedCarouselProps>) {
                     zIndex: 10 - Math.abs(relativeOffset),
                   }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.45, ease: [0.25, 1, 0.5, 1] }}
+                  transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
                   style={{
                     position: "absolute",
                     left: "50%",

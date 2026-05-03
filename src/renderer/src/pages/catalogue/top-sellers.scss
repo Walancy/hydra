@@ -97,8 +97,8 @@
   }
 
   &__thumb {
-    width: 120px;
-    height: 60px;
+    width: 124px;
+    height: 58px; // ~2.14 aspect ratio (similar to 460x215 header)
     border-radius: 4px;
     overflow: hidden;
     flex-shrink: 0;

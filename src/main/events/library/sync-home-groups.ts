@@ -18,7 +18,9 @@ const syncHomeGroups = async (
   groups: HomeGroup[]
 ) => {
   const prefs = await db
-    .get<string, UserPreferences>(levelKeys.userPreferences)
+    .get<string, UserPreferences | null>(levelKeys.userPreferences, {
+      valueEncoding: "json",
+    })
     .catch(() => null);
 
   const activeConfig = getActiveSupabaseConfig() || prefs?.supabaseConfig;
@@ -57,7 +59,9 @@ const fetchHomeGroups = async (
   _event: Electron.IpcMainInvokeEvent
 ): Promise<HomeGroup[] | null> => {
   const prefs = await db
-    .get<string, UserPreferences>(levelKeys.userPreferences)
+    .get<string, UserPreferences | null>(levelKeys.userPreferences, {
+      valueEncoding: "json",
+    })
     .catch(() => null);
 
   const activeConfig = getActiveSupabaseConfig() || prefs?.supabaseConfig;

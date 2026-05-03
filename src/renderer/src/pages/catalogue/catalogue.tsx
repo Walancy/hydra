@@ -214,7 +214,7 @@ export default function Catalogue() {
 
         setIsLoading(false);
       },
-      500,
+      50,
       { leading: false, trailing: true }
     )
   ).current;
@@ -484,25 +484,57 @@ export default function Catalogue() {
     ? SECTION_SIZE_GAMEPAD
     : SECTION_SIZE_DEFAULT;
 
+  const [steamTrending, setSteamTrending] = useState<{
+    topSellers: ShopAssets[];
+    newReleases: ShopAssets[];
+    comingSoon: ShopAssets[];
+    specials: ShopAssets[];
+  } | null>(null);
+
   // Home sections from results pool
   const sections = useMemo(() => {
     if (hasActiveFilters || !results.length) return [];
 
+    const fillFallback = (
+      steamList: ShopAssets[],
+      fallbackList: CatalogueSearchResult[]
+    ) => {
+      let result = steamList.map((steamGame) => {
+        const localEquiv = results.find(
+          (r) => String(r.objectId) === String(steamGame.objectId)
+        );
+        if (localEquiv) {
+          return {
+            ...localEquiv,
+            coverImageUrl: steamGame.coverImageUrl,
+            libraryImageUrl: steamGame.libraryImageUrl,
+            libraryHeroImageUrl: steamGame.libraryHeroImageUrl,
+          } as CatalogueSearchResult;
+        }
+        return steamGame as unknown as CatalogueSearchResult;
+      });
+      if (result.length < sectionSize && fallbackList.length > 0) {
+        const remaining = fallbackList.filter(
+          (lg) => !result.some((rg) => rg.objectId === lg.objectId)
+        );
+        result = [...result, ...remaining];
+      }
+      return result.slice(0, sectionSize);
+    };
+
     const used = new Set<string>();
 
-    // Destaques do Dia — embaralhado com seed diária
-    const destaques = dailyShuffled.slice(0, sectionSize);
-    destaques.forEach((g) => used.add(g.objectId));
+    // Destaques do Dia — Usa Ofertas Especiais da Steam se disponível, senão fallback diário
+    let destaques = dailyShuffled.slice(0, sectionSize);
 
-    // Mais Populares — jogos com mais fontes de download disponíveis
-    const populares = [...results]
+    // Mais Populares — Usa Mais Vendidos da Steam se disponível, senão fallback por fontes
+    let populares = [...results]
       .filter((g) => !used.has(g.objectId))
       .sort(
         (a, b) =>
           (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
       )
       .slice(0, sectionSize);
-    populares.forEach((g) => used.add(g.objectId));
 
     // Recomendados para Você — pontuados por overlap de gêneros com a biblioteca
     const libraryIds = new Set(library.map((g) => g.objectId));
@@ -515,7 +547,7 @@ export default function Catalogue() {
       });
     const hasGenreProfile = Object.keys(genreFreq).length > 0;
 
-    const recomendados = [...results]
+    let recomendados = [...results]
       .filter((g) => !used.has(g.objectId) && !libraryIds.has(g.objectId))
       .map((g) => ({
         game: g,
@@ -527,12 +559,33 @@ export default function Catalogue() {
       .slice(0, sectionSize)
       .map(({ game }) => game);
 
+    // Apply Steam data if available
+    if (steamTrending) {
+      if (steamTrending.specials?.length > 0) {
+        destaques = fillFallback(steamTrending.specials, destaques);
+      }
+      if (steamTrending.topSellers?.length > 0) {
+        populares = fillFallback(steamTrending.topSellers, populares);
+      }
+      if (steamTrending.newReleases?.length > 0) {
+        // Boost recomendados using Steam's new releases if available
+        recomendados = fillFallback(steamTrending.newReleases, recomendados);
+      }
+    }
+
     return [
       { title: "Destaques do Dia", games: destaques },
       { title: "Mais Populares", games: populares },
       { title: "Recomendados para Você", games: recomendados },
     ].filter((s) => s.games.length > 0);
-  }, [results, hasActiveFilters, dailyShuffled, library, sectionSize]);
+  }, [
+    results,
+    hasActiveFilters,
+    dailyShuffled,
+    library,
+    sectionSize,
+    steamTrending,
+  ]);
 
   const [showFilters, setShowFilters] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -545,6 +598,14 @@ export default function Catalogue() {
     window.electron.getSteamFeatured(getSteamLanguage(language)).then((sg) => {
       setSteamFeaturedGames(sg.slice(0, 18)); // Allow up to 18 items
     });
+    if (typeof window.electron.getSteamTrending === "function") {
+      window.electron
+        .getSteamTrending(getSteamLanguage(language))
+        .then((data) => {
+          setSteamTrending(data);
+        })
+        .catch(() => {});
+    }
   }, [language]);
 
   const featuredGames = useMemo(
@@ -725,6 +786,12 @@ export default function Catalogue() {
                 />
                 <CatalogueSection
                   title="Mais Populares"
+                  games={[]}
+                  isLoading
+                  skeletonCount={sectionSize}
+                />
+                <CatalogueSection
+                  title="Recomendados para Você"
                   games={[]}
                   isLoading
                   skeletonCount={sectionSize}

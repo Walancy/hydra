@@ -85,6 +85,12 @@ declare global {
 
     /* Catalogue */
     getSteamFeatured: (language: string) => Promise<ShopAssets[]>;
+    getSteamTrending: (language: string) => Promise<{
+      topSellers: ShopAssets[];
+      newReleases: ShopAssets[];
+      comingSoon: ShopAssets[];
+      specials: ShopAssets[];
+    }>;
     getGameShopDetails: (
       objectId: string,
       shop: GameShop,

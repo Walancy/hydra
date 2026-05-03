@@ -175,11 +175,8 @@
 
   // Dots
   &__dots {
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
     gap: 6px;
   }
 

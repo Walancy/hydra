@@ -24,7 +24,24 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
-  const [primaryFailed, setPrimaryFailed] = useState(!game.libraryImageUrl);
+  const steamHeader =
+    game.shop === "steam"
+      ? `https://cdn.akamai.steamstatic.com/steam/apps/${game.objectId}/header.jpg`
+      : null;
+  const defaultHorizontal =
+    game.coverImageUrl || (game as any).libraryHeroImageUrl || steamHeader;
+  const steamCapsule =
+    game.shop === "steam"
+      ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/capsule_616x353.jpg`
+      : null;
+  const isGenericCover =
+    defaultHorizontal &&
+    !defaultHorizontal.includes("steamstatic.com") &&
+    !defaultHorizontal.includes("fastly.steamstatic");
+
+  const [primaryFailed, setPrimaryFailed] = useState(
+    !defaultHorizontal || isGenericCover
+  );
   const [finalFailed, setFinalFailed] = useState(false);
   const { heroUrl, logoUrl } = useSteamGridHeroAndLogo(
     game.objectId,
@@ -54,7 +71,11 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
     }
   }, [heroUrl]);
 
-  const activeSrc = primaryFailed ? (heroUrl ?? null) : game.libraryImageUrl;
+  const activeSrc = primaryFailed
+    ? heroUrl === undefined
+      ? undefined
+      : (heroUrl ?? steamCapsule ?? null)
+    : defaultHorizontal;
 
   useEffect(() => {
     setAdded(
@@ -116,6 +137,12 @@ function CatalogueCard({ game }: Readonly<{ game: CatalogueSearchResult }>) {
               alt={game.title}
               className="cat-card__cover"
               loading="lazy"
+              onLoad={(e) => {
+                if (e.currentTarget.naturalWidth <= 1) {
+                  if (!primaryFailed) setPrimaryFailed(true);
+                  else setFinalFailed(true);
+                }
+              }}
               onError={() => {
                 if (!primaryFailed) {
                   setPrimaryFailed(true);

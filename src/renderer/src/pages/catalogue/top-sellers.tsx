@@ -1,11 +1,17 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { CatalogueSearchResult, ShopDetailsWithAssets } from "@types";
+import type {
+  CatalogueSearchResult,
+  ShopDetailsWithAssets,
+  ShopAssets,
+} from "@types";
+import { QuestionIcon } from "@primer/octicons-react";
 import {
   buildGameDetailsPath,
   getSteamLanguage,
   globalImageCache,
 } from "@renderer/helpers";
+import { useSteamGridHeroAndLogo } from "@renderer/hooks/use-steamgrid-cover";
 import { useTranslation } from "react-i18next";
 import Skeleton from "react-loading-skeleton";
 import "./top-sellers.scss";
@@ -14,8 +20,10 @@ import "./top-sellers.scss";
 const TAB_GENRES: Record<string, string[]> = {};
 
 const TABS = [
-  { key: "popular", label: "Mais Populares" },
-  { key: "new", label: "Lançamentos" },
+  { key: "new", label: "Novidades populares" },
+  { key: "popular", label: "Mais vendidos" },
+  { key: "upcoming", label: "Mais aguardados" },
+  { key: "specials", label: "Ofertas" },
 ];
 
 interface TopSellersProps {
@@ -37,23 +45,56 @@ function GameRow({
   const navigate = useNavigate();
   const genres = game.genres?.slice(0, 3).join(", ") ?? "";
   const imgRef = useRef<HTMLImageElement>(null);
+  const steamHeader =
+    game.shop === "steam"
+      ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/header.jpg`
+      : null;
+  const steamCapsule =
+    game.shop === "steam"
+      ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/capsule_616x353.jpg`
+      : null;
+  const initialThumbUrl =
+    game.coverImageUrl || game.libraryImageUrl || steamHeader;
+
+  const [primaryFailed, setPrimaryFailed] = useState(!initialThumbUrl);
+  const [finalFailed, setFinalFailed] = useState(false);
+
+  const steamGridArt = useSteamGridHeroAndLogo(
+    game.objectId,
+    game.title,
+    primaryFailed
+  );
+
+  const activeSrc = primaryFailed
+    ? steamGridArt.heroUrl === undefined
+      ? undefined
+      : (steamGridArt.heroUrl ??
+        steamCapsule ??
+        game.libraryImageUrl ??
+        game.coverImageUrl ??
+        null)
+    : initialThumbUrl;
+
   const [imageLoaded, setImageLoaded] = useState(() =>
-    game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
+    activeSrc ? globalImageCache.has(activeSrc) : false
   );
 
   useEffect(() => {
-    setImageLoaded(
-      game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
-    );
-    if (
-      game.libraryImageUrl &&
-      imgRef.current?.complete &&
-      imgRef.current.naturalWidth > 0
-    ) {
-      globalImageCache.add(game.libraryImageUrl);
-      setImageLoaded(true);
+    setImageLoaded(activeSrc ? globalImageCache.has(activeSrc) : false);
+
+    if (activeSrc && imgRef.current?.complete) {
+      if (imgRef.current.naturalWidth > 1) {
+        globalImageCache.add(activeSrc);
+        setImageLoaded(true);
+      } else {
+        if (!primaryFailed) {
+          setPrimaryFailed(true);
+        } else {
+          setFinalFailed(true);
+        }
+      }
     }
-  }, [game.libraryImageUrl]);
+  }, [activeSrc, primaryFailed]);
 
   return (
     <button
@@ -64,8 +105,18 @@ function GameRow({
       aria-label={game.title}
     >
       <span className="top-sellers__rank">{rank}</span>
-      <div className="top-sellers__thumb" style={{ position: "relative" }}>
-        {game.libraryImageUrl ? (
+      <div
+        className="top-sellers__thumb"
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {finalFailed || activeSrc === null ? (
+          <QuestionIcon size={20} />
+        ) : (
           <>
             {!imageLoaded && (
               <Skeleton
@@ -77,25 +128,61 @@ function GameRow({
                 }}
               />
             )}
-            <img
-              ref={imgRef}
-              key={game.libraryImageUrl}
-              src={game.libraryImageUrl}
-              alt={game.title}
-              loading="lazy"
-              onLoad={() => {
-                if (game.libraryImageUrl)
-                  globalImageCache.add(game.libraryImageUrl);
-                setImageLoaded(true);
-              }}
-              style={{
-                opacity: imageLoaded ? 1 : 0,
-                transition: "opacity 0.3s ease",
-              }}
-            />
+            {activeSrc !== undefined && (
+              <>
+                <img
+                  ref={imgRef}
+                  key={activeSrc}
+                  src={activeSrc}
+                  alt={game.title}
+                  loading="lazy"
+                  onError={() => {
+                    if (!primaryFailed) {
+                      setPrimaryFailed(true);
+                    } else {
+                      setFinalFailed(true);
+                    }
+                  }}
+                  onLoad={(e) => {
+                    if (e.currentTarget.naturalWidth <= 1) {
+                      if (!primaryFailed) setPrimaryFailed(true);
+                      else setFinalFailed(true);
+                    } else {
+                      if (activeSrc) globalImageCache.add(activeSrc);
+                      setImageLoaded(true);
+                    }
+                  }}
+                  style={{
+                    opacity: imageLoaded
+                      ? primaryFailed && steamGridArt.logoUrl
+                        ? 0.6
+                        : 1
+                      : 0,
+                    transition: "opacity 0.3s ease",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+                {primaryFailed && steamGridArt.logoUrl && imageLoaded && (
+                  <img
+                    src={steamGridArt.logoUrl}
+                    alt={`${game.title} logo`}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      maxWidth: "85%",
+                      maxHeight: "85%",
+                      zIndex: 3,
+                      objectFit: "contain",
+                    }}
+                  />
+                )}
+              </>
+            )}
           </>
-        ) : (
-          <QuestionIcon size={20} />
         )}
       </div>
       <div className="top-sellers__meta">
@@ -169,7 +256,7 @@ export function TopSellers({
   games,
   isLoading = false,
 }: Readonly<TopSellersProps>) {
-  const [activeTab, setActiveTab] = useState("popular");
+  const [activeTab, setActiveTab] = useState("new");
   const [hoveredIndex, setHoveredIndex] = useState(0);
   const [activeGameDetails, setActiveGameDetails] =
     useState<ShopDetailsWithAssets | null>(null);
@@ -188,16 +275,107 @@ export function TopSellers({
   const { i18n } = useTranslation("catalogue");
   const navigate = useNavigate();
 
+  const [steamTrending, setSteamTrending] = useState<{
+    topSellers: ShopAssets[];
+    newReleases: ShopAssets[];
+    comingSoon: ShopAssets[];
+    specials: ShopAssets[];
+  } | null>(null);
+  const [isSteamLoading, setIsSteamLoading] = useState(true);
+
+  useEffect(() => {
+    setIsSteamLoading(true);
+    if (typeof window.electron.getSteamTrending === "function") {
+      window.electron
+        .getSteamTrending(getSteamLanguage(i18n.language))
+        .then((data) => {
+          setSteamTrending(data);
+        })
+        .catch(() => {})
+        .finally(() => {
+          setIsSteamLoading(false);
+        });
+    } else {
+      setIsSteamLoading(false);
+    }
+  }, [i18n.language]);
+
   const tabGames = useMemo(() => {
+    const localPopular = [...games].sort(
+      (a, b) =>
+        (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
+    );
+
+    const fillToTen = (
+      steamList: ShopAssets[],
+      fallbackList: CatalogueSearchResult[]
+    ) => {
+      let result = steamList.map((steamGame) => {
+        const localEquiv = games.find(
+          (g) => String(g.objectId) === String(steamGame.objectId)
+        );
+        if (localEquiv) {
+          return {
+            ...localEquiv,
+            coverImageUrl: steamGame.coverImageUrl,
+            libraryImageUrl: steamGame.libraryImageUrl,
+          } as CatalogueSearchResult;
+        }
+        return steamGame as unknown as CatalogueSearchResult;
+      });
+      if (result.length < 10 && fallbackList.length > 0) {
+        const remaining = fallbackList.filter(
+          (lg) => !result.some((rg) => rg.objectId === lg.objectId)
+        );
+        result = [...result, ...remaining];
+      }
+      return result.slice(0, 10);
+    };
+
+    if (
+      activeTab === "popular" &&
+      steamTrending?.topSellers &&
+      steamTrending.topSellers.length > 0
+    ) {
+      return fillToTen(steamTrending.topSellers, localPopular);
+    }
+
+    if (
+      activeTab === "new" &&
+      steamTrending?.newReleases &&
+      steamTrending.newReleases.length > 0
+    ) {
+      const localNew = [...games].sort((a, b) => {
+        const tsA = releaseTimestamps[a.objectId];
+        const tsB = releaseTimestamps[b.objectId];
+        if (tsA && tsB) return tsB - tsA;
+        if (tsA) return -1;
+        if (tsB) return 1;
+        return parseInt(b.objectId) - parseInt(a.objectId);
+      });
+      return fillToTen(steamTrending.newReleases, localNew);
+    }
+
+    if (
+      activeTab === "upcoming" &&
+      steamTrending?.comingSoon &&
+      steamTrending.comingSoon.length > 0
+    ) {
+      return fillToTen(steamTrending.comingSoon, localPopular);
+    }
+
+    if (
+      activeTab === "specials" &&
+      steamTrending?.specials &&
+      steamTrending.specials.length > 0
+    ) {
+      return fillToTen(steamTrending.specials, localPopular);
+    }
+
     if (!games.length) return [];
 
     if (activeTab === "popular") {
-      return [...games]
-        .sort(
-          (a, b) =>
-            (b.downloadSources?.length ?? 0) - (a.downloadSources?.length ?? 0)
-        )
-        .slice(0, 10);
+      return localPopular.slice(0, 10);
     }
 
     if (activeTab === "new") {
@@ -205,12 +383,9 @@ export function TopSellers({
         .sort((a, b) => {
           const tsA = releaseTimestamps[a.objectId];
           const tsB = releaseTimestamps[b.objectId];
-          // Ambos com data real: mais recente primeiro
           if (tsA && tsB) return tsB - tsA;
-          // Só um tem data: o que tem data fica na frente
           if (tsA) return -1;
           if (tsB) return 1;
-          // Nenhum tem data ainda: AppID como proxy (maior = mais recente no Steam)
           return parseInt(b.objectId) - parseInt(a.objectId);
         })
         .slice(0, 10);
@@ -298,16 +473,22 @@ export function TopSellers({
 
   const mediaItems = useMemo(() => {
     const items: { thumb: string; full: string }[] = [];
-    if (activeGame?.libraryImageUrl) {
-      items.push({
-        thumb: activeGame.libraryImageUrl,
-        full: activeGame.libraryImageUrl,
-      });
-    }
-    if (activeGameDetails?.screenshots) {
-      activeGameDetails.screenshots.slice(0, 3).forEach((s) => {
+    if (
+      activeGameDetails?.screenshots &&
+      activeGameDetails.screenshots.length > 0
+    ) {
+      activeGameDetails.screenshots.slice(0, 4).forEach((s) => {
         items.push({ thumb: s.path_thumbnail, full: s.path_full });
       });
+    } else {
+      const fallbackUrl =
+        activeGame?.coverImageUrl || activeGame?.libraryImageUrl;
+      if (fallbackUrl) {
+        items.push({
+          thumb: fallbackUrl,
+          full: fallbackUrl,
+        });
+      }
     }
     return items;
   }, [activeGame, activeGameDetails]);
@@ -367,14 +548,15 @@ export function TopSellers({
     if (
       activeMedia &&
       panelImgRef.current?.complete &&
-      panelImgRef.current.naturalWidth > 0
+      panelImgRef.current.naturalWidth > 1
     ) {
       globalImageCache.add(activeMedia.full);
       setPanelImageLoaded(true);
     }
   }, [activeMedia]);
 
-  if (!isLoading && !games.length) return null;
+  if (!isLoading && !isSteamLoading && !games.length && !steamTrending)
+    return null;
 
   return (
     <section className="top-sellers">
@@ -396,7 +578,7 @@ export function TopSellers({
 
       <div className="top-sellers__body">
         <div className="top-sellers__list">
-          {isLoading
+          {isLoading || isSteamLoading
             ? Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
@@ -420,7 +602,7 @@ export function TopSellers({
               ))}
         </div>
 
-        {activeGame && !isLoading && (
+        {activeGame && !isLoading && !isSteamLoading && (
           <div
             className="top-sellers__panel"
             onMouseEnter={() => setIsHoveringPanel(true)}
@@ -461,10 +643,14 @@ export function TopSellers({
                           src={activeMedia.full}
                           alt={activeGame.title}
                           loading="lazy"
-                          onLoad={() => {
-                            if (activeMedia)
-                              globalImageCache.add(activeMedia.full);
-                            setPanelImageLoaded(true);
+                          onLoad={(e) => {
+                            if (e.currentTarget.naturalWidth <= 1) {
+                              setPanelImageLoaded(false);
+                            } else {
+                              if (activeMedia)
+                                globalImageCache.add(activeMedia.full);
+                              setPanelImageLoaded(true);
+                            }
                           }}
                           style={{
                             opacity: panelImageLoaded ? 1 : 0,

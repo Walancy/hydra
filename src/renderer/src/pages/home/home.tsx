@@ -82,39 +82,82 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
       ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
       : (customCover ?? customLibrary ?? customIcon ?? null);
 
-  const [primaryFailed, setPrimaryFailed] = useState(!initialPrimarySrc);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
   const [finalFailed, setFinalFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const steamGridCover = useSteamGridCover(
     game.objectId,
     game.title,
-    primaryFailed,
+    fallbackIndex > 0,
     "vertical"
   );
 
-  const primarySrc =
+  const steamHeader =
     game.shop === "steam"
-      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
-      : (customCover ?? customLibrary ?? customIcon ?? null);
+      ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/header.jpg`
+      : null;
 
-  const activeSrc = primaryFailed
-    ? (steamGridCover ?? customCover ?? customLibrary ?? customIcon ?? null)
-    : primarySrc;
+  const fallbackSources = useMemo(() => {
+    const sources: (string | null | undefined)[] = [initialPrimarySrc];
+
+    if (steamGridCover) sources.push(steamGridCover);
+
+    sources.push(customLibrary);
+    sources.push(customCover);
+
+    if (game.shop === "steam") {
+      sources.push(
+        `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900.jpg`
+      );
+      sources.push(
+        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/capsule_616x353.jpg`
+      );
+      sources.push(steamHeader);
+    }
+
+    sources.push(customIcon);
+
+    return Array.from(new Set(sources.filter(Boolean))) as string[];
+  }, [
+    initialPrimarySrc,
+    steamGridCover,
+    customLibrary,
+    customCover,
+    game.shop,
+    game.objectId,
+    steamHeader,
+    customIcon,
+  ]);
+
+  const activeSrc =
+    fallbackIndex === 0
+      ? initialPrimarySrc
+      : fallbackIndex > 0 && steamGridCover === undefined
+        ? undefined
+        : fallbackSources[fallbackIndex];
 
   const [imageLoaded, setImageLoaded] = useState(() =>
     activeSrc ? globalImageCache.has(activeSrc) : false
   );
 
+  const handleImageError = () => {
+    if (fallbackIndex < fallbackSources.length - 1) {
+      setFallbackIndex((prev) => prev + 1);
+    } else {
+      setFinalFailed(true);
+    }
+  };
+
   useEffect(() => {
     setImageLoaded(activeSrc ? globalImageCache.has(activeSrc) : false);
-    if (
-      activeSrc &&
-      imgRef.current?.complete &&
-      imgRef.current.naturalWidth > 0
-    ) {
-      globalImageCache.add(activeSrc);
-      setImageLoaded(true);
+    if (activeSrc && imgRef.current?.complete) {
+      if (imgRef.current.naturalWidth > 0) {
+        globalImageCache.add(activeSrc);
+        setImageLoaded(true);
+      } else {
+        handleImageError();
+      }
     }
   }, [activeSrc]);
 
@@ -149,35 +192,37 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
           }}
         />
       )}
-      {!finalFailed && activeSrc && (
-        <img
-          ref={imgRef}
-          key={activeSrc}
-          src={activeSrc}
-          alt={game.title}
-          className="home__card-image"
-          loading="lazy"
-          draggable={false}
-          onLoad={() => {
-            globalImageCache.add(activeSrc);
-            setImageLoaded(true);
-          }}
-          style={{
-            position: "relative",
-            zIndex: 1,
-            backgroundColor: "inherit",
-            opacity: imageLoaded ? 1 : 0,
-            transition: "opacity 0.3s ease",
-          }}
-          onError={() => {
-            if (!primaryFailed) {
-              setPrimaryFailed(true);
-            } else {
-              setFinalFailed(true);
-            }
-          }}
-        />
-      )}
+      {!finalFailed &&
+        activeSrc &&
+        (!activeSrc &&
+          steamGridCover !== undefined &&
+          fallbackIndex >= fallbackSources.length) === false && (
+          <img
+            ref={imgRef}
+            key={activeSrc}
+            src={activeSrc}
+            alt={game.title}
+            className="home__card-image"
+            loading="lazy"
+            draggable={false}
+            onLoad={(e) => {
+              if (e.currentTarget.naturalWidth <= 1) {
+                handleImageError();
+              } else {
+                globalImageCache.add(activeSrc);
+                setImageLoaded(true);
+              }
+            }}
+            style={{
+              position: "relative",
+              zIndex: 1,
+              backgroundColor: "inherit",
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
+            onError={handleImageError}
+          />
+        )}
     </div>
   );
 }

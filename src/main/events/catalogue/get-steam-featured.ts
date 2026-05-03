@@ -2,11 +2,24 @@ import { registerEvent } from "../register-event";
 import axios from "axios";
 import type { ShopAssets } from "@types";
 
+interface FeaturedCache {
+  data: ShopAssets[];
+  timestamp: number;
+}
+
+const cacheMap = new Map<string, FeaturedCache>();
+const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+
 const getSteamFeaturedEvent = async (
   _event: Electron.IpcMainInvokeEvent,
   language: string
 ) => {
   try {
+    const cached = cacheMap.get(language);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+
     const response = await axios.get(
       `https://store.steampowered.com/api/featuredcategories/?cc=BR&l=${language}`
     );
@@ -16,7 +29,6 @@ const getSteamFeaturedEvent = async (
     const addGames = (steamGames: any[]) => {
       if (!steamGames || !Array.isArray(steamGames)) return;
       for (const game of steamGames) {
-        // Only allow Apps (type: 0). Bundles, subs, etc. break the image CDN formatting.
         if (game.type !== 0 && game.type !== undefined) continue;
 
         const gameId = game.id || game.appid || game.item_id;
@@ -29,7 +41,6 @@ const getSteamFeaturedEvent = async (
             objectId: gameIdStr,
             title: game.name || game.title,
             shop: "steam",
-            // Use store item assets instead of akamaihd when possible, which is more reliable.
             coverImageUrl: game.large_capsule_image || game.header_image,
             libraryImageUrl: `https://shared.steamstatic.com/store_item_assets/steam/apps/${gameIdStr}/library_600x900.jpg`,
             libraryHeroImageUrl: `https://shared.steamstatic.com/store_item_assets/steam/apps/${gameIdStr}/library_hero.jpg`,
@@ -42,10 +53,10 @@ const getSteamFeaturedEvent = async (
       }
     };
 
-    // A Steam Store destaca esses nas categorias principais
     addGames(data.top_sellers?.items);
     addGames(data.specials?.items);
 
+    cacheMap.set(language, { data: games, timestamp: Date.now() });
     return games;
   } catch (error) {
     return [];

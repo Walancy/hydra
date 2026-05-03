@@ -130,9 +130,7 @@ export class WindowManager {
       this.initialConfigInitializationMainWindow
     );
 
-    if (isMaximized) {
-      this.mainWindow.maximize();
-    }
+    this.mainWindow.maximize();
 
     this.mainWindow.webContents.session.webRequest.onBeforeSendHeaders(
       (details, callback) => {

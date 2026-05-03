@@ -464,7 +464,7 @@ export type CatalogueSearchResult = {
   protondbSupportBadges?: string[];
   deckCompatibility?: string | null;
   deckCompatibilities?: string[];
-} & Pick<ShopAssets, "libraryImageUrl" | "downloadSources">;
+} & Pick<ShopAssets, "libraryImageUrl" | "downloadSources" | "coverImageUrl">;
 
 export type LibraryGame = Game &
   Partial<ShopAssets> & {

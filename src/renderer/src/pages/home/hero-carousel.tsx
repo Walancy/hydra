@@ -198,7 +198,7 @@ function CarouselSlide({
             opacity: imageLoaded ? 1 : 0,
             transition: "opacity 0.3s ease",
           }}
-          onError={(e) => {
+          onError={() => {
             if (!bgPrimaryFailed) {
               setBgPrimaryFailed(true);
             } else {

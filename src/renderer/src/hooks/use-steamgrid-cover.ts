@@ -127,12 +127,13 @@ export function useSteamGridCover(
   title: string,
   primaryFailed: boolean,
   orientation: "vertical" | "horizontal" = "vertical"
-): string | null {
-  const [gridUrl, setGridUrl] = useState<string | null>(null);
+): string | null | undefined {
+  const [gridUrl, setGridUrl] = useState<string | null | undefined>(undefined);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!primaryFailed || fetchedRef.current) return;
+    if (!primaryFailed) return;
+    if (fetchedRef.current) return;
 
     const cacheKey = `sgdb:${objectId}:${orientation}`;
     if (cache.has(cacheKey)) {
@@ -156,8 +157,8 @@ export function useSteamGridCover(
 }
 
 export interface SteamGridArt {
-  heroUrl: string | null;
-  logoUrl: string | null;
+  heroUrl: string | null | undefined;
+  logoUrl: string | null | undefined;
 }
 
 export function useSteamGridHeroAndLogo(
@@ -165,12 +166,13 @@ export function useSteamGridHeroAndLogo(
   title: string,
   primaryFailed: boolean
 ): SteamGridArt {
-  const [heroUrl, setHeroUrl] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [heroUrl, setHeroUrl] = useState<string | null | undefined>(undefined);
+  const [logoUrl, setLogoUrl] = useState<string | null | undefined>(undefined);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!primaryFailed || fetchedRef.current) return;
+    if (!primaryFailed) return;
+    if (fetchedRef.current) return;
 
     const cacheKeyHero = `sgdb:hero:${objectId}`;
     const cacheKeyLogo = `sgdb:logo:${objectId}`;

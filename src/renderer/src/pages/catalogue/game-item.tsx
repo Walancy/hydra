@@ -1,7 +1,8 @@
 import { Badge } from "@renderer/components/badge/badge";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import { useAppSelector, useLibrary } from "@renderer/hooks";
-import { lazy, Suspense, useMemo, useState, useEffect } from "react";
+import { lazy, Suspense, useMemo, useState, useEffect, useRef } from "react";
+import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 import { Link } from "@renderer/components/link/link";
 
 import "./game-item.scss";
@@ -96,67 +97,176 @@ export function GameItem({ game }: GameItemProps) {
     });
   }, [game.genres, language, steamGenres]);
 
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [imageLoaded, setImageLoaded] = useState(() =>
-    game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
+  const resolveImageSource = (
+    imageUrl: string | null | undefined
+  ): string | null => {
+    if (!imageUrl) return null;
+    const trimmed = imageUrl.trim();
+    if (!trimmed) return null;
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    )
+      return trimmed;
+    if (trimmed.startsWith("local:"))
+      return `local:${trimmed.slice("local:".length).replaceAll("\\", "/")}`;
+    const normalized = trimmed.replaceAll("\\", "/");
+    if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("/"))
+      return `local:${normalized}`;
+    return normalized;
+  };
+
+  const customLibrary = resolveImageSource(game.libraryImageUrl);
+  const customCover = resolveImageSource(game.coverImageUrl);
+
+  const initialPrimarySrc =
+    game.shop === "steam"
+      ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900_2x.jpg`
+      : (customLibrary ?? customCover ?? null);
+
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+  const [finalFailed, setFinalFailed] = useState(false);
+
+  const steamGridUrl = useSteamGridCover(
+    game.objectId,
+    game.title,
+    fallbackIndex > 0
   );
 
-  useEffect(() => {
-    setImageLoaded(
-      game.libraryImageUrl ? globalImageCache.has(game.libraryImageUrl) : false
-    );
-    if (
-      game.libraryImageUrl &&
-      imgRef.current?.complete &&
-      imgRef.current.naturalWidth > 0
-    ) {
-      globalImageCache.add(game.libraryImageUrl);
-      setImageLoaded(true);
+  const steamHeader =
+    game.shop === "steam"
+      ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/header.jpg`
+      : null;
+
+  const fallbackSources = useMemo(() => {
+    const sources: (string | null | undefined)[] = [initialPrimarySrc];
+
+    if (steamGridUrl) sources.push(steamGridUrl);
+
+    sources.push(customLibrary);
+    sources.push(customCover);
+    sources.push(game.libraryImageUrl);
+    sources.push(game.coverImageUrl);
+
+    if (game.shop === "steam") {
+      sources.push(
+        `https://steamcdn-a.akamaihd.net/steam/apps/${game.objectId}/library_600x900.jpg`
+      );
+      sources.push(
+        `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${game.objectId}/capsule_616x353.jpg`
+      );
+      sources.push(steamHeader);
     }
-  }, [game.libraryImageUrl]);
+
+    return Array.from(new Set(sources.filter(Boolean))) as string[];
+  }, [
+    initialPrimarySrc,
+    steamGridUrl,
+    customLibrary,
+    customCover,
+    game,
+    steamHeader,
+  ]);
+
+  const activeSrc =
+    fallbackIndex === 0
+      ? initialPrimarySrc
+      : fallbackIndex > 0 && steamGridUrl === undefined
+        ? undefined
+        : fallbackSources[fallbackIndex];
+
+  const resolvedSrc = activeSrc || undefined;
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(() =>
+    resolvedSrc ? globalImageCache.has(resolvedSrc) : false
+  );
+
+  const handleImageError = useCallback(() => {
+    if (fallbackIndex < fallbackSources.length - 1) {
+      setFallbackIndex((prev) => prev + 1);
+    } else {
+      setFinalFailed(true);
+    }
+  }, [fallbackIndex, fallbackSources.length]);
+
+  useEffect(() => {
+    setImageLoaded(resolvedSrc ? globalImageCache.has(resolvedSrc) : false);
+
+    if (resolvedSrc && imgRef.current?.complete) {
+      if (imgRef.current.naturalWidth > 0) {
+        globalImageCache.add(resolvedSrc);
+        setImageLoaded(true);
+      } else {
+        handleImageError();
+      }
+    }
+  }, [resolvedSrc, handleImageError]);
 
   const libraryImage = useMemo(() => {
-    if (game.libraryImageUrl) {
+    if (
+      finalFailed ||
+      (!resolvedSrc &&
+        steamGridUrl !== undefined &&
+        fallbackIndex >= fallbackSources.length)
+    ) {
       return (
-        <>
-          {!imageLoaded && (
-            <Skeleton
-              className="game-item__cover"
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 2,
-                borderRadius: "inherit",
-              }}
-            />
-          )}
+        <div className="game-item__cover-placeholder">
+          <QuestionIcon size={28} />
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {!imageLoaded && (
+          <Skeleton
+            className="game-item__cover"
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              borderRadius: "inherit",
+            }}
+          />
+        )}
+        {resolvedSrc !== undefined && (
           <img
             ref={imgRef}
-            key={game.libraryImageUrl}
+            key={resolvedSrc}
             className="game-item__cover"
-            src={game.libraryImageUrl}
+            src={resolvedSrc}
             alt={game.title}
             loading="lazy"
-            onLoad={() => {
-              if (game.libraryImageUrl)
-                globalImageCache.add(game.libraryImageUrl);
-              setImageLoaded(true);
+            onError={handleImageError}
+            onLoad={(e) => {
+              if (e.currentTarget.naturalWidth <= 1) {
+                handleImageError();
+              } else {
+                if (resolvedSrc) globalImageCache.add(resolvedSrc);
+                setImageLoaded(true);
+              }
             }}
             style={{
               opacity: imageLoaded ? 1 : 0,
               transition: "opacity 0.3s ease",
             }}
           />
-        </>
-      );
-    }
-
-    return (
-      <div className="game-item__cover-placeholder">
-        <QuestionIcon size={28} />
-      </div>
+        )}
+      </>
     );
-  }, [game.libraryImageUrl, game.title, imageLoaded]);
+  }, [
+    resolvedSrc,
+    game.title,
+    imageLoaded,
+    finalFailed,
+    fallbackIndex,
+    fallbackSources.length,
+    handleImageError,
+    steamGridUrl,
+  ]);
 
   const rawProtonValue =
     game.tier ??
