@@ -28,7 +28,6 @@ const RANDOM_PHRASES = [
   "Relaxe e Jogue",
 ];
 
-
 const resolveImageSource = (
   imageUrl: string | null | undefined
 ): string | null => {

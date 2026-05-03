@@ -1,7 +1,15 @@
 import { Badge } from "@renderer/components/badge/badge";
 import { buildGameDetailsPath } from "@renderer/helpers";
 import { useAppSelector, useLibrary } from "@renderer/hooks";
-import { lazy, Suspense, useMemo, useState, useEffect, useRef, useCallback } from "react";
+import {
+  lazy,
+  Suspense,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
 import { Link } from "@renderer/components/link/link";
 
