@@ -7,6 +7,7 @@ import {
 import {
   setCatalogueCategory,
   setIsMyGames,
+  setIsInstalledGames,
   setCurrentCategory,
 } from "@renderer/features";
 import { useSteamGridCover } from "@renderer/hooks/use-steamgrid-cover";
@@ -230,7 +231,7 @@ export function HomeGameImage({ game }: { game: ShopAssets }) {
 export default function Home() {
   const { t, i18n } = useTranslation("home");
   const navigate = useNavigate();
-  const { library } = useLibrary();
+  const { library, updateLibrary } = useLibrary();
 
   const [isLoading, setIsLoading] = useState(false);
   const [downloadGame, setDownloadGame] = useState<ShopAssets | null>(null);
@@ -280,6 +281,7 @@ export default function Home() {
   } | null>(null);
 
   const isMyGames = useAppSelector((state) => state.homeCatalogue.isMyGames);
+  const isInstalledGames = useAppSelector((state) => state.homeCatalogue.isInstalledGames);
   const currentCatalogueCategory = useAppSelector(
     (state) => state.homeCatalogue.currentCategory
   );
@@ -337,6 +339,16 @@ export default function Home() {
   const handleMyGamesClick = () => {
     setIsTransitioning(true);
     dispatch(setIsMyGames(true));
+    dispatch(setIsInstalledGames(false));
+    setOpenedGroup(null);
+    setSelectedIndex(0);
+    requestAnimationFrame(() => setIsTransitioning(false));
+  };
+
+  const handleInstalledGamesClick = () => {
+    setIsTransitioning(true);
+    dispatch(setIsMyGames(false));
+    dispatch(setIsInstalledGames(true));
     setOpenedGroup(null);
     setSelectedIndex(0);
     requestAnimationFrame(() => setIsTransitioning(false));
@@ -344,6 +356,7 @@ export default function Home() {
 
   const handleCatTabClick = (category: CatalogueCategory) => {
     dispatch(setIsMyGames(false));
+    dispatch(setIsInstalledGames(false));
     setOpenedGroup(null);
     handleCategoryClick(category);
   };
@@ -381,6 +394,40 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!isInstalledGames) return;
+
+    let isMounted = true;
+
+    const verifyInstalledGames = async () => {
+      const installed = library.filter((g) => g.executablePath && g.shop && g.objectId);
+      let changed = false;
+
+      for (const game of installed) {
+        if (!isMounted) break;
+        try {
+          const exists = await window.electron.checkFileExists(game.executablePath!);
+          if (!exists) {
+            await window.electron.updateExecutablePath(game.shop!, game.objectId!, null);
+            changed = true;
+          }
+        } catch (error) {
+          // ignore
+        }
+      }
+
+      if (changed && isMounted) {
+        updateLibrary();
+      }
+    };
+
+    verifyInstalledGames();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isInstalledGames, library, updateLibrary]);
+
   const categories = Object.values(CatalogueCategory);
 
   const libraryAsGames = useMemo<
@@ -417,12 +464,19 @@ export default function Home() {
   );
 
   const homeItems = useMemo(() => {
-    if (!isMyGames) {
+    if (!isMyGames && !isInstalledGames) {
       return catalogue[currentCatalogueCategory].map((g) => ({
         type: "game" as const,
         data: g,
         covers: [],
       }));
+    }
+
+    if (isInstalledGames) {
+      const installedGames = libraryAsGames.filter((g) => g.executablePath);
+      return installedGames
+        .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+        .map((g) => ({ type: "game" as const, data: g, covers: [] }));
     }
 
     if (openedGroup) {
@@ -445,9 +499,7 @@ export default function Home() {
       return { type: "folder" as const, data: g, covers: covers.slice(0, 4) };
     });
 
-    const installedGames = libraryAsGames.filter((g) => g.executablePath);
-    const sourceGames =
-      installedGames.length > 0 ? installedGames : libraryAsGames;
+    const sourceGames = libraryAsGames;
 
     const unassignedGames = sourceGames
       .filter(
@@ -490,6 +542,7 @@ export default function Home() {
     return combined;
   }, [
     isMyGames,
+    isInstalledGames,
     libraryAsGames,
     groups,
     openedGroup,
@@ -550,18 +603,21 @@ export default function Home() {
   }, []);
 
   const isGamepadConnected = useGamepadConnected();
-  const allTabKeys = ["myGames", ...categories] as const;
+  const allTabKeys = ["myGames", "installed", ...categories] as const;
   const activeTabIndex = isMyGames
     ? 0
-    : 1 + categories.indexOf(currentCatalogueCategory);
+    : isInstalledGames
+      ? 1
+      : 2 + categories.indexOf(currentCatalogueCategory);
 
   const handleTabChange = useCallback(
     (idx: number) => {
       if (idx === 0) handleMyGamesClick();
-      else handleCatTabClick(categories[idx - 1]);
+      else if (idx === 1) handleInstalledGamesClick();
+      else handleCatTabClick(categories[idx - 2]);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [categories, currentCatalogueCategory, isMyGames]
+    [categories, currentCatalogueCategory, isMyGames, isInstalledGames]
   );
 
   const handleGamepadConfirm = useCallback(() => {
@@ -719,11 +775,21 @@ export default function Home() {
                   {t("my_games")}
                 </Button>
               </li>
+              <li>
+                <Button
+                  theme={
+                    isInstalledGames ? (isBgLight ? "dark" : "primary") : "outline"
+                  }
+                  onClick={handleInstalledGamesClick}
+                >
+                  {t("installed", { defaultValue: "Instalados" })}
+                </Button>
+              </li>
               {categories.map((category) => (
                 <li key={category}>
                   <Button
                     theme={
-                      !isMyGames && category === currentCatalogueCategory
+                      !isMyGames && !isInstalledGames && category === currentCatalogueCategory
                         ? isBgLight
                           ? "dark"
                           : "primary"

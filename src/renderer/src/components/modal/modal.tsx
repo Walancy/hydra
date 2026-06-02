@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { XIcon } from "@primer/octicons-react";
+import { useGamepad } from "@renderer/hooks/use-gamepad";
 
 import "./modal.scss";
 
@@ -83,6 +84,19 @@ export function Modal({
 
     return () => {};
   }, [handleCloseClick, visible]);
+
+  useGamepad({
+    priority: 10,
+    onButton: {
+      B: () => {
+        if (visible && isTopMostModal()) {
+          handleCloseClick();
+          return true;
+        }
+        return false;
+      },
+    },
+  });
 
   useEffect(() => {
     if (clickOutsideToClose) {

@@ -498,11 +498,12 @@ export function App() {
           page: 1,
           key: JSON.stringify({
             filtersArg: {
-              genres: [],
-              tags: [],
+              title: "",
               downloadSourceFingerprints: [],
-              developers: [],
+              tags: [],
               publishers: [],
+              genres: [],
+              developers: [],
               protondbSupportBadges: [],
               deckCompatibility: [],
             },

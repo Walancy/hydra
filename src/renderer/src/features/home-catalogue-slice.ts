@@ -7,6 +7,7 @@ import { CatalogueCategory } from "@shared";
 export interface HomeCatalogueState {
   catalogue: Record<CatalogueCategory, ShopAssets[]>;
   isMyGames: boolean;
+  isInstalledGames: boolean;
   currentCategory: CatalogueCategory;
 }
 
@@ -17,6 +18,7 @@ const initialState: HomeCatalogueState = {
     [CatalogueCategory.Achievements]: [],
   },
   isMyGames: true,
+  isInstalledGames: false,
   currentCategory: CatalogueCategory.Hot,
 };
 
@@ -36,11 +38,14 @@ export const homeCatalogueSlice = createSlice({
     setIsMyGames: (state, action: PayloadAction<boolean>) => {
       state.isMyGames = action.payload;
     },
+    setIsInstalledGames: (state, action: PayloadAction<boolean>) => {
+      state.isInstalledGames = action.payload;
+    },
     setCurrentCategory: (state, action: PayloadAction<CatalogueCategory>) => {
       state.currentCategory = action.payload;
     },
   },
 });
 
-export const { setCatalogueCategory, setIsMyGames, setCurrentCategory } =
+export const { setCatalogueCategory, setIsMyGames, setIsInstalledGames, setCurrentCategory } =
   homeCatalogueSlice.actions;

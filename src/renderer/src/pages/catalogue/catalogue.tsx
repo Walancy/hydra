@@ -209,7 +209,7 @@ export default function Catalogue() {
 
         globalCachedResults = response.edges;
         globalCachedCount = response.count;
-        globalCachedPage = page;
+        globalCachedPage = offset / take + 1;
         globalCachedKey = JSON.stringify({ filtersArg, sources, take, offset });
 
         setIsLoading(false);
