@@ -281,7 +281,9 @@ export default function Home() {
   } | null>(null);
 
   const isMyGames = useAppSelector((state) => state.homeCatalogue.isMyGames);
-  const isInstalledGames = useAppSelector((state) => state.homeCatalogue.isInstalledGames);
+  const isInstalledGames = useAppSelector(
+    (state) => state.homeCatalogue.isInstalledGames
+  );
   const currentCatalogueCategory = useAppSelector(
     (state) => state.homeCatalogue.currentCategory
   );
@@ -400,15 +402,23 @@ export default function Home() {
     let isMounted = true;
 
     const verifyInstalledGames = async () => {
-      const installed = library.filter((g) => g.executablePath && g.shop && g.objectId);
+      const installed = library.filter(
+        (g) => g.executablePath && g.shop && g.objectId
+      );
       let changed = false;
 
       for (const game of installed) {
         if (!isMounted) break;
         try {
-          const exists = await window.electron.checkFileExists(game.executablePath!);
+          const exists = await window.electron.checkFileExists(
+            game.executablePath!
+          );
           if (!exists) {
-            await window.electron.updateExecutablePath(game.shop!, game.objectId!, null);
+            await window.electron.updateExecutablePath(
+              game.shop!,
+              game.objectId!,
+              null
+            );
             changed = true;
           }
         } catch (error) {
@@ -778,7 +788,11 @@ export default function Home() {
               <li>
                 <Button
                   theme={
-                    isInstalledGames ? (isBgLight ? "dark" : "primary") : "outline"
+                    isInstalledGames
+                      ? isBgLight
+                        ? "dark"
+                        : "primary"
+                      : "outline"
                   }
                   onClick={handleInstalledGamesClick}
                 >
@@ -789,7 +803,9 @@ export default function Home() {
                 <li key={category}>
                   <Button
                     theme={
-                      !isMyGames && !isInstalledGames && category === currentCatalogueCategory
+                      !isMyGames &&
+                      !isInstalledGames &&
+                      category === currentCatalogueCategory
                         ? isBgLight
                           ? "dark"
                           : "primary"

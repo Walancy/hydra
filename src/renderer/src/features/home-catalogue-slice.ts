@@ -47,5 +47,9 @@ export const homeCatalogueSlice = createSlice({
   },
 });
 
-export const { setCatalogueCategory, setIsMyGames, setIsInstalledGames, setCurrentCategory } =
-  homeCatalogueSlice.actions;
+export const {
+  setCatalogueCategory,
+  setIsMyGames,
+  setIsInstalledGames,
+  setCurrentCategory,
+} = homeCatalogueSlice.actions;
