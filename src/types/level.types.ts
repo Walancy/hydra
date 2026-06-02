@@ -48,6 +48,7 @@ export interface Game {
   playTimeInMilliseconds: number;
   unsyncedDeltaPlayTimeInMilliseconds?: number;
   lastTimePlayed: Date | null;
+  addedToLibraryAt?: Date | null;
   objectId: string;
   shop: GameShop;
   remoteId: string | null;
@@ -85,12 +86,20 @@ export interface Download {
   shouldSeed: boolean;
   status: DownloadStatus | null;
   queued: boolean;
+  pinnedToHero?: boolean;
   timestamp: number;
   extracting: boolean;
+  extractionProgress?: number;
   automaticallyExtract: boolean;
-  extractionProgress: number;
+  automaticallyDeleteArchiveFiles: boolean;
   fileIndices?: number[];
   selectedFilesSize?: number | null;
+}
+
+export interface DownloadLayoutState {
+  version: 1;
+  queueOrder: string[];
+  pausedOrder: string[];
 }
 
 export interface GameAchievement {
@@ -108,6 +117,12 @@ export type AchievementCustomNotificationPosition =
   | "bottom-center"
   | "bottom-right";
 
+export interface DownloadDirectoryPreference {
+  path: string;
+  createdAt: string;
+  source: "manual" | "auto";
+}
+
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
@@ -117,6 +132,8 @@ export type LibraryStorageMode = "local" | "supabase";
 
 export interface UserPreferences {
   downloadsPath?: string | null;
+  downloadDirectories?: DownloadDirectoryPreference[];
+  optionalDownloadsPaths?: string[];
   ggDealsApiKey?: string | null;
   language?: string;
   realDebridApiToken?: string | null;
@@ -127,6 +144,7 @@ export interface UserPreferences {
   runAtStartup?: boolean;
   startMinimized?: boolean;
   launchToLibraryPage?: boolean;
+  launchInBigPicture?: boolean;
   disableNsfwAlert?: boolean;
   enableAutoInstall?: boolean;
   seedAfterDownloadComplete?: boolean;
@@ -142,16 +160,17 @@ export interface UserPreferences {
   friendStartGameNotificationsEnabled?: boolean;
   showDownloadSpeedInMegabytes?: boolean;
   extractFilesByDefault?: boolean;
+  deleteArchiveFilesAfterExtractionByDefault?: boolean;
   enableSteamAchievements?: boolean;
   autoplayGameTrailers?: boolean;
   hideToTrayOnGameStart?: boolean;
   enableNewDownloadOptionsBadges?: boolean;
-  useNativeHttpDownloader?: boolean;
   createStartMenuShortcut?: boolean;
   maxDownloadSpeedBytesPerSecond?: number | null;
   defaultProtonPath?: string | null;
   autoRunMangohud?: boolean;
   autoRunGamemode?: boolean;
+  useNativeHttpDownloader?: boolean;
   backgroundMusicEnabled?: boolean;
   backgroundMusicVolume?: number;
   customScanDirectories?: string[];

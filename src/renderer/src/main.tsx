@@ -34,7 +34,17 @@ import ThemeEditor from "./pages/theme-editor/theme-editor";
 import Library from "./pages/library/library";
 import Notifications from "./pages/notifications/notifications";
 import { AchievementNotification } from "./pages/achievements/notification/achievement-notification";
+import { AchievementNotificationOverlay } from "./components/achievements/notification/achievement-notification-overlay";
 import GameLauncher from "./pages/game-launcher/game-launcher";
+import BigPictureApp from "../../big-picture/src/app";
+import BigPictureCatalogue from "../../big-picture/src/pages/catalogue/catalogue";
+import BigPictureComponentLab from "../../big-picture/src/pages/component-lab/component-lab";
+import BigPictureDownloads from "../../big-picture/src/pages/downloads/downloads";
+import BigPictureHome from "../../big-picture/src/pages/home/home";
+import BigPictureSettings from "../../big-picture/src/pages/settings/settings";
+import BigPictureLibrary from "../../big-picture/src/pages/library/page";
+import BigPictureGame from "../../big-picture/src/pages/game/game";
+import BigPictureGameAchievements from "../../big-picture/src/pages/game-achievements/game-achievements";
 
 console.log = logger.log;
 
@@ -47,10 +57,10 @@ Sentry.init({
   tracesSampleRate: 0.5,
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
-  release: "hydra-launcher@" + (await window.electron.getVersion()),
+  release: "hydra-launcher@" + (await globalThis.electron.getVersion()),
 });
 
-const isStaging = await window.electron.isStaging();
+const isStaging = await globalThis.electron.isStaging();
 addCookieInterceptor(isStaging);
 
 const syncDocumentLanguage = (language: string) => {
@@ -58,7 +68,7 @@ const syncDocumentLanguage = (language: string) => {
   document.documentElement.dir = i18n.dir(language);
 };
 
-i18n
+await i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -67,28 +77,28 @@ i18n
     interpolation: {
       escapeValue: false,
     },
-  })
-  .then(async () => {
-    const userPreferences = (await levelDBService.get(
-      "userPreferences",
-      null,
-      "json"
-    )) as { language?: string } | null;
-
-    if (userPreferences?.language) {
-      i18n.changeLanguage(userPreferences.language);
-    } else {
-      window.electron.updateUserPreferences({ language: i18n.language });
-    }
-
-    syncDocumentLanguage(i18n.language);
-    i18n.on("languageChanged", syncDocumentLanguage);
   });
+
+const userPreferences = (await levelDBService.get(
+  "userPreferences",
+  null,
+  "json"
+)) as { language?: string } | null;
+
+if (userPreferences?.language) {
+  await i18n.changeLanguage(userPreferences.language);
+} else {
+  globalThis.electron.updateUserPreferences({ language: i18n.language });
+}
+
+syncDocumentLanguage(i18n.language);
+i18n.on("languageChanged", syncDocumentLanguage);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
       <HashRouter>
+        <AchievementNotificationOverlay />
         <Routes>
           <Route element={<App />}>
             <Route path="/" element={<Home />} />
@@ -108,6 +118,20 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             element={<AchievementNotification />}
           />
           <Route path="/game-launcher" element={<GameLauncher />} />
+
+          <Route path="/big-picture" element={<BigPictureApp />}>
+            <Route index element={<BigPictureHome />} />
+            <Route path="catalogue" element={<BigPictureCatalogue />} />
+            <Route path="component-lab" element={<BigPictureComponentLab />} />
+            <Route path="downloads" element={<BigPictureDownloads />} />
+            <Route path="settings" element={<BigPictureSettings />} />
+            <Route path="library" element={<BigPictureLibrary />} />
+            <Route path="game/:shop/:objectId" element={<BigPictureGame />} />
+            <Route
+              path="game/:shop/:objectId/achievements"
+              element={<BigPictureGameAchievements />}
+            />
+          </Route>
         </Routes>
       </HashRouter>
     </Provider>

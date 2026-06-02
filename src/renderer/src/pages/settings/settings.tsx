@@ -51,14 +51,12 @@ export default function Settings() {
       },
       {
         id: "content_gameplay" as const,
-        label: t("content_gameplay", {
-          defaultValue: "Content & gameplay",
-        }),
+        label: t("content_gameplay"),
         icon: <PlayIcon size={16} />,
       },
       {
         id: "integrations" as const,
-        label: t("integrations", { defaultValue: "Integrations" }),
+        label: t("integrations"),
         icon: <CloudIcon size={16} />,
       },
       {
@@ -68,7 +66,7 @@ export default function Settings() {
       },
       {
         id: "compatibility" as const,
-        label: t("compatibility", { defaultValue: "Compatibility" }),
+        label: t("compatibility"),
         icon: <Wrench size={16} />,
       },
     ],

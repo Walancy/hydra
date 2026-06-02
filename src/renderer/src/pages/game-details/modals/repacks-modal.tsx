@@ -39,7 +39,9 @@ export interface RepacksModalProps {
     automaticallyExtract: boolean,
     addToQueueOnly?: boolean,
     fileIndices?: number[],
-    selectedFilesSize?: number | null
+    selectedFilesSize?: number | null,
+    automaticallyDeleteArchiveFiles?: boolean,
+    signal?: AbortSignal
   ) => Promise<{ ok: boolean; error?: string }>;
   onClose: () => void;
 }
@@ -296,7 +298,7 @@ export function RepacksModal({
 
       <Modal
         visible={visible}
-        title={t("download_options")}
+        title={t("download_options_title")}
         description={t("repacks_modal_description")}
         onClose={onClose}
       >

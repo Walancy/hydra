@@ -1,32 +1,34 @@
-import path from "node:path";
-import fs from "node:fs";
-import axios from "axios";
-import sharp from "sharp";
-import pngToIco from "png-to-ico";
-import type { GameShop, UserPreferences } from "@types";
+import { ASSETS_PATH } from "@main/constants";
+import { getGameAssets } from "@main/events/catalogue/get-game-assets";
+import { getDirectorySize } from "@main/events/helpers/get-directory-size";
 import { db, downloadsSublevel, gamesSublevel, levelKeys } from "@main/level";
 import {
   Downloader,
   FILE_EXTENSIONS_TO_EXTRACT,
   removeSymbolsFromName,
 } from "@shared";
-import { SevenZip, ExtractionProgress } from "./7zip";
-import { WindowManager } from "./window-manager";
-import { publishExtractionCompleteNotification } from "./notifications";
-import { logger } from "./logger";
-import { getDirectorySize } from "@main/events/helpers/get-directory-size";
-import { GameExecutables } from "./game-executables";
+import type { GameShop, UserPreferences } from "@types";
+import axios from "axios";
 import createDesktopShortcut from "create-desktop-shortcuts";
 import { app } from "electron";
-import { SystemPath } from "./system-path";
-import { ASSETS_PATH } from "@main/constants";
-import { getGameAssets } from "@main/events/catalogue/get-game-assets";
+import fs from "node:fs";
+import path from "node:path";
+import pngToIco from "png-to-ico";
+import sharp from "sharp";
+import { ExtractionProgress, SevenZip } from "./7zip";
 import { getPathType } from "./extraction-path";
+import { GameExecutables } from "./game-executables";
+import { logger } from "./logger";
+import { deleteArchiveFile } from "@main/events/library/delete-archive";
+import { publishExtractionCompleteNotification } from "./notifications";
+import { SystemPath } from "./system-path";
+import { WindowManager } from "./window-manager";
 
 const PROGRESS_THROTTLE_MS = 1000;
 
 export class GameFilesManager {
-  private lastProgressUpdate = 0;
+  private lastProgressUpdateTime = 0;
+  private lastProgressUpdateValue = 0;
 
   constructor(
     private readonly shop: GameShop,
@@ -37,24 +39,21 @@ export class GameFilesManager {
     return levelKeys.game(this.shop, this.objectId);
   }
 
-  private async updateExtractionProgress(progress: number, force = false) {
+  private updateExtractionProgress(progress: number, force = false) {
     const now = Date.now();
 
-    if (!force && now - this.lastProgressUpdate < PROGRESS_THROTTLE_MS) {
+    if (!force && now - this.lastProgressUpdateTime < PROGRESS_THROTTLE_MS) {
       return;
     }
 
-    this.lastProgressUpdate = now;
+    if (!force && progress < this.lastProgressUpdateValue) {
+      return;
+    }
 
-    const download = await downloadsSublevel.get(this.gameKey);
-    if (!download) return;
+    this.lastProgressUpdateValue = progress;
+    this.lastProgressUpdateTime = now;
 
-    await downloadsSublevel.put(this.gameKey, {
-      ...download,
-      extractionProgress: progress,
-    });
-
-    WindowManager.mainWindow?.webContents.send(
+    WindowManager.sendToAppWindows(
       "on-extraction-progress",
       this.shop,
       this.objectId,
@@ -83,15 +82,18 @@ export class GameFilesManager {
         status,
         queued: false,
         extracting: false,
-        extractionProgress: 0,
       });
+      WindowManager.sendDownloadsUpdated();
     }
 
-    WindowManager.mainWindow?.webContents.send(
+    WindowManager.sendToAppWindows(
       "on-extraction-failed",
       this.shop,
       this.objectId
     );
+
+    this.lastProgressUpdateTime = 0;
+    this.lastProgressUpdateValue = 0;
   }
 
   async failExtraction(error: unknown, targetPath?: string) {
@@ -99,6 +101,7 @@ export class GameFilesManager {
   }
 
   private readonly handleProgress = (progress: ExtractionProgress) => {
+    console.log(`handleProgress: ${progress.percent}% - ${progress.file}`);
     this.updateExtractionProgress(progress.percent / 100);
   };
 
@@ -139,7 +142,7 @@ export class GameFilesManager {
 
     if (filesToExtract.length === 0) return true;
 
-    await this.updateExtractionProgress(0, true);
+    this.updateExtractionProgress(0, true);
 
     const totalFiles = filesToExtract.length;
     let completedFiles = 0;
@@ -161,10 +164,7 @@ export class GameFilesManager {
 
         if (result.success) {
           completedFiles++;
-          await this.updateExtractionProgress(
-            completedFiles / totalFiles,
-            true
-          );
+          this.updateExtractionProgress(completedFiles / totalFiles, true);
         } else {
           await this.setExtractionFailedState(
             new Error(`7zip returned unsuccessful extraction for ${file}`),
@@ -186,10 +186,28 @@ export class GameFilesManager {
       .filter((archivePath) => fs.existsSync(archivePath));
 
     if (archivePaths.length > 0) {
-      WindowManager.mainWindow?.webContents.send(
-        "on-archive-deletion-prompt",
-        archivePaths
-      );
+      const [download, userPreferences] = await Promise.all([
+        downloadsSublevel.get(this.gameKey),
+        db.get<string, UserPreferences | null>(levelKeys.userPreferences, {
+          valueEncoding: "json",
+        }),
+      ]);
+
+      const shouldDelete =
+        download?.automaticallyDeleteArchiveFiles ??
+        userPreferences?.deleteArchiveFilesAfterExtractionByDefault ??
+        false;
+
+      if (shouldDelete) {
+        for (const archivePath of archivePaths) {
+          await deleteArchiveFile(archivePath);
+        }
+      } else {
+        WindowManager.sendToAppWindows(
+          "on-archive-deletion-prompt",
+          archivePaths
+        );
+      }
     }
 
     return true;
@@ -206,8 +224,8 @@ export class GameFilesManager {
     await downloadsSublevel.put(this.gameKey, {
       ...download,
       extracting: false,
-      extractionProgress: 0,
     });
+    WindowManager.sendDownloadsUpdated();
 
     // Calculate and store the installed size
     if (game && download.folderName) {
@@ -220,7 +238,7 @@ export class GameFilesManager {
       });
     }
 
-    WindowManager.mainWindow?.webContents.send(
+    WindowManager.sendToAppWindows(
       "on-extraction-complete",
       this.shop,
       this.objectId
@@ -229,6 +247,9 @@ export class GameFilesManager {
     if (publishNotification && game) {
       publishExtractionCompleteNotification(game);
     }
+
+    this.lastProgressUpdateTime = 0;
+    this.lastProgressUpdateValue = 0;
 
     await this.searchAndBindExecutable();
   }
@@ -280,7 +301,7 @@ export class GameFilesManager {
           executablePath: foundExePath,
         });
 
-        WindowManager.mainWindow?.webContents.send("on-library-batch-complete");
+        WindowManager.sendToAppWindows("on-library-batch-complete");
 
         await this.createDesktopShortcutForGame(game.title);
       }
@@ -419,6 +440,38 @@ export class GameFilesManager {
     }
   }
 
+  private buildRunDeepLink() {
+    const query = new URLSearchParams({
+      shop: this.shop,
+      objectId: this.objectId,
+    });
+
+    return `hydralauncher://run?${query.toString()}`;
+  }
+
+  private quoteLinuxExecArg(value: string) {
+    return `"${value.replaceAll('"', '\\"')}"`;
+  }
+
+  private getShortcutArguments(deepLink: string) {
+    const deepLinkArgument =
+      process.platform === "linux"
+        ? this.quoteLinuxExecArg(deepLink)
+        : deepLink;
+
+    if (process.defaultApp && process.argv.length >= 2) {
+      const appEntry = path.resolve(process.argv[1]);
+      const appEntryArgument =
+        process.platform === "linux"
+          ? this.quoteLinuxExecArg(appEntry)
+          : appEntry;
+
+      return `${appEntryArgument} ${deepLinkArgument}`;
+    }
+
+    return deepLinkArgument;
+  }
+
   private createWindowsShortcut(
     shortcutName: string,
     outputPath: string,
@@ -463,7 +516,8 @@ export class GameFilesManager {
     try {
       const shortcutName =
         removeSymbolsFromName(gameTitle).trim() || this.objectId;
-      const deepLink = `hydralauncher://run?shop=${this.shop}&objectId=${this.objectId}`;
+      const deepLink = this.buildRunDeepLink();
+      const shortcutArguments = this.getShortcutArguments(deepLink);
       const iconPath = await this.downloadGameIcon();
 
       if (process.platform === "win32") {
@@ -519,7 +573,7 @@ export class GameFilesManager {
 
         const options = {
           filePath: process.execPath,
-          arguments: deepLink,
+          arguments: shortcutArguments,
           name: shortcutName,
           outputPath: SystemPath.getPath("desktop"),
           icon: iconPath ?? undefined,
@@ -602,7 +656,7 @@ export class GameFilesManager {
       path.parse(download.folderName!).name
     );
 
-    await this.updateExtractionProgress(0, true);
+    this.updateExtractionProgress(0, true);
 
     try {
       const result = await SevenZip.extractFile(
@@ -623,10 +677,23 @@ export class GameFilesManager {
         }
 
         if (fs.existsSync(extractionPath) && fs.existsSync(filePath)) {
-          WindowManager.mainWindow?.webContents.send(
-            "on-archive-deletion-prompt",
-            [filePath]
+          const userPreferences = await db.get<string, UserPreferences | null>(
+            levelKeys.userPreferences,
+            { valueEncoding: "json" }
           );
+
+          const shouldDelete =
+            download.automaticallyDeleteArchiveFiles ??
+            userPreferences?.deleteArchiveFilesAfterExtractionByDefault ??
+            false;
+
+          if (shouldDelete) {
+            await deleteArchiveFile(filePath);
+          } else {
+            WindowManager.sendToAppWindows("on-archive-deletion-prompt", [
+              filePath,
+            ]);
+          }
         }
 
         await downloadsSublevel.put(this.gameKey, {

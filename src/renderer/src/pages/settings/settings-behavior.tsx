@@ -26,6 +26,7 @@ export function SettingsBehavior() {
     runAtStartup: false,
     startMinimized: false,
     launchToLibraryPage: false,
+    launchInBigPicture: false,
     disableNsfwAlert: false,
     enableAutoInstall: false,
     seedAfterDownloadComplete: false,
@@ -43,24 +44,20 @@ export function SettingsBehavior() {
 
   const protonVersionAutoLabel = t("proton_version_auto", {
     ns: ["settings", "game_details"],
-    defaultValue: "Auto (global default or umu default)",
   });
 
   const protonSourceUmuDefault = t("proton_source_umu_default", {
     ns: ["settings", "game_details"],
-    defaultValue: "umu default selection",
   });
 
   const protonSourceSteam = t("proton_source_steam", {
     ns: ["settings", "game_details"],
-    defaultValue: "Installed by Steam",
   });
 
   const protonSourceCompatibilityTools = t(
     "proton_source_compatibility_tools",
     {
       ns: ["settings", "game_details"],
-      defaultValue: "Installed in Steam compatibilitytools.d",
     }
   );
 
@@ -72,6 +69,7 @@ export function SettingsBehavior() {
         runAtStartup: userPreferences.runAtStartup ?? false,
         startMinimized: userPreferences.startMinimized ?? false,
         launchToLibraryPage: userPreferences.launchToLibraryPage ?? false,
+        launchInBigPicture: userPreferences.launchInBigPicture ?? false,
         disableNsfwAlert: userPreferences.disableNsfwAlert ?? false,
         enableAutoInstall: userPreferences.enableAutoInstall ?? false,
         seedAfterDownloadComplete:
@@ -189,6 +187,14 @@ export function SettingsBehavior() {
         checked={form.launchToLibraryPage}
         onChange={() =>
           handleChange({ launchToLibraryPage: !form.launchToLibraryPage })
+        }
+      />
+
+      <CheckboxField
+        label={t("launch_hydra_in_big_picture")}
+        checked={form.launchInBigPicture}
+        onChange={() =>
+          handleChange({ launchInBigPicture: !form.launchInBigPicture })
         }
       />
 

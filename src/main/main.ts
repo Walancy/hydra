@@ -2,7 +2,9 @@ import { downloadsSublevel } from "./level/sublevels/downloads";
 import { orderBy } from "lodash-es";
 import { Downloader } from "@shared";
 import { levelKeys, db } from "./level";
-import type { Download, UserPreferences } from "@types";
+import { type Download, type UserPreferences } from "../types";
+import path from "node:path";
+import fs from "node:fs";
 import {
   SystemPath,
   CommonRedistManager,
@@ -10,7 +12,6 @@ import {
   RealDebridClient,
   PremiumizeClient,
   AllDebridClient,
-  Aria2,
   DownloadManager,
   HydraApi,
   uploadGamesBatch,
@@ -19,10 +20,36 @@ import {
   Lock,
   DeckyPlugin,
   DownloadSourcesChecker,
+  DownloadOrchestrator,
   WSClient,
+  WindowManager,
   logger,
 } from "@main/services";
 import { migrateDownloadSources } from "./helpers/migrate-download-sources";
+import { getDirSize } from "./services/download/helpers";
+import { GofileApi } from "./services/hosters";
+
+const hasMissingSeedFiles = async (download: Download): Promise<boolean> => {
+  if (!download.folderName) return false;
+
+  const downloadTargetPath = path.join(
+    download.downloadPath,
+    download.folderName
+  );
+
+  if (!fs.existsSync(downloadTargetPath)) {
+    return true;
+  }
+
+  const expectedSize = download.selectedFilesSize ?? download.fileSize ?? 0;
+
+  if (expectedSize <= 0) {
+    return false;
+  }
+
+  const currentSize = await getDirSize(downloadTargetPath);
+  return currentSize < expectedSize;
+};
 
 export const loadState = async () => {
   await Lock.acquireLock();
@@ -34,8 +61,6 @@ export const loadState = async () => {
     .catch(() => null);
 
   await import("./events");
-
-  Aria2.spawn();
 
   if (userPreferences?.realDebridApiToken) {
     RealDebridClient.authorize(userPreferences.realDebridApiToken);
@@ -52,6 +77,8 @@ export const loadState = async () => {
   if (userPreferences?.torBoxApiToken) {
     TorBoxClient.authorize(userPreferences.torBoxApiToken);
   }
+
+  GofileApi.initialize();
 
   Ludusavi.copyConfigFileToUserData();
   Ludusavi.copyBinaryToUserData();
@@ -74,68 +101,63 @@ export const loadState = async () => {
     WSClient.connect();
   });
 
-  const downloads = await downloadsSublevel
-    .values()
-    .all()
-    .then((games) => {
-      return orderBy(games, "timestamp", "desc");
-    });
-
-  let interruptedDownload: Download | null = null;
-
-  for (const download of downloads) {
-    const downloadKey = levelKeys.game(download.shop, download.objectId);
-
-    // Reset extracting state
-    if (download.extracting) {
-      await downloadsSublevel.put(downloadKey, {
-        ...download,
-        extracting: false,
-      });
-    }
-
-    // Find interrupted active download (download that was running when app closed)
-    // Mark it as paused but remember it for auto-resume
-    if (download.status === "active" && !interruptedDownload) {
-      interruptedDownload = download;
-      await downloadsSublevel.put(downloadKey, {
-        ...download,
-        status: "paused",
-      });
-    } else if (download.status === "active") {
-      // Mark other active downloads as paused
-      await downloadsSublevel.put(downloadKey, {
-        ...download,
-        status: "paused",
-      });
-    }
-  }
-
-  // Re-fetch downloads after status updates
-  const updatedDownloads = await downloadsSublevel
+  const downloadToResume =
+    await DownloadOrchestrator.bootstrapDownloadsOnStartup();
+  const normalizedDownloads = await downloadsSublevel
     .values()
     .all()
     .then((games) => orderBy(games, "timestamp", "desc"));
 
-  // Prioritize interrupted download, then queued downloads
-  const downloadToResume =
-    interruptedDownload ?? updatedDownloads.find((game) => game.queued);
+  const downloadsToSeed: Download[] = [];
 
-  const downloadsToSeed = updatedDownloads.filter(
-    (game) =>
-      game.shouldSeed &&
-      game.downloader === Downloader.Torrent &&
-      game.progress === 1 &&
-      game.uri !== null
-  );
+  for (const game of normalizedDownloads) {
+    if (
+      !game.shouldSeed ||
+      game.downloader !== Downloader.Torrent ||
+      game.progress !== 1 ||
+      game.status !== "seeding" ||
+      game.uri === null
+    ) {
+      continue;
+    }
 
-  // For torrents or if JS downloader is disabled, use Python RPC
+    if (!(await hasMissingSeedFiles(game))) {
+      downloadsToSeed.push(game);
+      continue;
+    }
+
+    const gameKey = levelKeys.game(game.shop, game.objectId);
+    const expectedSize = game.selectedFilesSize ?? game.fileSize ?? 0;
+    let progress = game.progress;
+
+    if (game.folderName) {
+      const downloadTargetPath = path.join(game.downloadPath, game.folderName);
+      const currentSize = fs.existsSync(downloadTargetPath)
+        ? await getDirSize(downloadTargetPath)
+        : 0;
+      progress =
+        expectedSize > 0
+          ? Math.min(currentSize / expectedSize, 1)
+          : game.progress;
+    }
+
+    await downloadsSublevel.put(gameKey, {
+      ...game,
+      status: "paused",
+      shouldSeed: false,
+      queued: false,
+      pinnedToHero: false,
+      progress,
+    });
+
+    logger.warn(
+      `[Startup] Seed files missing for ${gameKey}; seeding was disabled`
+    );
+  }
+
+  // For torrents use Python RPC; HTTP downloads use JS downloader.
   const isTorrent = downloadToResume?.downloader === Downloader.Torrent;
-  // Default to true - native HTTP downloader is enabled by default
-  const useJsDownloader =
-    (userPreferences?.useNativeHttpDownloader ?? true) && !isTorrent;
-
-  if (useJsDownloader && downloadToResume) {
+  if (downloadToResume && !isTorrent) {
     // Start Python RPC for seeding only, then resume HTTP download with JS
     await DownloadManager.startRPC(undefined, downloadsToSeed);
     await DownloadManager.startDownload(downloadToResume).catch((err) => {
@@ -144,8 +166,13 @@ export const loadState = async () => {
     });
   } else {
     // Use Python RPC for everything (torrent or fallback)
-    await DownloadManager.startRPC(downloadToResume, downloadsToSeed);
+    await DownloadManager.startRPC(
+      downloadToResume ?? undefined,
+      downloadsToSeed
+    );
   }
+
+  WindowManager.sendDownloadsUpdated();
 
   startMainLoop();
 

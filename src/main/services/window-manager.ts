@@ -1,3 +1,15 @@
+import { is } from "@electron-toolkit/utils";
+import { isStaging } from "@main/constants";
+import { db, gamesSublevel, levelKeys } from "@main/level";
+import icon from "@resources/icon.png?asset";
+import trayIcon from "@resources/tray-icon.png?asset";
+import { AuthPage, generateAchievementCustomNotificationTest } from "@shared";
+import type {
+  AchievementCustomNotificationPosition,
+  AchievementNotificationInfo,
+  ScreenState,
+  UserPreferences,
+} from "@types";
 import {
   BrowserWindow,
   Menu,
@@ -9,28 +21,19 @@ import {
   screen,
   shell,
 } from "electron";
-import { is } from "@electron-toolkit/utils";
 import { t } from "i18next";
-import path from "node:path";
-import icon from "@resources/icon.png?asset";
-import trayIcon from "@resources/tray-icon.png?asset";
-import { HydraApi } from "./hydra-api";
-import UserAgent from "user-agents";
-import { db, gamesSublevel, levelKeys } from "@main/level";
 import { orderBy, slice } from "lodash-es";
-import type {
-  AchievementCustomNotificationPosition,
-  ScreenState,
-  UserPreferences,
-} from "@types";
-import { AuthPage, generateAchievementCustomNotificationTest } from "@shared";
-
+import path from "node:path";
+import UserAgent from "user-agents";
+import { HydraApi } from "./hydra-api";
 import { logger } from "./logger";
 
 export class WindowManager {
   public static mainWindow: Electron.BrowserWindow | null = null;
   public static notificationWindow: Electron.BrowserWindow | null = null;
   public static gameLauncherWindow: Electron.BrowserWindow | null = null;
+  private static bigPicture: Electron.BrowserWindow | null = null;
+  private static deferredMainMaximize = false;
 
   private static readonly editorWindows: Map<string, BrowserWindow> = new Map();
 
@@ -94,6 +97,39 @@ export class WindowManager {
     }
   }
 
+  private static disableMainWindowWhileBigPictureIsOpen() {
+    const main = this.mainWindow;
+
+    if (!main || main.isDestroyed()) return;
+
+    main.setFocusable(false);
+    main.setIgnoreMouseEvents(true);
+    main.hide();
+  }
+
+  private static restoreMainWindowAfterBigPictureCloses() {
+    const main = this.mainWindow;
+
+    if (!main || main.isDestroyed()) return;
+
+    main.setIgnoreMouseEvents(false);
+    main.setFocusable(true);
+    main.setSkipTaskbar(false);
+  }
+
+  public static sendToAppWindows(channel: string, ...args: unknown[]) {
+    const windows = [this.mainWindow, this.bigPicture];
+
+    for (const window of windows) {
+      if (!window || window.isDestroyed()) continue;
+      window.webContents.send(channel, ...args);
+    }
+  }
+
+  public static sendDownloadsUpdated() {
+    this.sendToAppWindows("on-downloads-updated");
+  }
+
   private static async saveScreenConfig(configScreenWhenClosed: ScreenState) {
     await db.put(levelKeys.screenState, configScreenWhenClosed, {
       valueEncoding: "json",
@@ -101,11 +137,12 @@ export class WindowManager {
   }
 
   private static async loadScreenConfig() {
-    const data = await db
-      .get<string, ScreenState | undefined>(levelKeys.screenState, {
+    const data = await db.get<string, ScreenState | undefined>(
+      levelKeys.screenState,
+      {
         valueEncoding: "json",
-      })
-      .catch(() => undefined);
+      }
+    );
     return data ?? { isMaximized: false, height: 860, width: 1200 };
   }
 
@@ -121,6 +158,12 @@ export class WindowManager {
   public static async createMainWindow() {
     if (this.mainWindow) return;
 
+    const userPreferences = await db
+      .get<string, UserPreferences | null>(levelKeys.userPreferences, {
+        valueEncoding: "json",
+      })
+      .catch(() => null);
+
     const { isMaximized = false, ...configWithoutMaximized } =
       await this.loadScreenConfig();
 
@@ -130,7 +173,17 @@ export class WindowManager {
       this.initialConfigInitializationMainWindow
     );
 
-    this.mainWindow.maximize();
+    this.deferredMainMaximize = false;
+
+    if (userPreferences?.launchInBigPicture) {
+      this.mainWindow.setOpacity(0);
+      this.mainWindow.setSkipTaskbar(true);
+      if (isMaximized) {
+        this.deferredMainMaximize = true;
+      }
+    } else if (isMaximized) {
+      this.mainWindow.maximize();
+    }
 
     this.mainWindow.webContents.session.webRequest.onBeforeSendHeaders(
       (details, callback) => {
@@ -202,30 +255,31 @@ export class WindowManager {
       }
     );
 
-    const userPreferences = await db
-      .get<string, UserPreferences | null>(levelKeys.userPreferences, {
-        valueEncoding: "json",
-      })
-      .catch(() => null);
-
     const initialHash = userPreferences?.launchToLibraryPage ? "library" : "";
 
     this.loadMainWindowURL(initialHash);
     this.mainWindow.removeMenu();
 
     this.mainWindow.on("ready-to-show", () => {
-      WindowManager.mainWindow?.show();
+      if (!app.isPackaged || isStaging)
+        WindowManager.mainWindow?.webContents.openDevTools();
+      if (userPreferences?.launchInBigPicture) {
+        void WindowManager.openBigPictureWindow();
+      } else {
+        WindowManager.mainWindow?.show();
+      }
     });
 
     this.mainWindow.on("close", async () => {
       const mainWindow = this.mainWindow;
       this.mainWindow = null;
 
-      const userPreferences = await db
-        .get<string, UserPreferences>(levelKeys.userPreferences, {
+      const userPreferences = await db.get<string, UserPreferences>(
+        levelKeys.userPreferences,
+        {
           valueEncoding: "json",
-        })
-        .catch(() => null);
+        }
+      );
 
       if (mainWindow) {
         mainWindow.setProgressBar(-1);
@@ -256,6 +310,70 @@ export class WindowManager {
     });
   }
 
+  public static async openBigPictureWindow() {
+    if (this.bigPicture) {
+      this.bigPicture.focus();
+      return;
+    }
+
+    const targetDisplay = this.mainWindow?.isDestroyed()
+      ? null
+      : this.mainWindow
+        ? screen.getDisplayMatching(this.mainWindow.getBounds())
+        : screen.getPrimaryDisplay();
+    const targetBounds =
+      targetDisplay?.bounds ?? screen.getPrimaryDisplay().bounds;
+
+    this.bigPicture = new BrowserWindow({
+      x: targetBounds.x,
+      y: targetBounds.y,
+      width: targetBounds.width,
+      height: targetBounds.height,
+      backgroundColor: "#0a0a0a",
+      icon,
+      frame: false,
+      fullscreen: true,
+      show: false,
+      webPreferences: {
+        preload: path.join(__dirname, "../preload/index.mjs"),
+        sandbox: false,
+      },
+    });
+
+    this.bigPicture.removeMenu();
+
+    if (!app.isPackaged || isStaging) {
+      this.bigPicture.webContents.openDevTools();
+    }
+
+    this.loadWindowURL(this.bigPicture, "big-picture");
+
+    this.bigPicture.once("ready-to-show", () => {
+      const main = this.mainWindow;
+      if (main && !main.isDestroyed()) {
+        main.setOpacity(1);
+        this.disableMainWindowWhileBigPictureIsOpen();
+      }
+      this.bigPicture?.setBounds(targetBounds);
+      this.bigPicture?.show();
+      this.bigPicture?.focus();
+    });
+
+    this.bigPicture.on("closed", () => {
+      this.bigPicture = null;
+      const main = this.mainWindow;
+      if (main && !main.isDestroyed()) {
+        this.restoreMainWindowAfterBigPictureCloses();
+        if (WindowManager.deferredMainMaximize) {
+          main.maximize();
+          WindowManager.deferredMainMaximize = false;
+        }
+        main.show();
+        main.focus();
+      }
+    });
+  }
+
   public static openAuthWindow(page: AuthPage, searchParams: URLSearchParams) {
     if (this.mainWindow) {
       const authWindow = new BrowserWindow({
@@ -276,8 +394,7 @@ export class WindowManager {
 
       authWindow.removeMenu();
 
-      // if (!app.isPackaged)
-      //   authWindow.webContents.openDevTools({ mode: "detach" });
+      if (!app.isPackaged) authWindow.webContents.openDevTools();
 
       authWindow.loadURL(
         `${import.meta.env.MAIN_VITE_AUTH_URL}${page}?${searchParams.toString()}`
@@ -366,13 +483,30 @@ export class WindowManager {
     };
   }
 
+  public static sendAchievementToFocusedWindow(
+    position: AchievementCustomNotificationPosition,
+    achievements: AchievementNotificationInfo[]
+  ): boolean {
+    const candidates = [this.bigPicture, this.mainWindow];
+
+    for (const window of candidates) {
+      if (window && !window.isDestroyed() && window.isFocused()) {
+        window.webContents.send(
+          "on-achievement-unlocked-in-app",
+          position,
+          achievements
+        );
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public static async createNotificationWindow() {
     if (this.notificationWindow) return;
 
-    // In dev mode this window renders black and overlays the whole desktop - skip it
-    if (!app.isPackaged) return;
-
-    if (process.platform === "darwin") {
+    if (process.platform === "darwin" || process.platform === "linux") {
       return;
     }
 
@@ -416,6 +550,10 @@ export class WindowManager {
 
     this.notificationWindow.setAlwaysOnTop(true, "screen-saver", 1);
     this.loadWindowURL(this.notificationWindow, "achievement-notification");
+
+    if (!app.isPackaged || isStaging) {
+      this.notificationWindow.webContents.openDevTools();
+    }
   }
 
   public static async showAchievementTestNotification() {
@@ -427,8 +565,9 @@ export class WindowManager {
     );
 
     const language = userPreferences.language ?? "en";
-
-    const achievements = [
+    const position =
+      userPreferences.achievementCustomNotificationPosition ?? "top-left";
+    const testAchievements = [
       generateAchievementCustomNotificationTest(t, language),
       generateAchievementCustomNotificationTest(t, language, {
         isRare: true,
@@ -439,23 +578,15 @@ export class WindowManager {
       }),
     ];
 
-    const position =
-      userPreferences.achievementCustomNotificationPosition ?? "top-left";
-
-    if (!app.isPackaged) {
-      // In dev mode notificationWindow doesn't exist — send to main window
-      this.mainWindow?.webContents.send(
-        "on-forza-test",
-        position,
-        achievements
-      );
+    if (process.platform === "linux") {
+      this.sendAchievementToFocusedWindow(position, testAchievements);
       return;
     }
 
     this.notificationWindow?.webContents.send(
       "on-achievement-unlocked",
       position,
-      achievements
+      testAchievements
     );
   }
 
@@ -550,6 +681,10 @@ export class WindowManager {
 
       editorWindow.once("ready-to-show", () => {
         editorWindow.show();
+        this.mainWindow?.webContents.openDevTools();
+        if (!app.isPackaged || isStaging) {
+          editorWindow.webContents.openDevTools();
+        }
       });
 
       editorWindow.webContents.on("before-input-event", (_event, input) => {
@@ -626,9 +761,9 @@ export class WindowManager {
       this.gameLauncherWindow = null;
     });
 
-    // if (!app.isPackaged || isStaging) {
-    //   this.gameLauncherWindow.webContents.openDevTools({ mode: "detach" });
-    // }
+    if (!app.isPackaged || isStaging) {
+      this.gameLauncherWindow.webContents.openDevTools();
+    }
   }
 
   public static showGameLauncherWindow() {
@@ -645,6 +780,11 @@ export class WindowManager {
   }
 
   public static openMainWindow() {
+    if (this.bigPicture && !this.bigPicture.isDestroyed()) {
+      this.bigPicture.focus();
+      return;
+    }
+
     if (this.mainWindow) {
       this.mainWindow.show();
       if (this.mainWindow.isMinimized()) {
@@ -674,6 +814,10 @@ export class WindowManager {
   public static redirect(hash: string) {
     if (!this.mainWindow) this.createMainWindow();
     this.loadMainWindowURL(hash);
+
+    if (this.bigPicture && !this.bigPicture.isDestroyed()) {
+      return;
+    }
 
     if (this.mainWindow?.isMinimized()) this.mainWindow.restore();
     this.mainWindow?.focus();

@@ -7,16 +7,13 @@ import {
   publishNotificationUpdateAvailable,
 } from "@main/services/notifications";
 import { db, levelKeys } from "@main/level";
-import { MAIN_LOOP_INTERVAL } from "@main/constants";
 
 const { autoUpdater } = updater;
 const sendEventsForDebug = false;
-const ticksToUpdate = (50 * 60 * 1000) / MAIN_LOOP_INTERVAL; // 50 minutes
 
 export class UpdateManager {
   private static hasNotified = false;
   private static newVersion = "";
-  private static checkTick = 0;
 
   private static mockValuesForDebug() {
     this.sendEvent({ type: "update-available", info: { version: "3.3.1" } });
@@ -49,12 +46,13 @@ export class UpdateManager {
 
   public static async checkForUpdates() {
     autoUpdater
-      .once("update-available", (info: UpdateInfo) => {
+      .removeAllListeners()
+      .on("update-available", (info: UpdateInfo) => {
         this.sendEvent({ type: "update-available", info });
         this.newVersion = info.version;
         publishNotificationUpdateAvailable(info.version);
       })
-      .once("update-downloaded", () => {
+      .on("update-downloaded", () => {
         this.sendEvent({ type: "update-downloaded" });
 
         if (!this.hasNotified) {
@@ -75,12 +73,5 @@ export class UpdateManager {
     }
 
     return isAutoInstallAvailable;
-  }
-
-  public static checkForUpdatePeriodically() {
-    if (this.checkTick % ticksToUpdate == 0) {
-      this.checkForUpdates();
-    }
-    this.checkTick++;
   }
 }

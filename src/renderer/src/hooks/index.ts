@@ -1,4 +1,5 @@
 export * from "./use-download";
+export * from "./use-download-layout";
 export * from "./use-library";
 export * from "./use-date";
 export * from "./use-toast";
@@ -10,7 +11,6 @@ export * from "./use-download-options-listener";
 export * from "./use-game-card";
 export * from "./use-search-history";
 export * from "./use-search-suggestions";
-export * from "./use-hls-video";
 export * from "./use-game-collections";
 export * from "./use-home-groups";
 export * from "./useDominantColor";

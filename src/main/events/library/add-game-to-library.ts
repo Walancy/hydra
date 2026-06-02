@@ -82,6 +82,7 @@ const addGameToLibrary = async (
     await downloadsSublevel.del(gameKey);
 
     game.isDeleted = false;
+    game.addedToLibraryAt ??= new Date();
 
     // Patch in assets if they were missing (e.g. older imports)
     if (!game.iconUrl && iconUrl) game.iconUrl = iconUrl;
@@ -102,6 +103,7 @@ const addGameToLibrary = async (
       isDeleted: false,
       playTimeInMilliseconds: 0,
       lastTimePlayed: null,
+      addedToLibraryAt: new Date(),
     };
 
     await gamesSublevel.put(gameKey, game);

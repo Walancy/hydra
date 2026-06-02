@@ -22,10 +22,12 @@ import type {
   AchievementNotificationInfo,
   ProtonVersion,
   TorrentFilesResponse,
+  DownloadLayoutState,
+  SupabaseConfig,
+  LibraryStorageMode,
 } from "@types";
 import type { AuthPage } from "@shared";
 import type { AxiosProgressEvent } from "axios";
-import type { SupabaseConfig, LibraryStorageMode } from "@types";
 
 contextBridge.exposeInMainWorld("electron", {
   /* Torrenting */
@@ -37,8 +39,11 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("cancelGameDownload", shop, objectId),
   pauseGameDownload: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("pauseGameDownload", shop, objectId),
-  resumeGameDownload: (shop: GameShop, objectId: string) =>
-    ipcRenderer.invoke("resumeGameDownload", shop, objectId),
+  resumeGameDownload: (
+    shop: GameShop,
+    objectId: string,
+    strategy?: "interruptActive" | "queueIfActive"
+  ) => ipcRenderer.invoke("resumeGameDownload", shop, objectId, strategy),
   pauseGameSeed: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("pauseGameSeed", shop, objectId),
   resumeGameSeed: (shop: GameShop, objectId: string) =>
@@ -54,6 +59,40 @@ contextBridge.exposeInMainWorld("electron", {
       objectId,
       direction
     ),
+  setDownloadQueuePosition: (
+    shop: GameShop,
+    objectId: string,
+    targetIndex: number
+  ) =>
+    ipcRenderer.invoke("setDownloadQueuePosition", shop, objectId, targetIndex),
+  setPausedDownloadPosition: (
+    shop: GameShop,
+    objectId: string,
+    targetIndex: number
+  ) =>
+    ipcRenderer.invoke(
+      "setPausedDownloadPosition",
+      shop,
+      objectId,
+      targetIndex
+    ),
+  moveDownloadPlacement: (
+    shop: GameShop,
+    objectId: string,
+    targetArea: "hero" | "queue" | "paused",
+    targetIndex?: number
+  ) =>
+    ipcRenderer.invoke(
+      "moveDownloadPlacement",
+      shop,
+      objectId,
+      targetArea,
+      targetIndex
+    ),
+  getDownloadLayoutState: () =>
+    ipcRenderer.invoke(
+      "getDownloadLayoutState"
+    ) as Promise<DownloadLayoutState>,
   onDownloadProgress: (cb: (value: DownloadProgress | null) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
@@ -83,10 +122,6 @@ contextBridge.exposeInMainWorld("electron", {
     >,
 
   /* Catalogue */
-  getSteamFeatured: (language: string) =>
-    ipcRenderer.invoke("getSteamFeatured", language),
-  getSteamTrending: (language: string) =>
-    ipcRenderer.invoke("getSteamTrending", language),
   getGameShopDetails: (objectId: string, shop: GameShop, language: string) =>
     ipcRenderer.invoke("getGameShopDetails", objectId, shop, language),
   getRandomGame: () => ipcRenderer.invoke("getRandomGame"),
@@ -113,8 +148,19 @@ contextBridge.exposeInMainWorld("electron", {
 
   /* User preferences */
   getUserPreferences: () => ipcRenderer.invoke("getUserPreferences"),
-  updateUserPreferences: (preferences: UserPreferences) =>
+  updateUserPreferences: (preferences: Partial<UserPreferences>) =>
     ipcRenderer.invoke("updateUserPreferences", preferences),
+  onUserPreferencesUpdated: (
+    cb: (preferences: UserPreferences | null) => void
+  ) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      preferences: UserPreferences | null
+    ) => cb(preferences);
+    ipcRenderer.on("on-user-preferences-updated", listener);
+    return () =>
+      ipcRenderer.removeListener("on-user-preferences-updated", listener);
+  },
   autoLaunch: (autoLaunchProps: { enabled: boolean; minimized: boolean }) =>
     ipcRenderer.invoke("autoLaunch", autoLaunchProps),
   authenticateRealDebrid: (apiToken: string) =>
@@ -139,13 +185,6 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("getDownloadSourcesSinceValue"),
 
   /* Library */
-  importSteamGames: (customPath?: string) =>
-    ipcRenderer.invoke("importSteamGames", customPath),
-  importEpicGames: () => ipcRenderer.invoke("importEpicGames"),
-  importGamesFromFolder: (folderPath: string) =>
-    ipcRenderer.invoke("importGamesFromFolder", folderPath),
-  checkFileExists: (filePath: string) =>
-    ipcRenderer.invoke("checkFileExists", filePath),
   toggleAutomaticCloudSync: (
     shop: GameShop,
     objectId: string,
@@ -241,9 +280,6 @@ contextBridge.exposeInMainWorld("electron", {
     collectionIds: string[]
   ) =>
     ipcRenderer.invoke("assignGameToCollection", shop, objectId, collectionIds),
-  syncHomeGroups: (groups: any[]) =>
-    ipcRenderer.invoke("syncHomeGroups", groups),
-  fetchHomeGroups: () => ipcRenderer.invoke("fetchHomeGroups"),
   clearNewDownloadOptions: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("clearNewDownloadOptions", shop, objectId),
   toggleGamePin: (shop: GameShop, objectId: string, pinned: boolean) =>
@@ -348,6 +384,11 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.on("on-library-batch-complete", listener);
     return () =>
       ipcRenderer.removeListener("on-library-batch-complete", listener);
+  },
+  onDownloadsUpdated: (cb: () => void) => {
+    const listener = (_event: Electron.IpcRendererEvent) => cb();
+    ipcRenderer.on("on-downloads-updated", listener);
+    return () => ipcRenderer.removeListener("on-downloads-updated", listener);
   },
   onExtractionComplete: (cb: (shop: GameShop, objectId: string) => void) => {
     const listener = (
@@ -466,8 +507,6 @@ contextBridge.exposeInMainWorld("electron", {
   isPortableVersion: () => ipcRenderer.invoke("isPortableVersion"),
   openExternal: (src: string) => ipcRenderer.invoke("openExternal", src),
   openCheckout: () => ipcRenderer.invoke("openCheckout"),
-  openDevTools: () => ipcRenderer.invoke("openDevTools"),
-  showVirtualKeyboard: () => ipcRenderer.invoke("showVirtualKeyboard"),
   showOpenDialog: (options: Electron.OpenDialogOptions) =>
     ipcRenderer.invoke("showOpenDialog", options),
   showItemInFolder: (path: string) =>
@@ -611,8 +650,22 @@ contextBridge.exposeInMainWorld("electron", {
   getMe: () => ipcRenderer.invoke("getMe"),
   updateProfile: (updateProfile: UpdateProfileRequest) =>
     ipcRenderer.invoke("updateProfile", updateProfile),
+  getProfileImageMetadata: (imagePath: string) =>
+    ipcRenderer.invoke("getProfileImageMetadata", imagePath),
   processProfileImage: (imagePath: string) =>
     ipcRenderer.invoke("processProfileImage", imagePath),
+  cropProfileImage: (
+    imagePath: string,
+    params: {
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+      outputWidth: number;
+      outputHeight: number;
+      rotation?: number;
+    }
+  ) => ipcRenderer.invoke("cropProfileImage", imagePath, params),
   onSyncFriendRequests: (cb: (friendRequests: FriendRequestSync) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
@@ -709,6 +762,21 @@ contextBridge.exposeInMainWorld("electron", {
     return () =>
       ipcRenderer.removeListener("on-achievement-unlocked", listener);
   },
+  onInAppAchievementUnlocked: (
+    cb: (
+      position: AchievementCustomNotificationPosition,
+      achievements: AchievementNotificationInfo[]
+    ) => void
+  ) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      position: AchievementCustomNotificationPosition,
+      achievements: AchievementNotificationInfo[]
+    ) => cb(position, achievements);
+    ipcRenderer.on("on-achievement-unlocked-in-app", listener);
+    return () =>
+      ipcRenderer.removeListener("on-achievement-unlocked-in-app", listener);
+  },
   onForzaTest: (
     cb: (
       position: AchievementCustomNotificationPosition,
@@ -722,6 +790,20 @@ contextBridge.exposeInMainWorld("electron", {
     ) => cb(position, achievements);
     ipcRenderer.on("on-forza-test", listener);
     return () => ipcRenderer.removeListener("on-forza-test", listener);
+  },
+  onInAppAchievementUnlocked: (
+    cb: (
+      position: AchievementCustomNotificationPosition,
+      achievements: AchievementNotificationInfo[]
+    ) => void
+  ) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      position: AchievementCustomNotificationPosition,
+      achievements: AchievementNotificationInfo[]
+    ) => cb(position, achievements);
+    ipcRenderer.on("on-achievement-unlocked-in-app", listener);
+    return () => ipcRenderer.removeListener("on-achievement-unlocked-in-app", listener);
   },
   onCombinedAchievementsUnlocked: (
     cb: (
@@ -803,6 +885,9 @@ contextBridge.exposeInMainWorld("electron", {
   closeEditorWindow: (themeId?: string) =>
     ipcRenderer.invoke("closeEditorWindow", themeId),
 
+  /* Big Picture */
+  openBigPictureWindow: () => ipcRenderer.invoke("openBigPictureWindow"),
+
   /* Game Launcher Window */
   showGameLauncherWindow: () => ipcRenderer.invoke("showGameLauncherWindow"),
   closeGameLauncherWindow: () => ipcRenderer.invoke("closeGameLauncherWindow"),
@@ -834,6 +919,25 @@ contextBridge.exposeInMainWorld("electron", {
     iterator: (sublevelName: string) =>
       ipcRenderer.invoke("leveldbIterator", sublevelName),
   },
+
+  //UPDATEDD
+  pauseGameTransfer: (shop: GameShop, objectId: string) =>
+    ipcRenderer.invoke("pauseGameTransfer", shop, objectId),
+  resumeGameTransfer: (shop: GameShop, objectId: string) =>
+    ipcRenderer.invoke("resumeGameTransfer", shop, objectId),
+  cancelGameTransfer: (shop: GameShop, objectId: string) =>
+    ipcRenderer.invoke("cancelGameTransfer", shop, objectId),
+
+  // Add these to the electron object in contextBridge.exposeInMainWorld
+  on: (channel: string, listener: (...args: any[]) => void) => {
+    ipcRenderer.on(channel, listener);
+  },
+  off: (channel: string, listener: (...args: any[]) => void) => {
+    ipcRenderer.off(channel, listener);
+  },
+  getAvailableDrives: () => ipcRenderer.invoke("getAvailableDrives"),
+  transferGameFiles: (shop: GameShop, objectId: string, destParent: string) =>
+    ipcRenderer.invoke("transferGameFiles", shop, objectId, destParent),
 
   /* Supabase Library Integration */
   connectSupabase: (config: SupabaseConfig) =>

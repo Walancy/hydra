@@ -4,6 +4,7 @@ import type { Download, Game, Subscription } from "./level.types";
 import type { GameShop, UnlockedAchievement } from "./game.types";
 
 export type FriendRequestAction = "ACCEPTED" | "REFUSED" | "CANCEL";
+export * from "./download-contract";
 
 export type HydraCloudFeature =
   | "achievements"
@@ -138,6 +139,7 @@ export interface StartGameDownloadPayload {
   downloadPath: string;
   downloader: Downloader;
   automaticallyExtract: boolean;
+  automaticallyDeleteArchiveFiles?: boolean;
   fileSize?: string | null;
   fileIndices?: number[];
   selectedFilesSize?: number | null;
@@ -427,6 +429,13 @@ export interface ComparedAchievements {
 
 export interface CatalogueSearchPayload {
   title: string;
+  sortBy:
+    | "popularity"
+    | "reviewScore"
+    | "alphabetical"
+    | "hydraScore"
+    | "releaseDate";
+  sortOrder: "asc" | "desc";
   downloadSourceFingerprints: string[];
   tags: number[];
   publishers: string[];
@@ -440,6 +449,7 @@ export interface CatalogueSearchPayload {
     | "platinum"
   )[];
   deckCompatibility: ("verified" | "playable" | "unsupported" | "unknown")[];
+  releaseYear?: { gte?: number; lte?: number };
 }
 
 export interface ProtonDBData {
@@ -458,6 +468,7 @@ export type CatalogueSearchResult = {
   title: string;
   shop: GameShop;
   genres: string[];
+  releaseYear: number | null;
   tier?: string | null;
   bestReportedTier?: string | null;
   protondbSupportBadge?: string | null;

@@ -531,6 +531,12 @@ declare global {
         achievements: AchievementNotificationInfo[]
       ) => void
     ) => () => Electron.IpcRenderer;
+    onInAppAchievementUnlocked: (
+      cb: (
+        position: AchievementCustomNotificationPosition,
+        achievements: AchievementNotificationInfo[]
+      ) => void
+    ) => () => Electron.IpcRenderer;
     onCombinedAchievementsUnlocked: (
       cb: (
         gameCount: number,
@@ -609,6 +615,52 @@ declare global {
       config: SupabaseConfig
     ) => Promise<{ ok: true } | { ok: false; error: string }>;
     setLibraryStorageMode: (mode: LibraryStorageMode) => Promise<void>;
+
+    /* Missing main branch types */
+    getDownloadLayoutState: () => Promise<DownloadLayoutState>;
+    onDownloadsUpdated: (cb: () => void) => () => Electron.IpcRenderer;
+    getProfileImageMetadata: (
+      path: string
+    ) => Promise<{ mimeType: string | null; isAnimated: boolean }>;
+    cropProfileImage: (
+      path: string,
+      params: {
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+        outputWidth: number;
+        outputHeight: number;
+    getProfileImageMetadata: (
+      path: string
+    ) => Promise<{ mimeType: string | null; isAnimated: boolean }>;
+    cropProfileImage: (
+      path: string,
+      params: {
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+        outputWidth: number;
+        outputHeight: number;
+        rotation?: number;
+      }
+    ) => Promise<{ imagePath: string }>;
+    getAvailableDrives: () => Promise<any[]>;
+    transferGameFiles: (
+      shop: import("./types").GameShop,
+      objectId: string,
+      destParent: string
+    ) => Promise<{
+      ok: boolean;
+      error?: string;
+      needed?: number;
+      available?: number;
+      newExePath?: string;
+    }>;
+    cancelGameTransfer: (shop: import("./types").GameShop, objectId: string) => Promise<void>;
+    on: (channel: string, listener: (...args: any[]) => void) => void;
+    off: (channel: string, listener: (...args: any[]) => void) => void;
   }
 
   interface Window {
