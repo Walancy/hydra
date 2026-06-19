@@ -437,7 +437,8 @@ export function TopSellers({
 
   // Pré-busca datas de lançamento em lotes de 5 quando a aba "Lançamentos" está ativa
   useEffect(() => {
-    if ((activeTab !== "new" && activeTab !== "recent") || !games.length) return;
+    if ((activeTab !== "new" && activeTab !== "recent") || !games.length)
+      return;
 
     abortFetchRef.current?.abort();
     const abort = new AbortController();

@@ -23,7 +23,7 @@ export function SidebarOnlineFriends() {
 
     window.electron.hydraApi
       .get<{ friends?: OnlineFriend[] }>("/profile/friends", {
-        params: { take: 100, skip: 0 }
+        params: { take: 100, skip: 0 },
       })
       .then((data) => {
         const online = (data?.friends ?? []).filter((f) => f.currentGame);

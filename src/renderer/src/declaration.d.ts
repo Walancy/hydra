@@ -666,7 +666,10 @@ declare global {
       available?: number;
       newExePath?: string;
     }>;
-    cancelGameTransfer: (shop: import("./types").GameShop, objectId: string) => Promise<void>;
+    cancelGameTransfer: (
+      shop: import("./types").GameShop,
+      objectId: string
+    ) => Promise<void>;
     on: (channel: string, listener: (...args: any[]) => void) => void;
     off: (channel: string, listener: (...args: any[]) => void) => void;
   }

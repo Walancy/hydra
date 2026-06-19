@@ -108,7 +108,7 @@ export function Sidebar() {
 
     window.electron.hydraApi
       .get<{ friends?: { currentGame: any }[] }>("/profile/friends", {
-        params: { take: 100, skip: 0 }
+        params: { take: 100, skip: 0 },
       })
       .then((data) => {
         if (data?.friends) {
