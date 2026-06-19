@@ -286,7 +286,7 @@ contextBridge.exposeInMainWorld("electron", {
   removeGameFromFavorites: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("removeGameFromFavorites", shop, objectId),
   assignGameToCollection: (
-    shop: import("./types").GameShop,
+    shop: GameShop,
     objectId: string,
     collectionId: string[]
   ) =>

@@ -52,8 +52,8 @@ const addGameToQueue = async (
     queued: true,
     pinnedToHero: false,
     extracting: false,
-    automaticallyExtract,
-    automaticallyDeleteArchiveFiles,
+    automaticallyExtract: automaticallyExtract ?? false,
+    automaticallyDeleteArchiveFiles: automaticallyDeleteArchiveFiles ?? false,
     fileIndices,
     selectedFilesSize,
   };
