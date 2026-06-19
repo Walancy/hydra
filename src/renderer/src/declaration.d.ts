@@ -59,13 +59,33 @@ declare global {
     ) => Promise<{ ok: boolean; error?: string }>;
     cancelGameDownload: (shop: GameShop, objectId: string) => Promise<void>;
     pauseGameDownload: (shop: GameShop, objectId: string) => Promise<void>;
-    resumeGameDownload: (shop: GameShop, objectId: string) => Promise<void>;
+    resumeGameDownload: (
+      shop: GameShop,
+      objectId: string,
+      strategy?: "interruptActive" | "queueIfActive"
+    ) => Promise<void>;
     pauseGameSeed: (shop: GameShop, objectId: string) => Promise<void>;
     resumeGameSeed: (shop: GameShop, objectId: string) => Promise<void>;
     updateDownloadQueuePosition: (
       shop: GameShop,
       objectId: string,
       direction: "up" | "down"
+    ) => Promise<boolean>;
+    setDownloadQueuePosition: (
+      shop: GameShop,
+      objectId: string,
+      targetIndex: number
+    ) => Promise<boolean>;
+    setPausedDownloadPosition: (
+      shop: GameShop,
+      objectId: string,
+      targetIndex: number
+    ) => Promise<boolean>;
+    moveDownloadPlacement: (
+      shop: GameShop,
+      objectId: string,
+      targetArea: "hero" | "queue" | "paused",
+      targetIndex?: number
     ) => Promise<boolean>;
     onDownloadProgress: (
       cb: (value: DownloadProgress | null) => void
@@ -619,18 +639,6 @@ declare global {
     /* Missing main branch types */
     getDownloadLayoutState: () => Promise<DownloadLayoutState>;
     onDownloadsUpdated: (cb: () => void) => () => Electron.IpcRenderer;
-    getProfileImageMetadata: (
-      path: string
-    ) => Promise<{ mimeType: string | null; isAnimated: boolean }>;
-    cropProfileImage: (
-      path: string,
-      params: {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-        outputWidth: number;
-        outputHeight: number;
     getProfileImageMetadata: (
       path: string
     ) => Promise<{ mimeType: string | null; isAnimated: boolean }>;

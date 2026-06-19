@@ -122,6 +122,10 @@ contextBridge.exposeInMainWorld("electron", {
     >,
 
   /* Catalogue */
+  getSteamFeatured: (language: string) =>
+    ipcRenderer.invoke("getSteamFeatured", language),
+  getSteamTrending: (language: string) =>
+    ipcRenderer.invoke("getSteamTrending", language),
   getGameShopDetails: (objectId: string, shop: GameShop, language: string) =>
     ipcRenderer.invoke("getGameShopDetails", objectId, shop, language),
   getRandomGame: () => ipcRenderer.invoke("getRandomGame"),
@@ -185,6 +189,13 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("getDownloadSourcesSinceValue"),
 
   /* Library */
+  importSteamGames: (customPath?: string) =>
+    ipcRenderer.invoke("importSteamGames", customPath),
+  importEpicGames: () => ipcRenderer.invoke("importEpicGames"),
+  importGamesFromFolder: (folderPath: string) =>
+    ipcRenderer.invoke("importGamesFromFolder", folderPath),
+  checkFileExists: (filePath: string) =>
+    ipcRenderer.invoke("checkFileExists", filePath),
   toggleAutomaticCloudSync: (
     shop: GameShop,
     objectId: string,
@@ -275,11 +286,14 @@ contextBridge.exposeInMainWorld("electron", {
   removeGameFromFavorites: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("removeGameFromFavorites", shop, objectId),
   assignGameToCollection: (
-    shop: GameShop,
+    shop: import("./types").GameShop,
     objectId: string,
-    collectionIds: string[]
+    collectionId: string[]
   ) =>
-    ipcRenderer.invoke("assignGameToCollection", shop, objectId, collectionIds),
+    ipcRenderer.invoke("assignGameToCollection", shop, objectId, collectionId),
+  syncHomeGroups: (groups: any[]) =>
+    ipcRenderer.invoke("syncHomeGroups", groups),
+  fetchHomeGroups: () => ipcRenderer.invoke("fetchHomeGroups"),
   clearNewDownloadOptions: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("clearNewDownloadOptions", shop, objectId),
   toggleGamePin: (shop: GameShop, objectId: string, pinned: boolean) =>
@@ -507,6 +521,8 @@ contextBridge.exposeInMainWorld("electron", {
   isPortableVersion: () => ipcRenderer.invoke("isPortableVersion"),
   openExternal: (src: string) => ipcRenderer.invoke("openExternal", src),
   openCheckout: () => ipcRenderer.invoke("openCheckout"),
+  openDevTools: () => ipcRenderer.invoke("openDevTools"),
+  showVirtualKeyboard: () => ipcRenderer.invoke("showVirtualKeyboard"),
   showOpenDialog: (options: Electron.OpenDialogOptions) =>
     ipcRenderer.invoke("showOpenDialog", options),
   showItemInFolder: (path: string) =>
@@ -791,20 +807,7 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.on("on-forza-test", listener);
     return () => ipcRenderer.removeListener("on-forza-test", listener);
   },
-  onInAppAchievementUnlocked: (
-    cb: (
-      position: AchievementCustomNotificationPosition,
-      achievements: AchievementNotificationInfo[]
-    ) => void
-  ) => {
-    const listener = (
-      _event: Electron.IpcRendererEvent,
-      position: AchievementCustomNotificationPosition,
-      achievements: AchievementNotificationInfo[]
-    ) => cb(position, achievements);
-    ipcRenderer.on("on-achievement-unlocked-in-app", listener);
-    return () => ipcRenderer.removeListener("on-achievement-unlocked-in-app", listener);
-  },
+
   onCombinedAchievementsUnlocked: (
     cb: (
       gameCount: number,

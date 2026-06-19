@@ -22,6 +22,7 @@ const TAB_GENRES: Record<string, string[]> = {};
 const TABS = [
   { key: "new", label: "Novidades populares" },
   { key: "popular", label: "Mais vendidos" },
+  { key: "recent", label: "Mais recentes" },
   { key: "upcoming", label: "Mais aguardados" },
   { key: "specials", label: "Ofertas" },
 ];
@@ -356,6 +357,19 @@ export function TopSellers({
       return fillToTen(steamTrending.newReleases, localNew);
     }
 
+    if (activeTab === "recent") {
+      return [...games]
+        .sort((a, b) => {
+          const tsA = releaseTimestamps[a.objectId];
+          const tsB = releaseTimestamps[b.objectId];
+          if (tsA && tsB) return tsB - tsA;
+          if (tsA) return -1;
+          if (tsB) return 1;
+          return parseInt(b.objectId) - parseInt(a.objectId);
+        })
+        .slice(0, 10);
+    }
+
     if (
       activeTab === "upcoming" &&
       steamTrending?.comingSoon &&
@@ -378,7 +392,7 @@ export function TopSellers({
       return localPopular.slice(0, 10);
     }
 
-    if (activeTab === "new") {
+    if (activeTab === "new" || activeTab === "recent") {
       return [...games]
         .sort((a, b) => {
           const tsA = releaseTimestamps[a.objectId];
@@ -423,7 +437,7 @@ export function TopSellers({
 
   // Pré-busca datas de lançamento em lotes de 5 quando a aba "Lançamentos" está ativa
   useEffect(() => {
-    if (activeTab !== "new" || !games.length) return;
+    if ((activeTab !== "new" && activeTab !== "recent") || !games.length) return;
 
     abortFetchRef.current?.abort();
     const abort = new AbortController();
