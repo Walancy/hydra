@@ -27,33 +27,38 @@ export const supabaseFetch = async <T>(
   path: string,
   options: RequestInit = {}
 ): Promise<SupabaseResponse<T>> => {
-  let baseUrl = config.url.trim().replace(/\/$/, "");
-  if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
-    baseUrl = "https://" + baseUrl;
-  }
-  const url = `${baseUrl}/rest/v1${path}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${config.anonKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-      ...(options.headers ?? {}),
-    },
-  });
+  try {
+    let baseUrl = config.url.trim().replace(/\/$/, "");
+    if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+      baseUrl = "https://" + baseUrl;
+    }
+    const url = `${baseUrl}/rest/v1${path}`;
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+        ...(options.headers ?? {}),
+      },
+    });
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    return {
-      data: null,
-      error: { message: body?.message ?? res.statusText, code: body?.code },
-    };
-  }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return {
+        data: null,
+        error: { message: body?.message ?? res.statusText, code: body?.code },
+      };
+    }
 
-  const text = await res.text();
-  const data = text ? (JSON.parse(text) as T) : null;
-  return { data, error: null };
+    const text = await res.text();
+    const data = text ? (JSON.parse(text) as T) : null;
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Fetch failed";
+    return { data: null, error: { message } };
+  }
 };
 
 const runMigrationViaRpc = async (config: SupabaseConfig): Promise<void> => {
